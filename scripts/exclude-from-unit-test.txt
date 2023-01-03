@@ -1,0 +1,2 @@
+sgithub.com/splunk/terraform-provider-splunkcloud/internal/helpers/status.go
+github.com/splunk/terraform-provider-splunkcloud/internal/indexes/index_resource.go
