@@ -1,3 +1,4 @@
-provider "scaffolding" {
-  # example configuration here
+provider "splunkcloud" {
+  stack = "test-stack"
+  server = "https://admin.splunk.com"
 }

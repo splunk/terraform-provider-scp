@@ -2,9 +2,13 @@ package provider
 
 import (
 	"context"
-
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/splunk/terraform-provider-splunkcloud/acs/v2"
+	"github.com/splunk/terraform-provider-splunkcloud/client"
+	"github.com/splunk/terraform-provider-splunkcloud/internal/indexes"
 )
 
 func init() {
@@ -25,33 +29,111 @@ func init() {
 
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
-		p := &schema.Provider{
-			DataSourcesMap: map[string]*schema.Resource{
-				"scaffolding_data_source": dataSourceScaffolding(),
-			},
-			ResourcesMap: map[string]*schema.Resource{
-				"scaffolding_resource": resourceScaffolding(),
-			},
+		provider := &schema.Provider{
+			Schema:       providerSchema(),
+			ResourcesMap: providerResources(),
 		}
 
-		p.ConfigureContextFunc = configure(version, p)
+		provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+			return configure(ctx, d, version)
+		}
 
-		return p
+		return provider
 	}
 }
 
-type apiClient struct {
-	// Add whatever fields, client or connection info, etc. here
-	// you would need to setup to communicate with the upstream
-	// API.
+// Returns a map of splunk resources for configuration
+func providerResources() map[string]*schema.Resource {
+	return map[string]*schema.Resource{
+		"splunkcloud_indexes": indexes.ResourceIndex(),
+	}
 }
 
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
-	return func(context.Context, *schema.ResourceData) (any, diag.Diagnostics) {
-		// Setup a User-Agent for your API client (replace the provider name for yours):
-		// userAgent := p.UserAgent("terraform-provider-scaffolding", version)
-		// TODO: myClient.UserAgent = userAgent
-
-		return &apiClient{}, nil
+func providerSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"server": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("ACS_SERVER", nil),
+			Description: "ACS API endpoint. May also be provided via ACS_SERVER environment variable.",
+		},
+		"stack": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("SPLUNK_STACK", nil),
+			Description: "Stack to perform ACS operations. May also be provided via SPLUNK_STACK environment variable.",
+		},
+		"auth_token": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			DefaultFunc: schema.EnvDefaultFunc("SPLUNK_AUTH_TOKEN", nil),
+			Description: "Authentication tokens, also known as JSON Web Tokens (JWT), are a method for authenticating " +
+				"Splunk platform users into the Splunk platform. May also be provided via SPLUNK_AUTH_TOKEN environment variable.",
+		},
+		"username": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("STACK_USERNAME", nil),
+			Description: "Splunk Cloud Platform deployment username. May also be provided via STACK_USERNAME environment variable.",
+		},
+		"password": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Sensitive:   true,
+			DefaultFunc: schema.EnvDefaultFunc("STACK_PASSWORD", nil),
+			Description: "Splunk Cloud Platform deployment password. May also be provided via STACK_PASSWORD environment variable.",
+		},
 	}
+}
+
+func configure(ctx context.Context, d *schema.ResourceData, version string) (interface{}, diag.Diagnostics) {
+	provider := client.ACSProvider{}
+
+	// initialize stack
+	stackName, ok := d.GetOk("stack")
+	if !ok || stackName == "" {
+		return nil, diag.Errorf("missing Splunk Deployment stack name")
+	}
+	provider.Stack = v2.Stack(stackName.(string))
+
+	// initialize client to ACS
+	server, ok := d.GetOk("server")
+	if !ok || server == "" {
+		return nil, diag.Errorf("missing server url")
+	}
+
+	token, ok := d.GetOk("auth_token")
+	if !ok || token == "" {
+		tflog.Info(ctx, "No token provided, using stack credentials to generate ephemeral token.")
+
+		username, ok := d.GetOk("username")
+		if !ok || username == "" {
+			return nil, diag.Errorf("missing Splunk Deployment username, must provide token or stack username/password")
+		}
+
+		password, ok := d.GetOk("password")
+		if !ok || password == "" {
+			return nil, diag.Errorf("missing Splunk Deployment password")
+		}
+
+		tmpClient, err := client.GetClientBasicAuth(server.(string), username.(string), password.(string), version)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		token, err = client.GenerateToken(ctx, tmpClient, username.(string), stackName.(string))
+		if err != nil {
+			return nil, diag.Errorf(fmt.Sprintf("error while generating token: %v", err))
+		}
+	}
+
+	acsClient, err := client.GetClient(server.(string), token.(string), version)
+
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
+
+	provider.Client = &acsClient
+	return provider, nil
 }
