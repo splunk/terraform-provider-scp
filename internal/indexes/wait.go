@@ -18,9 +18,9 @@ const (
 )
 
 var (
-	PendingStatusCRUD          = []string{http.StatusText(429), http.StatusText(403), http.StatusText(500), http.StatusText(503)}
-	PendingStatusVerifyCreated = []string{http.StatusText(404), http.StatusText(429), http.StatusText(403), http.StatusText(500), http.StatusText(503)}
-	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(429), http.StatusText(403), http.StatusText(500), http.StatusText(503)}
+	PendingStatusCRUD          = []string{http.StatusText(429), http.StatusText(403)}
+	PendingStatusVerifyCreated = []string{http.StatusText(404), http.StatusText(429), http.StatusText(403)}
+	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(429), http.StatusText(403)}
 
 	TargetStatusResourceChange  = []string{http.StatusText(202)}
 	TargetStatusResourceExists  = []string{http.StatusText(200)}

@@ -93,7 +93,7 @@ func TestWaitIndexPoll(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 409, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(unexpectedStatusCode), nil).Once()
 				err := idx.WaitIndexPoll(context.TODO(), client, v2.Stack(mockStack), mockIndexName, idx.TargetStatusResourceExists, idx.PendingStatusVerifyCreated)
@@ -117,7 +117,7 @@ func TestWaitIndexPoll(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 409, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(unexpectedStatusCode), nil).Once()
 				err := idx.WaitIndexPoll(context.TODO(), client, v2.Stack(mockStack), mockIndexName, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted)
@@ -146,7 +146,7 @@ func TestWaitIndexRead(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(unexpectedStatusCode), nil).Once()
 				index, err := idx.WaitIndexRead(context.TODO(), client, v2.Stack(mockStack), mockIndexName)
@@ -178,7 +178,7 @@ func TestWaitIndexUpdate(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 404, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 404, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("PatchIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName), mockUpdateBody).Return(genIndexResp(unexpectedStatusCode), nil).Once()
 				err := idx.WaitIndexUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
@@ -237,7 +237,7 @@ func TestWaitIndexConfirmUpdate(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(unexpectedStatusCode), nil).Once()
 				err := idx.WaitIndexConfirmUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
@@ -273,7 +273,7 @@ func TestWaitIndexDelete(t *testing.T) {
 	})
 
 	t.Run("with unexpected error resp", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501} {
+		for _, unexpectedStatusCode := range []int{400, 401, 404, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("DeleteIndex", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName),
 					v2.DeleteIndexJSONRequestBody{}).Return(badReqResp, nil).Once()
