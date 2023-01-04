@@ -77,11 +77,32 @@ func genIndexResp(code int) *http.Response {
 func TestValidateIndexUpdateComplete(t *testing.T) {
 	assert := assert.New(t)
 
+	altMockBucketPath := "s3://some_alt_bucket_path"
+
 	cases := []struct {
 		expectedResult bool
 		patchRequest   *v2.PatchIndexInfoJSONRequestBody
 		indexResponse  *v2.IndexResponse
 	}{
+		{
+			true,
+			&v2.PatchIndexInfoJSONRequestBody{
+				MaxDataSizeMB:               nil,
+				SearchableDays:              nil,
+				SelfStorageBucketPath:       nil,
+				SplunkArchivalRetentionDays: nil,
+			},
+			&v2.IndexResponse{
+				Datatype:                    mockDatatype,
+				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
+				Name:                        mockIndexName,
+				SearchableDays:              uint64(mockSearchableDays),
+				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
+				SplunkArchivalRetentionDays: nil,
+				TotalEventCount:             nil,
+				TotalRawSizeMB:              nil,
+			},
+		},
 		{
 			true,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -196,6 +217,44 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		{
+			false,
+			&v2.PatchIndexInfoJSONRequestBody{
+				MaxDataSizeMB:               &mockMaxDataSizeMB,
+				SearchableDays:              &mockSearchableDays,
+				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
+				SplunkArchivalRetentionDays: nil,
+			},
+			&v2.IndexResponse{
+				Datatype:                    mockDatatype,
+				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
+				Name:                        mockIndexName,
+				SearchableDays:              uint64(mockSearchableDays),
+				SelfStorageBucketPath:       &altMockBucketPath,
+				SplunkArchivalRetentionDays: nil,
+				TotalEventCount:             nil,
+				TotalRawSizeMB:              nil,
+			},
+		},
+		{
+			false,
+			&v2.PatchIndexInfoJSONRequestBody{
+				MaxDataSizeMB:               &mockMaxDataSizeMB,
+				SearchableDays:              &mockSearchableDays,
+				SelfStorageBucketPath:       nil,
+				SplunkArchivalRetentionDays: &mockSplunkArchivalRetentionDays,
+			},
+			&v2.IndexResponse{
+				Datatype:                    mockDatatype,
+				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
+				Name:                        mockIndexName,
+				SearchableDays:              uint64(mockSearchableDays),
+				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
+				SplunkArchivalRetentionDays: uint64Ptr(400),
+				TotalEventCount:             nil,
+				TotalRawSizeMB:              nil,
+			},
+		},
 	}
 	for i, test := range cases {
 		test := test // Capture
@@ -219,6 +278,14 @@ func TestProcessResponse(t *testing.T) {
 				assert.Error(err)
 			})
 		}
+	})
+
+	/* test nil resp returns error */
+	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
+		resp, statusText, err := idx.ProcessResponse(nil, idx.TargetStatusResourceChange, idx.PendingStatusCRUD)
+		assert.Nil(resp)
+		assert.Error(err)
+		assert.Equal(statusText, "")
 	})
 
 	/* test non-nil resp, correct status text, and nil error for expected resp */
