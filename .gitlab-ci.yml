@@ -65,7 +65,7 @@ test-acc:
   variables:
     ACS_SERVER: 'https://staging.admin.splunk.com'
     SPLUNK_STACK: 'mausamp-test-noah-tf'
-    SPLUNK_AUTH_TOKEN: ${STG_STACK_TOKEN}
+    STACK_TOKEN: ${STG_STACK_TOKEN}
     STACK_USERNAME: ${STG_STACK_USERNAME}
     STACK_PASSWORD: ${STG_STACK_PASSWORD}
   script:
