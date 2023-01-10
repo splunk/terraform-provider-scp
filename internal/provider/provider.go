@@ -64,10 +64,11 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Stack to perform ACS operations. May also be provided via SPLUNK_STACK environment variable.",
 		},
 		"auth_token": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Sensitive:   true,
-			DefaultFunc: schema.EnvDefaultFunc("SPLUNK_AUTH_TOKEN", nil),
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			DefaultFunc:  schema.EnvDefaultFunc("SPLUNK_AUTH_TOKEN", nil),
+			AtLeastOneOf: []string{"username"},
 			Description: "Authentication tokens, also known as JSON Web Tokens (JWT), are a method for authenticating " +
 				"Splunk platform users into the Splunk platform. May also be provided via SPLUNK_AUTH_TOKEN environment variable.",
 		},
@@ -78,11 +79,12 @@ func providerSchema() map[string]*schema.Schema {
 			Description: "Splunk Cloud Platform deployment username. May also be provided via STACK_USERNAME environment variable.",
 		},
 		"password": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Sensitive:   true,
-			DefaultFunc: schema.EnvDefaultFunc("STACK_PASSWORD", nil),
-			Description: "Splunk Cloud Platform deployment password. May also be provided via STACK_PASSWORD environment variable.",
+			Type:         schema.TypeString,
+			Optional:     true,
+			Sensitive:    true,
+			RequiredWith: []string{"username"},
+			DefaultFunc:  schema.EnvDefaultFunc("STACK_PASSWORD", nil),
+			Description:  "Splunk Cloud Platform deployment password. May also be provided via STACK_PASSWORD environment variable.",
 		},
 	}
 }
