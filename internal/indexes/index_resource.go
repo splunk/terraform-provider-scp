@@ -43,6 +43,7 @@ func IndexSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
+			ForceNew:    true,
 			Description: "Valid values: (event | metric). Specifies the type of index. Can not be updated. Defaults to event. Can not be updated after creation, if changed in config file terraform will propose a replacement (create current index and recreate with new datatype).\n",
 		},
 		"max_data_size_mb": {

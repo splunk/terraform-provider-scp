@@ -12,7 +12,6 @@ import (
 
 var GeneralRetryableStatusCodes = map[int]string{
 	http.StatusTooManyRequests: http.StatusText(429),
-	http.StatusForbidden:       http.StatusText(403), //Todo remove once WAF changes are in
 }
 
 func StatusIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createIndexRequest v2.CreateIndexJSONRequestBody) resource.StateRefreshFunc {
