@@ -34,7 +34,7 @@ func init() {
 func PreCheck(t *testing.T) {
 	variables := []string{
 		"ACS_SERVER",
-		"SPLUNK_AUTH_TOKEN",
+		"STACK_TOKEN",
 		"SPLUNK_STACK",
 		"STACK_USERNAME",
 		"STACK_PASSWORD",

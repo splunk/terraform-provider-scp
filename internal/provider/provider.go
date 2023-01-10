@@ -55,7 +55,7 @@ func providerSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("ACS_SERVER", nil),
-			Description: "ACS API endpoint. May also be provided via ACS_SERVER environment variable.",
+			Description: "ACS API base URL. May also be provided via ACS_SERVER environment variable.",
 		},
 		"stack": {
 			Type:        schema.TypeString,
@@ -67,10 +67,10 @@ func providerSchema() map[string]*schema.Schema {
 			Type:         schema.TypeString,
 			Optional:     true,
 			Sensitive:    true,
-			DefaultFunc:  schema.EnvDefaultFunc("SPLUNK_AUTH_TOKEN", nil),
+			DefaultFunc:  schema.EnvDefaultFunc("STACK_TOKEN", nil),
 			AtLeastOneOf: []string{"username"},
 			Description: "Authentication tokens, also known as JSON Web Tokens (JWT), are a method for authenticating " +
-				"Splunk platform users into the Splunk platform. May also be provided via SPLUNK_AUTH_TOKEN environment variable.",
+				"Splunk platform users into the Splunk platform. May also be provided via STACK_TOKEN environment variable.",
 		},
 		"username": {
 			Type:        schema.TypeString,

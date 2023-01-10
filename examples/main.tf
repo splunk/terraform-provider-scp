@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    splunkcloud = {
+      source  = "registry.terraform.io/splunk/splunkcloud"
+    }
+  }
+}
+
+provider "splunkcloud" {
+  stack = "example-stack"
+  server = "https://admin.splunk.com"
+}
+
 resource "splunkcloud_indexes" "index-1" {
   name = "index-1"
 }

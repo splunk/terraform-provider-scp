@@ -1,4 +1,4 @@
 provider "splunkcloud" {
-  stack = "test-stack"
+  stack = "my-stack"
   server = "https://admin.splunk.com"
 }
