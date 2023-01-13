@@ -52,3 +52,55 @@ Defaults are currently set to:
 - `update` -  20m
 - `delete` -  20m 
 
+## Notes/Troubleshooting 
+
+### Retries 
+
+The Terraform provider is configured to retry on certain error codes from the ACS API, such as error code 429, due 
+to the ACS API rate limiting. When hitting a rate limit, it will likely take about 5 minutes for requests to become accepted again. 
+
+### Terraform Import 
+**Issue:** If you receive a 409 conflict error when creating a resource, either use a different index name to create a new resource, or use `terraform import` to bring
+  the resource under terraform management. 
+
+**Solution:** User must manually write resource block in the config file:
+```
+resource "splunkcloud_indexes" "index-1" {
+    #configuration here
+}
+```
+
+User must then run the following command to bring the index into terraform state: 
+
+```terraform import splunkcloud_indexes.index-1 index-1```
+
+Note: Terraform import does NOT write the resource configuration in the config file, only brings it into terraform state
+                
+### Remove from State 
+If an index is deleted outside terraform, the provider should gracefully handle this and recreate it as long as it is still in the configuration file. 
+If you wish to remove an index from terraform state entirely, you may use the following command: 
+
+``` terraform state rm splunkcloud_indexes.index-1 ```
+
+### Resource Replacement 
+**Issue**: Due to the async nature of ACS APIs, if replacing resources (creating and deleting resource with same name), you may 
+encounter timeout on the delete operation as the poll to verify index has been deleted fails due to the newly created resource 
+with the same name. 
+
+**Solution**: Rerun `terraform apply` or run with `-parallelism=1` to avoid this issue. 
+                          
+### Errors from the ACS API: 
+Unexpected errors received from the ACS API such as bad requests will be output to the user as indicated below. 
+
+Please see https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSerrormessages for general troubleshooting tips: 
+
+``` 
+Error submitting request for index (index-1) to be created: 
+unexpected state 'Not Found', wanted target 'Accepted'. 
+last error: {"code":"404-stack-not-found","message":"stack not found. 
+Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSerrormessages 
+for general troubleshooting tips."}
+```
+
+### Logs 
+Please see the following for more information on viewing logs for terraform provider. https://developer.hashicorp.com/terraform/plugin/log/managing

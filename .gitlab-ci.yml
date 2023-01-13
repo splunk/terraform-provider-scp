@@ -3,7 +3,7 @@ image: docker.repo.splunkdev.net/ci-cd/ci-container/golang-1.18:1.7.0
 stages:
 - build
 - analysis
-- test
+- acceptance-test
 
 include:
   - project: 'ci-cd/templates'
@@ -61,10 +61,10 @@ oss-scan:
       when: always
 
 test-acc:
-  stage: test
+  stage: acceptance-test
   variables:
-    ACS_SERVER: 'https://staging.admin.splunk.com'
-    SPLUNK_STACK: 'mausamp-test-noah-tf'
+    ACS_SERVER: ${STG_URL}
+    SPLUNK_STACK: ${STG_STACKNAME}
     STACK_TOKEN: ${STG_STACK_TOKEN}
     STACK_USERNAME: ${STG_STACK_USERNAME}
     STACK_PASSWORD: ${STG_STACK_PASSWORD}

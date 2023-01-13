@@ -1,14 +1,13 @@
 Hi there,
 
-Thank you for opening an issue. Please note that we try to keep the Terraform issue tracker reserved for bug reports and feature requests. For general usage questions, please see: https://www.terraform.io/community.html.
+Thank you for opening an issue. Please note that we try to keep the Terraform issue tracker reserved for bug reports and feature requests. 
 
 ### Terraform Version
 Run `terraform -v` to show the version. If you are not running the latest version of Terraform, please upgrade because your issue may have already been fixed.
 
 ### Affected Resource(s)
 Please list the resources as a list, for example:
-- opc_instance
-- opc_storage_volume
+- splunkcloud_indexes
 
 If this issue appears to affect multiple resources, it may be an issue with Terraform's core, so please mention this.
 
@@ -36,8 +35,7 @@ Please list the steps required to reproduce the issue, for example:
 1. `terraform apply`
 
 ### Important Factoids
-Are there anything atypical about your accounts that we should know? For example: Running in EC2 Classic? Custom version of OpenStack? Tight ACLs?
+Is there anything about your deployment/account that we should know?
 
 ### References
-Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? For example:
-- GH-1234
+Are there any other GitHub issues (open or closed) or Pull Requests that should be linked here? 
