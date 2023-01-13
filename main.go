@@ -4,14 +4,7 @@ import (
 	"flag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	"github.com/splunk/terraform-provider-splunkcloud/internal/provider"
-)
-
-var (
-	// these will be set by the goreleaser configuration to appropriate values for the compiled binary
-	version string = "1.0.0"
-
-	// goreleaser can also pass the specific commit if desired
-	// commit  string = ""
+	"github.com/splunk/terraform-provider-splunkcloud/version"
 )
 
 func main() {
@@ -24,7 +17,7 @@ func main() {
 		Debug: debugMode,
 
 		ProviderAddr: "registry.terraform.io/splunk/splunkcloud",
-		ProviderFunc: provider.New(version),
+		ProviderFunc: provider.New(version.ProviderVersion),
 	}
 
 	plugin.Serve(opts)
