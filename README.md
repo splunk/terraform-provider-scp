@@ -1,6 +1,6 @@
-# Terraform Provider for Splunk Cloud (Beta) 
+# Terraform Provider for Splunk Cloud Platform (Beta) 
 
-This provider is currently in beta stage and only supports the index resource for Splunk Cloud deployments. 
+This provider is currently in beta stage and only supports the index resource for Splunk Cloud Platform deployments. 
 
 ```
 Copyright 2023 Splunk Inc. 
@@ -31,7 +31,7 @@ https://www.mozilla.org/en-US/MPL/2.0/
     - ```
       provider_installation {
            dev_overrides {
-               "registry.terraform.io/splunk/splunkcloud" = "<path to local terraform binary>"
+               "registry.terraform.io/splunk/scp" = "<path to local terraform binary>"
            }
       }
 

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	v2 "github.com/splunk/terraform-provider-splunkcloud/acs/v2"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"io"
 	"net/http"
 )

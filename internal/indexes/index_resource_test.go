@@ -5,28 +5,28 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	v2 "github.com/splunk/terraform-provider-splunkcloud/acs/v2"
-	"github.com/splunk/terraform-provider-splunkcloud/client"
-	"github.com/splunk/terraform-provider-splunkcloud/internal/acctest"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/acctest"
 	"net/http"
 	"testing"
 )
 
 const newIndex = `
-resource "splunkcloud_indexes" "tf-test-index1" {
+resource "scp_indexes" "tf-test-index1" {
     name = "tf-test-index1"
 }
 `
 
 const updateIndex = `
-resource "splunkcloud_indexes" "tf-test-index1" {
+resource "scp_indexes" "tf-test-index1" {
 	name = "tf-test-index1"
 	searchable_days = 100
 }
 `
 
 func TestAccSplunkCloudIndex(t *testing.T) {
-	resourceName := "splunkcloud_indexes.tf-test-index1"
+	resourceName := "scp_indexes.tf-test-index1"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
@@ -60,7 +60,7 @@ func testAccCheckIndexDestroy(s *terraform.State) error {
 	stack := providerNew.Meta().(client.ACSProvider).Stack
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "splunkcloud_indexes" {
+		if rs.Type != "scp_indexes" {
 			continue
 		}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	v2 "github.com/splunk/terraform-provider-splunkcloud/acs/v2"
-	"github.com/splunk/terraform-provider-splunkcloud/client"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/client"
 	"net/http"
 	"strings"
 )

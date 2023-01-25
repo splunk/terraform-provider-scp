@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/splunk/terraform-provider-splunkcloud/internal/provider"
-	"github.com/splunk/terraform-provider-splunkcloud/version"
+	"github.com/splunk/terraform-provider-scp/internal/provider"
+	"github.com/splunk/terraform-provider-scp/version"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	opts := &plugin.ServeOpts{
 		Debug: debugMode,
 
-		ProviderAddr: "registry.terraform.io/splunk/splunkcloud",
+		ProviderAddr: "registry.terraform.io/splunk/scp",
 		ProviderFunc: provider.New(version.ProviderVersion),
 	}
 

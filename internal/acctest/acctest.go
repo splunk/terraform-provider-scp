@@ -2,12 +2,11 @@ package acctest
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/splunk/terraform-provider-splunkcloud/internal/provider"
+	"github.com/splunk/terraform-provider-scp/internal/provider"
+	"github.com/splunk/terraform-provider-scp/version"
 	"os"
 	"testing"
 )
-
-const VERSION = "1.0.0"
 
 var Provider *schema.Provider
 
@@ -15,14 +14,14 @@ var Provider *schema.Provider
 // The factory function will be invoked for every Terraform CLI command executed
 // to create a provider server to which the CLI can reattach.
 var ProviderFactories = map[string]func() (*schema.Provider, error){
-	"splunkcloud": func() (*schema.Provider, error) {
-		return provider.New(VERSION)(), nil
+	"scp": func() (*schema.Provider, error) {
+		return provider.New(version.ProviderVersion)(), nil
 	},
 }
 
 func init() {
 	var err error
-	Provider = provider.New(VERSION)()
+	Provider = provider.New(version.ProviderVersion)()
 
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-module github.com/splunk/terraform-provider-splunkcloud
+module github.com/splunk/terraform-provider-scp
 
 go 1.18
 

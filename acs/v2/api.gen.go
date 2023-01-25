@@ -235,6 +235,23 @@ type RestartStatus struct {
 	ServiceReady            *bool   `json:"serviceReady,omitempty"`
 }
 
+// ShcPeer defines model for ShcPeer.
+type ShcPeer struct {
+	Label               string `json:"label"`
+	LastConfReplication string `json:"lastConfReplication"`
+	Status              string `json:"status"`
+}
+
+// ShcStatus defines model for ShcStatus.
+type ShcStatus struct {
+
+	// Search Head Cluster captain
+	Captain string `json:"captain"`
+
+	// Search Head Cluster peer nodes
+	Peers []ShcPeer `json:"peers"`
+}
+
 // the splunkbase app name and version to install. If no version specified, the latest version will be installed.
 type SplunkbaseBody struct {
 	SplunkbaseID string  `json:"splunkbaseID"`
@@ -259,6 +276,7 @@ type StackStatus struct {
 		// The stack has a notification to restart splunk server. User should restart stack via UI for all configurations to be completed. It may take some time for the correct state for restart-required field to be populated in a Search Head Cluster, given sync delays with different Search Heads
 		RestartRequired *bool `json:"restartRequired,omitempty"`
 	} `json:"messages"`
+	ShcStatus *ShcStatus `json:"shcStatus,omitempty"`
 }
 
 // TokenBody defines model for TokenBody.

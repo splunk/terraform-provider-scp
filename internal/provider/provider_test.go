@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"github.com/splunk/terraform-provider-splunkcloud/version"
+	"github.com/splunk/terraform-provider-scp/version"
 	"testing"
 )
 

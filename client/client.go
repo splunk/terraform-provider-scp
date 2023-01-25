@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/splunk/terraform-provider-splunkcloud/acs/v2"
+	"github.com/splunk/terraform-provider-scp/acs/v2"
 	"io"
 	"net/http"
 )

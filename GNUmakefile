@@ -34,17 +34,8 @@ fmt:
 	go fmt ./...
 	@terraform fmt -recursive
 
-#local-build: clean generate
-#	go build -o terraform.local/local/splunkcloud/1.0.0/$(OS)_$(ARCH)/terraform-provider-splunkcloud .
-#	rm -rf ~/.terraform.d/plugins/terraform.local
-#	mv terraform.local/ ~/.terraform.d/plugins
-
 build:
-	go build -o terraform-provider-splunkcloud .
-
-#clean:
-#	rm -f .terraform.lock.hcl
-#	rm -rf .terraform/providers
+	go build -o terraform-provider-scp .
 
 ###################################
 #	Testing commands

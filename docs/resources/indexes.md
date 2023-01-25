@@ -1,22 +1,22 @@
 --- 
 
-# splunkcloud_indexes (Resource)
+# scp_indexes (Resource)
 
 Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageIndexes for more latest, detailed information on attribute requirements and the ACS Indexes API.
 
 ## Example Usage
 
 ```terraform
-resource "splunkcloud_indexes" "index-1" {
+resource "scp_indexes" "index-1" {
   name = "index-1"
 }
  
-resource "splunkcloud_indexes" "index-2" {
+resource "scp_indexes" "index-2" {
   name = "index-2"
   searchable_days = 90
 }
  
-resource "splunkcloud_indexes" "index-3" {
+resource "scp_indexes" "index-3" {
   name = "index-3"
   searchable_days = 90
   max_data_size_mb = 512
@@ -65,7 +65,7 @@ to the ACS API rate limiting. When hitting a rate limit, it will likely take abo
 
 **Solution:** User must manually write resource block in the config file:
 ```
-resource "splunkcloud_indexes" "index-1" {
+resource "scp_indexes" "index-1" {
     #configuration here
 }
 ```
