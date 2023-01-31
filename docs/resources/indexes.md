@@ -2,7 +2,7 @@
 
 # scp_indexes (Resource)
 
-Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageIndexes for more latest, detailed information on attribute requirements and the ACS Indexes API.
+Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageIndexes for more detailed information on attribute requirements and the ACS Indexes API.
 
 ## Example Usage
 
@@ -72,9 +72,11 @@ resource "scp_indexes" "index-1" {
 
 User must then run the following command to bring the index into terraform state: 
 
-```terraform import splunkcloud_indexes.index-1 index-1```
+```terraform import scp_indexes.index-1 index-1```
 
-Note: Terraform import does NOT write the resource configuration in the config file, only brings it into terraform state
+Note: Terraform import does NOT write the resource configuration in the `resource.tf` configuration file, only brings it 
+into terraform state (`.tfstate`). `.tfstate ` contains terraform's understanding of the infrastructure/resources that are managed 
+by terraform, not necessarily the actual infrastructure. 
                 
 ### Remove from State 
 If an index is deleted outside terraform, the provider should gracefully handle this and recreate it as long as it is still in the configuration file. 
@@ -87,7 +89,7 @@ If you wish to remove an index from terraform state entirely, you may use the fo
 encounter timeout on the delete operation as the poll to verify index has been deleted fails due to the newly created resource 
 with the same name. 
 
-**Solution**: Rerun `terraform apply` or run with `-parallelism=1` to avoid this issue. 
+**Solution**: Rerun `terraform apply` or run `terraform apply` with `-parallelism=1` to avoid this issue by limiting the number of simultaneous resource operations to 1 (instead of the default of 10 resources at a time)
                           
 ### Errors from the ACS API: 
 Unexpected errors received from the ACS API such as bad requests will be output to the user as indicated below. 

@@ -1,6 +1,6 @@
-# Terraform Provider for Splunk Cloud Platform (Beta) 
+# Terraform Provider for Splunk Cloud Platform 
 
-This provider is currently in beta stage and only supports the index resource for Splunk Cloud Platform deployments. 
+At this point in time, this provider only supports the index resource for Splunk Cloud Platform deployments. 
 
 ```
 Copyright 2023 Splunk Inc. 
@@ -48,9 +48,10 @@ Refer to the `/docs` directory for documentation on provider and resource usage,
 
 ## Contributions 
 
-This provider is under development and is currently in beta. Currently, we are not accepting contributions, however, please use the Github issue tracker to submit bugs or request features! 
-
-[Splunk Ideas](https://ideas.splunk.com/) is another place for your suggestions and [Splunk Answers](https://community.splunk.com/t5/Community/ct-p/en-us) for questions.
+Currently, we are not accepting contributions, however, please use the
+- Github issue tracker to submit bugs
+- [Splunk Ideas](https://ideas.splunk.com/) for your suggestions/feature requests 
+- [Splunk Answers](https://community.splunk.com/t5/Community/ct-p/en-us) for questions.
 
 ## Notes and Troubleshooting 
 
