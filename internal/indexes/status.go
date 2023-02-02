@@ -14,6 +14,7 @@ var GeneralRetryableStatusCodes = map[int]string{
 	http.StatusTooManyRequests: http.StatusText(429),
 }
 
+// IndexStatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
 func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createIndexRequest v2.CreateIndexJSONRequestBody) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.CreateIndex(ctx, stack, createIndexRequest)
@@ -25,7 +26,8 @@ func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
-func IndexStatus(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
+// IndexStatusPoll returns StateRefreshFunc that makes GET request and checks if response is desired target (200 for create and 404 for delete)
+func IndexStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
 		if err != nil {
@@ -37,7 +39,8 @@ func IndexStatus(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 	}
 }
 
-func IndexStatusWithResponse(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
+// IndexStatusRead returns StateRefreshFunc that makes GET request, checks if request was successful, and returns index response
+func IndexStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
 		if err != nil {
@@ -65,6 +68,7 @@ func IndexStatusWithResponse(ctx context.Context, acsClient v2.ClientInterface, 
 	}
 }
 
+// IndexStatusDelete returns StateRefreshFunc that makes DELETE request and checks if request was accepted
 func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DeleteIndex(ctx, stack, v2.Index(indexName), v2.DeleteIndexJSONRequestBody{})
@@ -77,6 +81,7 @@ func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
+// IndexStatusUpdate returns StateRefreshFunc that makes PATCH request and checks if request was accepted
 func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchIndexRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
@@ -90,6 +95,7 @@ func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
+// IndexStatusVerifyUpdate returns a StateRefreshFunc that makes a GET request and checks to see if the index fields matches those in patch request
 func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
@@ -123,6 +129,7 @@ func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, 
 	}
 }
 
+// VerifyIndexUpdate is a helper to verify that the fields in patch request match fields in the index response
 func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.IndexResponse) bool {
 	if patchRequest.MaxDataSizeMB != nil && uint64(*patchRequest.MaxDataSizeMB) != index.MaxDataSizeMB {
 		return false
@@ -161,6 +168,7 @@ func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStat
 	return resp, statusText, nil
 }
 
+// IsStatusCodeExpected checks if the given status code exists in either target or pending status codes
 func IsStatusCodeExpected(statusCode int, targetStatusCodes []string, pendingStatusCodes []string) bool {
 	isRetryableError := false
 	isTargetStatus := false

@@ -27,6 +27,7 @@ var (
 	TargetStatusResourceDeleted = []string{http.StatusText(404)}
 )
 
+// WaitIndexCreate Handles retry logic for POST requests for create lifecycle function
 func WaitIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createIndexRequest v2.CreateIndexJSONRequestBody) error {
 	waitIndexCreateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
@@ -52,11 +53,12 @@ func WaitIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	return nil
 }
 
+// WaitIndexPoll Handles retry logic for polling after POST and DELETE requests for create/delete lifecycle functions
 func WaitIndexPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string, targetStatus []string, pendingStatus []string) error {
 	waitIndexCreated := &resource.StateChangeConf{
 		Pending:      pendingStatus,
 		Target:       targetStatus,
-		Refresh:      IndexStatus(ctx, acsClient, stack, indexName, targetStatus, pendingStatus),
+		Refresh:      IndexStatusPoll(ctx, acsClient, stack, indexName, targetStatus, pendingStatus),
 		Timeout:      Timeout,
 		Delay:        PollDelayTime,
 		PollInterval: PollInterval,
@@ -66,11 +68,12 @@ func WaitIndexPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	return err
 }
 
+// WaitIndexRead Handles retry logic for GET requests for the read lifecycle function
 func WaitIndexRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) (*v2.IndexResponse, error) {
 	waitIndexRead := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       TargetStatusResourceExists,
-		Refresh:      IndexStatusWithResponse(ctx, acsClient, stack, indexName),
+		Refresh:      IndexStatusRead(ctx, acsClient, stack, indexName),
 		Timeout:      Timeout,
 		Delay:        CrudDelayTime,
 		PollInterval: PollInterval,
@@ -83,9 +86,11 @@ func WaitIndexRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 		return nil, err
 	}
 	index := output.(*v2.IndexResponse)
+	
 	return index, nil
 }
 
+// WaitIndexUpdate Handles retry logic for PATCH requests for the update lifecycle function
 func WaitIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) error {
 	waitIndexUpdateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
@@ -111,6 +116,8 @@ func WaitIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	return nil
 }
 
+// WaitVerifyIndexUpdate Handles retry logic for GET request for the update lifecycle function to verify that the fields in the
+// index response match those of the patch request
 func WaitVerifyIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) error {
 	waitIndexUpdateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
@@ -130,6 +137,7 @@ func WaitVerifyIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 	return nil
 }
 
+// WaitIndexDelete Handles retry logic for DELETE requests for the delete lifecycle function
 func WaitIndexDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) error {
 	waitIndexDelete := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
