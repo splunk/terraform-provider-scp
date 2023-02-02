@@ -25,12 +25,12 @@ resource "scp_indexes" "tf-test-index1" {
 }
 `
 
-func TestAccSplunkCloudIndex(t *testing.T) {
+func TestAcc_SplunkCloudIndex(t *testing.T) {
 	resourceName := "scp_indexes.tf-test-index1"
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIndexDestroy,
+		CheckDestroy:      testAcc_CheckIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: newIndex,
@@ -48,7 +48,7 @@ func TestAccSplunkCloudIndex(t *testing.T) {
 	})
 }
 
-func testAccCheckIndexDestroy(s *terraform.State) error {
+func testAcc_CheckIndexDestroy(s *terraform.State) error {
 	providerNew := acctest.Provider
 	diags := providerNew.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 	if diags != nil {

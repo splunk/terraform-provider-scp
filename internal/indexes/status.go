@@ -14,7 +14,7 @@ var GeneralRetryableStatusCodes = map[int]string{
 	http.StatusTooManyRequests: http.StatusText(429),
 }
 
-func StatusIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createIndexRequest v2.CreateIndexJSONRequestBody) resource.StateRefreshFunc {
+func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createIndexRequest v2.CreateIndexJSONRequestBody) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.CreateIndex(ctx, stack, createIndexRequest)
 		if err != nil {
@@ -25,7 +25,7 @@ func StatusIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
-func StatusIndex(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
+func IndexStatus(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
 		if err != nil {
@@ -37,7 +37,7 @@ func StatusIndex(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 	}
 }
 
-func StatusIndexWithIndexResponse(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
+func IndexStatusWithResponse(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
 		if err != nil {
@@ -65,7 +65,7 @@ func StatusIndexWithIndexResponse(ctx context.Context, acsClient v2.ClientInterf
 	}
 }
 
-func StatusIndexDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
+func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DeleteIndex(ctx, stack, v2.Index(indexName), v2.DeleteIndexJSONRequestBody{})
 		if err != nil {
@@ -77,7 +77,7 @@ func StatusIndexDelete(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
-func StatusIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchIndexRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
+func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchIndexRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
 		resp, err := acsClient.PatchIndexInfo(ctx, stack, v2.Index(indexName), patchIndexRequest)
@@ -90,7 +90,7 @@ func StatusIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack 
 	}
 }
 
-func StatusIndexPollUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
+func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.GetIndexInfo(ctx, stack, v2.Index(indexName))
 		if err != nil {
@@ -109,7 +109,7 @@ func StatusIndexPollUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 			if err = json.Unmarshal(bodyBytes, &index); err != nil {
 				return nil, "", &resource.UnexpectedStateError{LastError: err}
 			}
-			updateComplete = ValidateIndexUpdateComplete(patchRequest, index)
+			updateComplete = VerifyIndexUpdate(patchRequest, index)
 		}
 
 		var status string
@@ -123,7 +123,7 @@ func StatusIndexPollUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 	}
 }
 
-func ValidateIndexUpdateComplete(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.IndexResponse) bool {
+func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.IndexResponse) bool {
 	if patchRequest.MaxDataSizeMB != nil && uint64(*patchRequest.MaxDataSizeMB) != index.MaxDataSizeMB {
 		return false
 	}

@@ -31,7 +31,7 @@ func WaitIndexCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	waitIndexCreateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       TargetStatusResourceChange,
-		Refresh:      StatusIndexCreate(ctx, acsClient, stack, createIndexRequest),
+		Refresh:      IndexStatusCreate(ctx, acsClient, stack, createIndexRequest),
 		Timeout:      Timeout,
 		Delay:        CrudDelayTime,
 		PollInterval: PollInterval,
@@ -56,7 +56,7 @@ func WaitIndexPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	waitIndexCreated := &resource.StateChangeConf{
 		Pending:      pendingStatus,
 		Target:       targetStatus,
-		Refresh:      StatusIndex(ctx, acsClient, stack, indexName, targetStatus, pendingStatus),
+		Refresh:      IndexStatus(ctx, acsClient, stack, indexName, targetStatus, pendingStatus),
 		Timeout:      Timeout,
 		Delay:        PollDelayTime,
 		PollInterval: PollInterval,
@@ -70,7 +70,7 @@ func WaitIndexRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	waitIndexRead := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       TargetStatusResourceExists,
-		Refresh:      StatusIndexWithIndexResponse(ctx, acsClient, stack, indexName),
+		Refresh:      IndexStatusWithResponse(ctx, acsClient, stack, indexName),
 		Timeout:      Timeout,
 		Delay:        CrudDelayTime,
 		PollInterval: PollInterval,
@@ -90,7 +90,7 @@ func WaitIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	waitIndexUpdateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       TargetStatusResourceChange,
-		Refresh:      StatusIndexUpdate(ctx, acsClient, stack, patchRequest, indexName),
+		Refresh:      IndexStatusUpdate(ctx, acsClient, stack, patchRequest, indexName),
 		Timeout:      Timeout,
 		Delay:        CrudDelayTime,
 		PollInterval: PollInterval,
@@ -111,11 +111,11 @@ func WaitIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	return nil
 }
 
-func WaitIndexConfirmUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) error {
+func WaitVerifyIndexUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchIndexInfoJSONRequestBody, indexName string) error {
 	waitIndexUpdateAccepted := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       []string{"UPDATED"},
-		Refresh:      StatusIndexPollUpdate(ctx, acsClient, stack, patchRequest, indexName),
+		Refresh:      IndexStatusVerifyUpdate(ctx, acsClient, stack, patchRequest, indexName),
 		Timeout:      Timeout,
 		Delay:        PollDelayTime,
 		PollInterval: PollInterval,
@@ -134,7 +134,7 @@ func WaitIndexDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	waitIndexDelete := &resource.StateChangeConf{
 		Pending:      PendingStatusCRUD,
 		Target:       TargetStatusResourceChange,
-		Refresh:      StatusIndexDelete(ctx, acsClient, stack, indexName),
+		Refresh:      IndexStatusDelete(ctx, acsClient, stack, indexName),
 		Timeout:      Timeout,
 		Delay:        CrudDelayTime, // ToDO check if avoid errors on 1 min delay
 		PollInterval: PollInterval,

@@ -29,7 +29,7 @@ var (
 	mockSplunkArchivalRetentionDays int64 = 1099
 )
 
-func TestWaitIndexCreate(t *testing.T) {
+func Test_WaitIndexCreate(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	mockCreateBody := v2.CreateIndexJSONRequestBody{
@@ -69,7 +69,7 @@ func TestWaitIndexCreate(t *testing.T) {
 	})
 }
 
-func TestWaitIndexPoll(t *testing.T) {
+func Test_WaitIndexPoll(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	t.Run("with some client interface error", func(t *testing.T) {
@@ -127,7 +127,7 @@ func TestWaitIndexPoll(t *testing.T) {
 	})
 }
 
-func TestWaitIndexRead(t *testing.T) {
+func Test_WaitIndexRead(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	t.Run("with some client interface error", func(t *testing.T) {
@@ -157,7 +157,7 @@ func TestWaitIndexRead(t *testing.T) {
 	})
 }
 
-func TestWaitIndexUpdate(t *testing.T) {
+func Test_WaitIndexUpdate(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	mockUpdateBody := v2.PatchIndexInfoJSONRequestBody{
@@ -188,7 +188,7 @@ func TestWaitIndexUpdate(t *testing.T) {
 	})
 }
 
-func TestWaitIndexConfirmUpdate(t *testing.T) {
+func Test_WaitVerifyIndexUpdate(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	mockUpdateBody := v2.PatchIndexInfoJSONRequestBody{
@@ -200,13 +200,13 @@ func TestWaitIndexConfirmUpdate(t *testing.T) {
 
 	t.Run("with some client interface error", func(t *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(nil, errors.New("some error")).Once()
-		err := idx.WaitIndexConfirmUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
+		err := idx.WaitVerifyIndexUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
 		assert.Error(t, err)
 	})
 
 	t.Run("with http 200 response", func(t *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(200), nil).Once()
-		err := idx.WaitIndexConfirmUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
+		err := idx.WaitVerifyIndexUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
 		assert.NoError(t, err)
 	})
 
@@ -232,7 +232,7 @@ func TestWaitIndexConfirmUpdate(t *testing.T) {
 	t.Run("with non updated response first", func(t *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(mockResp, nil).Once()
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(200), nil).Once()
-		err := idx.WaitIndexConfirmUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
+		err := idx.WaitVerifyIndexUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
 		assert.NoError(t, err)
 	})
 
@@ -240,14 +240,14 @@ func TestWaitIndexConfirmUpdate(t *testing.T) {
 		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 409, 501, 500, 503} {
 			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
 				client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(genIndexResp(unexpectedStatusCode), nil).Once()
-				err := idx.WaitIndexConfirmUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
+				err := idx.WaitVerifyIndexUpdate(context.TODO(), client, v2.Stack(mockStack), mockUpdateBody, mockIndexName)
 				assert.Error(t, err)
 			})
 		}
 	})
 }
 
-func TestWaitIndexDelete(t *testing.T) {
+func Test_WaitIndexDelete(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	t.Run("with some client interface error", func(t *testing.T) {

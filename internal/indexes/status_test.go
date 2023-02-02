@@ -74,7 +74,7 @@ func genIndexResp(code int) *http.Response {
 	return recorder.Result()
 }
 
-func TestValidateIndexUpdateComplete(t *testing.T) {
+func Test_VerifyIndexUpdate(t *testing.T) {
 	assert := assert.New(t)
 
 	altMockBucketPath := "s3://some_alt_bucket_path"
@@ -84,6 +84,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 		patchRequest   *v2.PatchIndexInfoJSONRequestBody
 		indexResponse  *v2.IndexResponse
 	}{
+		// Test Case 0: Expected true for no fields to update
 		{
 			true,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -103,6 +104,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 1: Tests complete update for single field update
 		{
 			true,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -122,6 +124,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 2: Tests complete update for all fields updated except searchableDays
 		{
 			true,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -141,6 +144,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 3: Tests complete update for all fields updated except SplunkArchivalRetentionDays
 		{
 			true,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -160,6 +164,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 4: Tests incomplete update (nil selfstorage bucket path)
 		{
 			false,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -179,6 +184,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 5: Tests incomplete update (MaxDataSizeMB not updated)
 		{
 			false,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -198,6 +204,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 6: Tests incomplete update (searchableDays not updated)
 		{
 			false,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -217,6 +224,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 7: Tests incomplete update (SelfStorageBucketPath not updated)
 		{
 			false,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -236,6 +244,7 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 				TotalRawSizeMB:              nil,
 			},
 		},
+		// Test Case 7: Tests incomplete update (SplunkArchivalRetentionDays not updated)
 		{
 			false,
 			&v2.PatchIndexInfoJSONRequestBody{
@@ -259,13 +268,13 @@ func TestValidateIndexUpdateComplete(t *testing.T) {
 	for i, test := range cases {
 		test := test // Capture
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			result := idx.ValidateIndexUpdateComplete(*test.patchRequest, *test.indexResponse)
+			result := idx.VerifyIndexUpdate(*test.patchRequest, *test.indexResponse)
 			assert.Equal(result, test.expectedResult)
 		})
 	}
 }
 
-func TestProcessResponse(t *testing.T) {
+func Test_ProcessResponse(t *testing.T) {
 	assert := assert.New(t)
 
 	/* test nil resp, bad req status text, and error for bad request */
@@ -311,7 +320,7 @@ func TestProcessResponse(t *testing.T) {
 	})
 }
 
-func TestIsStatusCodeRetryable(t *testing.T) {
+func Test_IsStatusCodeRetryable(t *testing.T) {
 	assert := assert.New(t)
 
 	/* test general retryable error status code returns true */

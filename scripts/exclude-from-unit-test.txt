@@ -1,2 +1,1 @@
-github.com/splunk/terraform-provider-scp/internal/helpers/status.go
 github.com/splunk/terraform-provider-scp/internal/indexes/index_resource.go

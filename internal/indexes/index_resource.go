@@ -189,7 +189,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	//Poll until fields have been confirmed updated
-	err = WaitIndexConfirmUpdate(ctx, acsClient, stack, patchRequest, indexName)
+	err = WaitVerifyIndexUpdate(ctx, acsClient, stack, patchRequest, indexName)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be updated: %s", indexName, err))
 	}
