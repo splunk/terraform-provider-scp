@@ -94,15 +94,3 @@ jobs:
       run: |
         go mod download
         
-    - name: TF acceptance tests
-      timeout-minutes: 10
-      env:
-        TF_ACC: "1"
-
-        # Set whatever additional acceptance test env vars here. You can
-        # optionally use data from your repository secrets using the
-        # following syntax:
-        # SOME_VAR: ${{ secrets.SOME_VAR }}
-
-      run: |
-        go test -v -cover ./internal/provider/
