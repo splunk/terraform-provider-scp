@@ -75,7 +75,7 @@ User must then run the following command to bring the index into terraform state
 ```terraform import scp_indexes.index-1 index-1```
 
 Note: Terraform import does NOT write the resource configuration in the `resource.tf` configuration file, only brings it 
-into terraform state (`.tfstate`). `.tfstate ` contains Terraform's understanding of the infrastructure/resources that are managed 
+into terraform state (`.tfstate`). `.tfstate ` contains Terraform's understanding of the infrastructure/resources that are managed
 by terraform, not necessarily the actual infrastructure. 
                 
 ### Remove from State 
