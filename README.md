@@ -50,7 +50,7 @@ Refer to the `/docs` directory for documentation on provider and resource usage,
 
 Currently, we are not accepting contributions, however, please use the
 - Github issue tracker to submit bugs
-- [Splunk Ideas](https://ideas.splunk.com/) for your suggestions/feature requests 
+- [Splunk Ideas](https://ideas.splunk.com/) for your suggestions/feature requests. Please file under Enterprise Cloud.  
 - [Splunk Answers](https://community.splunk.com/t5/Community/ct-p/en-us) for questions.
 
 ## Notes and Troubleshooting 
