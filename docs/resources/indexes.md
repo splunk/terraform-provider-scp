@@ -40,7 +40,7 @@ resource "scp_indexes" "index-3" {
 -  `datatype` (String) Valid values: (event | metric). Specifies the type of index. Defaults to event. Can not be updated after creation, if changed in config file terraform will propose a replacement (delete current index and recreate with new datatype). Use the lifecycle `prevent_destroy` meta-argument to prevent deletion if this field is changed. 
 -  `max_data_size_mb` (Number) The maximum size in MB for a hot DB to reach before a roll to warm is triggered. Defaults to 0 (unlimited)
 -  `searchable_days` (Number) Number of days after which indexed data rolls to frozen. Defaults to 90 days
--  `self_storage_bucket_path` (String) To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format: `s3://selfStorageBucket/selfStorageBucketFolder`, where SelfStorageBucketFolder is optional, as you can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location for your deployment. Can not be set with splunk_archival_retention_days
+-  `self_storage_bucket_path` (String) To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format: `s3://selfStorageBucket/selfStorageBucketFolder`, where SelfStorageBucketFolder is optional, as you can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location for your deployment. Can not be set with splunk_archival_retention_days. 
 -  `splunk_archival_retention_days` (Number) To create an index with DDAA enabled, you must specify the `splunk_archival_retention_days` value which must be positive and greater than or equal to the `searchable_days` value. Can not be set with `self_storage_bucket_path`
 
 ### Read-Only
@@ -88,10 +88,9 @@ User must then run the following command to bring the index into terraform state
 
 ```terraform import scp_indexes.index-1 index-1```
 
-Note: Terraform import does NOT write the resource configuration in the `resource.tf` configuration file, only brings it 
-into terraform state (`.tfstate`). `.tfstate ` contains Terraform's understanding of the infrastructure/resources that are managed
-by terraform, not necessarily the actual infrastructure. 
-                
+Note: Terraform import does NOT write the resource configuration in the `resource.tf` configuration file, only brings it
+into terraform state (`.tfstate`). `.tfstate ` contains Terraform's understanding of the infrastructure/resources that are managed. 
+
 ### Remove from State 
 If an index is deleted outside terraform, the provider should gracefully handle this and recreate it as long as it is still in the configuration file. 
 If you wish to remove an index from terraform state entirely, you may use the following command: 
