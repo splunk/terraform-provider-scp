@@ -9,46 +9,161 @@ import (
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
 	"net/http"
+	"regexp"
 	"testing"
 )
 
-const newIndex = `
-resource "scp_indexes" "tf-test-index1" {
-    name = "tf-test-index1"
+func resourcePrefix(indexName string) string {
+	return fmt.Sprint("scp_indexes.", indexName)
 }
-`
 
-const updateIndex = `
-resource "scp_indexes" "tf-test-index1" {
-	name = "tf-test-index1"
-	searchable_days = 100
-}
-`
+func TestAcc_SplunkCloudIndex_CreateUpdate(t *testing.T) {
+	// Test creating an Index resource and then a new resource with a separate name
+	indexCreateResource := resource.UniqueId()
+	indexUpdateResource := fmt.Sprintf("%s-%s", indexCreateResource, "new")
 
-func TestAcc_SplunkCloudIndex(t *testing.T) {
-	resourceName := "scp_indexes.tf-test-index1"
+	nameResourceTest := []resource.TestStep{
+		// Create default index resource
+		{
+			Config: testAccInstanceConfig_Basic(indexCreateResource),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(indexCreateResource), "name", indexCreateResource),
+		},
+		{
+			Config: testAccInstanceConfig_Basic(indexUpdateResource),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(indexUpdateResource), "name", indexUpdateResource),
+		},
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAcc_CheckIndexDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: newIndex,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "searchable_days", "90"),
-				),
-			},
-			{
-				Config: updateIndex,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "searchable_days", "100"),
-				),
-			},
-		},
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps:             nameResourceTest,
 	})
 }
 
-func testAcc_CheckIndexDestroy(s *terraform.State) error {
+func TestAcc_SplunkCloudIndex_SearchableDays(t *testing.T) {
+	// Test creating an Index resource and then updating searchable_days field
+	searchableFieldResource := resource.UniqueId()
+
+	searchableFieldTest := []resource.TestStep{
+		// Create default index resource
+		{
+			Config: testAccInstanceConfig_Basic(searchableFieldResource),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(searchableFieldResource), "name", searchableFieldResource),
+		},
+		// Update default index with searchable_days field
+		{
+			Config: testAccInstanceConfig_AllFields(searchableFieldResource, "90", "0", "0", ""),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(searchableFieldResource), "searchable_days", "90"),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps:             searchableFieldTest,
+	})
+}
+
+func TestAcc_SplunkCloudIndex_DatasizeField(t *testing.T) {
+	// Test creating an Index resource and then updating max_data_size_mb field
+	datasizeFieldResource := resource.UniqueId()
+
+	datasizeFieldTest := []resource.TestStep{
+		// Create default index resource
+		{
+			Config: testAccInstanceConfig_Basic(datasizeFieldResource),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(datasizeFieldResource), "name", datasizeFieldResource),
+		},
+		// Update default index with max_data_size_mb field
+		{
+			Config: testAccInstanceConfig_AllFields(datasizeFieldResource, "90", "20", "0", ""),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(datasizeFieldResource), "max_data_size_mb", "20"),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps:             datasizeFieldTest,
+	})
+}
+
+func TestAcc_SplunkCloudIndex_ArchivalField(t *testing.T) {
+	// Test creating an Index resource and then updating splunk_archival_retention_days field
+	archivalFieldResource := resource.UniqueId()
+	regex, err := regexp.Compile("splunkArchivalRetentionDays must be greater than or equal to searchableDays")
+	if err != nil {
+		t.Error()
+	}
+
+	archivalFieldTest := []resource.TestStep{
+		// Create default index resource
+		{
+			Config: testAccInstanceConfig_Basic(archivalFieldResource),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(archivalFieldResource), "name", archivalFieldResource),
+		},
+		// Update default index with splunk_archival_retention_days field
+		{
+			Config: testAccInstanceConfig_AllFields(archivalFieldResource, "", "", "120", ""),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(archivalFieldResource), "splunk_archival_retention_days", "120"),
+		},
+		// Try to update retention days to be less than searchable days expecting failure
+		{
+			Config:      testAccInstanceConfig_AllFields(archivalFieldResource, "", "", "30", ""),
+			ExpectError: regex,
+			Check:       resource.TestCheckResourceAttr(resourcePrefix(archivalFieldResource), "splunk_archival_retention_days", "120"),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps:             archivalFieldTest,
+	})
+}
+
+// NOTE: The following case can't be automated because it may enter a poll loop due to resource replacement
+// Options: remove replacement logic and instead enforce error or skip adding automated tests and inform user of limitation
+// Test creating an Index resource and then updating datatype field
+//datatypeFieldResource := resource.UniqueId()
+//datatypeFieldTest := []resource.TestStep{
+//	{
+//		Config: testAccInstanceConfig_Basic(datatypeFieldResource),
+//		Check:  resource.TestCheckResourceAttr(getResourceKey(datatypeFieldResource), "name", datatypeFieldResource),
+//	},
+//	{
+//		Config: testAccInstanceConfig_AllFields(datatypeFieldResource, "", "", "", "metric"),
+//		Check:  resource.TestCheckResourceAttr(getResourceKey(datatypeFieldResource), "datatype", "metric"),
+//	},
+//}
+//runTerraformTest(t, datatypeFieldTest)
+
+func testAccInstanceConfig_Basic(name string) string {
+	return fmt.Sprintf("resource \"scp_indexes\" %[1]q {name = %[1]q}", name)
+}
+
+func testAccInstanceConfig_AllFields(name, searchableDays, maxDataSizeMb, retentionDays, datatype string) string {
+	if searchableDays == "" {
+		searchableDays = "90"
+	}
+	if maxDataSizeMb == "" {
+		maxDataSizeMb = "0"
+	}
+	if retentionDays == "" {
+		retentionDays = "100"
+	}
+	if datatype == "" {
+		datatype = "event"
+	}
+	return fmt.Sprintf("resource \"scp_indexes\" %[1]q {\nname = %[1]q \nsearchable_days = %[2]q \nmax_data_size_mb = %[3]q \nsplunk_archival_retention_days = %[4]q \ndatatype = %[5]q \n}", name, searchableDays, maxDataSizeMb, retentionDays, datatype)
+}
+
+func testAccCheckIndexDestroy(s *terraform.State) error {
 	providerNew := acctest.Provider
 	diags := providerNew.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 	if diags != nil {
