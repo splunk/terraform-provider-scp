@@ -4,6 +4,7 @@ stages:
 - build
 - analysis
 - acceptance-test
+- promote
 
 include:
   - project: 'ci-cd/templates'
@@ -77,3 +78,13 @@ test-acc:
       when: never
     - if: $CI_PIPELINE_SOURCE == 'push'
       when: always
+
+
+push-to-staging:
+  stage: promote
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'develop'
+      when: always
+    - when: never
+  script:
+    - echo "This script runs on commit to develop branch"
