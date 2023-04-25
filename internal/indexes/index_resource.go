@@ -3,35 +3,22 @@ package indexes
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
-	"net/http"
-	"strings"
 )
 
-func ResourceIndex() *schema.Resource {
-	return &schema.Resource{
-		// This description is used by the documentation generator and the language server.
-		Description: "Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/" +
-			"ManageIndexes for more latest, detailed information on attribute requirements and the ACS Indexes API. ",
+const (
+	ResourceKey = "scp_indexes"
+)
 
-		CreateContext: resourceIndexCreate,
-		ReadContext:   resourceIndexRead,
-		UpdateContext: resourceIndexUpdate,
-		DeleteContext: resourceIndexDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: IndexSchema(),
-	}
-}
-
-func IndexSchema() map[string]*schema.Schema {
+func indexResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
@@ -72,6 +59,24 @@ func IndexSchema() map[string]*schema.Schema {
 			ConflictsWith: []string{"self_storage_bucket_path"},
 			Description:   "To create an index with DDAA enabled, you must specify the splunkArchivalRetentionDays value which must be The value of splunkArchivalRetentionDays must be positive and greater than or equal to the SearchableDays value. Can not be set with self_storage_bucket_path",
 		},
+	}
+}
+
+func ResourceIndex() *schema.Resource {
+	return &schema.Resource{
+		// This description is used by the documentation generator and the language server.
+		Description: "Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageIndexes " +
+			"for more latest, detailed information on attribute requirements and the ACS Indexes API.",
+
+		CreateContext: resourceIndexCreate,
+		ReadContext:   resourceIndexRead,
+		UpdateContext: resourceIndexUpdate,
+		DeleteContext: resourceIndexDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: indexResourceSchema(),
 	}
 }
 
