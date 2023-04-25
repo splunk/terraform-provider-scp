@@ -3,10 +3,11 @@ package provider
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/splunk/terraform-provider-scp/acs/v2"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/indexes"
 )
@@ -30,8 +31,9 @@ func init() {
 func New(version string) func() *schema.Provider {
 	return func() *schema.Provider {
 		provider := &schema.Provider{
-			Schema:       providerSchema(),
-			ResourcesMap: providerResources(),
+			Schema:         providerSchema(),
+			ResourcesMap:   providerResources(),
+			DataSourcesMap: providerDataSources(),
 		}
 
 		provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
@@ -45,7 +47,14 @@ func New(version string) func() *schema.Provider {
 // Returns a map of splunk resources for configuration
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		"scp_indexes": indexes.ResourceIndex(),
+		indexes.ResourceKey: indexes.ResourceIndex(),
+	}
+}
+
+// Returns a map of Splunk data sources for configuration
+func providerDataSources() map[string]*schema.Resource {
+	return map[string]*schema.Resource{
+		indexes.ResourceKey: indexes.DataSourceIndex(),
 	}
 }
 

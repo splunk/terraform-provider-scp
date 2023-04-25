@@ -35,7 +35,7 @@ fmt:
 	@terraform fmt -recursive
 
 build:
-	go build -o terraform-provider-scp .
+	go build -o bin/terraform-provider-scp .
 
 ###################################
 #	Testing commands
