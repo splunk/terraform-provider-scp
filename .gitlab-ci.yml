@@ -1,10 +1,10 @@
 image: docker.repo.splunkdev.net/ci-cd/ci-container/golang-1.18:1.7.0
 
 stages:
-- build
-- analysis
-- acceptance-test
-- promote
+  - build
+  - analysis
+  - acceptance-test
+  - promote
 
 include:
   - project: 'ci-cd/templates'
@@ -82,9 +82,14 @@ test-acc:
 
 push-to-staging:
   stage: promote
+  variables:
+    GITLAB_TOKEN_USERNAME: ${GITLAB_TOKEN_USERNAME}
+    GITLAB_TOKEN: ${GITLAB_TOKEN}
   rules:
     - if: $CI_COMMIT_BRANCH == 'develop'
       when: always
     - when: never
+  before_script:
+    - eval $(ssh-agent -s)
   script:
-    - echo "This script runs on commit to develop branch"
+    - make push-to-staging

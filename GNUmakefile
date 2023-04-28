@@ -85,3 +85,9 @@ endif
 
 ## Run acceptance tests
 #.PHONY: testacc
+
+###################################
+#	CICD
+###################################
+push-to-staging:
+	./scripts/push-to-staging.sh
