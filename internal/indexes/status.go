@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/internal/status"
 )
 
 var GeneralRetryableStatusCodes = map[int]string{
@@ -158,7 +160,7 @@ func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStat
 	statusCode := resp.StatusCode
 	statusText := http.StatusText(statusCode)
 
-	if !IsStatusCodeExpected(statusCode, targetStateCodes, pendingStatusCodes) {
+	if !status.IsStatusCodeExpected(statusCode, targetStateCodes, pendingStatusCodes) {
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		return nil, statusText, &resource.UnexpectedStateError{
 			State:         statusText,
@@ -166,24 +168,4 @@ func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStat
 			LastError:     errors.New(string(bodyBytes))}
 	}
 	return resp, statusText, nil
-}
-
-// IsStatusCodeExpected checks if the given status code exists in either target or pending status codes
-func IsStatusCodeExpected(statusCode int, targetStatusCodes []string, pendingStatusCodes []string) bool {
-	isRetryableError := false
-	isTargetStatus := false
-
-	for _, code := range targetStatusCodes {
-		if code == http.StatusText(statusCode) {
-			isTargetStatus = true
-		}
-	}
-
-	for _, code := range pendingStatusCodes {
-		if code == http.StatusText(statusCode) {
-			isRetryableError = true
-		}
-	}
-
-	return isTargetStatus || isRetryableError
 }

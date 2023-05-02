@@ -10,6 +10,7 @@ import (
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/indexes"
+	"github.com/splunk/terraform-provider-scp/internal/ipallowlists"
 )
 
 func init() {
@@ -47,7 +48,8 @@ func New(version string) func() *schema.Provider {
 // Returns a map of splunk resources for configuration
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		indexes.ResourceKey: indexes.ResourceIndex(),
+		indexes.ResourceKey:      indexes.ResourceIndex(),
+		ipallowlists.ResourceKey: ipallowlists.ResourceIPAllowlist(),
 	}
 }
 

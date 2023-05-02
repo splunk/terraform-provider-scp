@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
-	idx "github.com/splunk/terraform-provider-scp/internal/indexes"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	idx "github.com/splunk/terraform-provider-scp/internal/indexes"
+	"github.com/stretchr/testify/assert"
 )
 
 var acceptedResp = &http.Response{
@@ -317,37 +318,5 @@ func Test_ProcessResponse(t *testing.T) {
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(notFoundResp.StatusCode), statusText)
 		assert.NoError(err)
-	})
-}
-
-func Test_IsStatusCodeRetryable(t *testing.T) {
-	assert := assert.New(t)
-
-	/* test general retryable error status code returns true */
-	t.Run("verify returns true on general retryable codes", func(t *testing.T) {
-		for generalCode, _ := range idx.GeneralRetryableStatusCodes {
-			t.Run(fmt.Sprintf("with general code %d", generalCode), func(t *testing.T) {
-				assert.True(idx.IsStatusCodeExpected(generalCode, idx.TargetStatusResourceChange, idx.PendingStatusCRUD))
-
-			})
-		}
-	})
-
-	/* test target status codes input return true when present */
-	t.Run("verify returns true on target status resource change code", func(t *testing.T) {
-		assert.True(idx.IsStatusCodeExpected(acceptedResp.StatusCode, idx.TargetStatusResourceChange, idx.PendingStatusCRUD))
-	})
-
-	t.Run("verify returns true on target status resource exists code", func(t *testing.T) {
-		assert.True(idx.IsStatusCodeExpected(successRespOk.StatusCode, idx.TargetStatusResourceExists, idx.PendingStatusVerifyCreated))
-	})
-
-	t.Run("verify returns true on target status resource deleted code", func(t *testing.T) {
-		assert.True(idx.IsStatusCodeExpected(notFoundResp.StatusCode, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted))
-	})
-
-	/* test return false when status code absent in both */
-	t.Run("verify returns false on non target and non retryable code", func(t *testing.T) {
-		assert.False(idx.IsStatusCodeExpected(badReqResp.StatusCode, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted))
 	})
 }
