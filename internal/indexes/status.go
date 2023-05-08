@@ -24,7 +24,7 @@ func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack 
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}
 		defer resp.Body.Close()
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
 	}
 }
 
@@ -37,7 +37,7 @@ func IndexStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, targetStatus, pendingStatus)
+		return status.ProcessResponse(resp, targetStatus, pendingStatus)
 	}
 }
 
@@ -79,7 +79,7 @@ func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
 	}
 }
 
@@ -93,7 +93,7 @@ func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
 	}
 }
 
@@ -151,21 +151,4 @@ func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.I
 	}
 
 	return true
-}
-
-func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStatusCodes []string) (interface{}, string, error) {
-	if resp == nil {
-		return nil, "", &resource.UnexpectedStateError{LastError: errors.New("nil response")}
-	}
-	statusCode := resp.StatusCode
-	statusText := http.StatusText(statusCode)
-
-	if !status.IsStatusCodeExpected(statusCode, targetStateCodes, pendingStatusCodes) {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, statusText, &resource.UnexpectedStateError{
-			State:         statusText,
-			ExpectedState: targetStateCodes,
-			LastError:     errors.New(string(bodyBytes))}
-	}
-	return resp, statusText, nil
 }

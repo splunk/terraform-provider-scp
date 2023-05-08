@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/splunk/terraform-provider-scp/internal/hec"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -49,6 +50,7 @@ func New(version string) func() *schema.Provider {
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
 		indexes.ResourceKey:      indexes.ResourceIndex(),
+		hec.ResourceKey:          hec.ResourceHecToken(),
 		ipallowlists.ResourceKey: ipallowlists.ResourceIPAllowlist(),
 	}
 }

@@ -63,3 +63,49 @@ func Test_IsStatusCodeRetryable(t *testing.T) {
 		assert.False(status.IsStatusCodeExpected(badReqResp.StatusCode, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted))
 	})
 }
+
+func Test_ProcessResponse(t *testing.T) {
+	assert := assert.New(t)
+
+	/* test nil resp, bad req status text, and error for bad request */
+	t.Run("verify returns correct output on bad requests", func(t *testing.T) {
+		for _, targetCodes := range [][]string{idx.TargetStatusResourceChange, idx.TargetStatusResourceExists, idx.TargetStatusResourceDeleted} {
+			t.Run(fmt.Sprintf("with target codes %v", targetCodes), func(t *testing.T) {
+				resp, statusText, err := status.ProcessResponse(badReqResp, targetCodes, idx.PendingStatusCRUD)
+				assert.Nil(resp)
+				assert.Equal(http.StatusText(badReqResp.StatusCode), statusText)
+				assert.Error(err)
+			})
+		}
+	})
+
+	/* test nil resp returns error */
+	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
+		resp, statusText, err := status.ProcessResponse(nil, idx.TargetStatusResourceChange, idx.PendingStatusCRUD)
+		assert.Nil(resp)
+		assert.Error(err)
+		assert.Equal(statusText, "")
+	})
+
+	/* test non-nil resp, correct status text, and nil error for expected resp */
+	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
+		resp, statusText, err := status.ProcessResponse(acceptedResp, idx.TargetStatusResourceChange, idx.PendingStatusCRUD)
+		assert.NotNil(resp)
+		assert.Equal(http.StatusText(acceptedResp.StatusCode), statusText)
+		assert.NoError(err)
+	})
+
+	t.Run("verify returns correct output on success resource exists after create", func(t *testing.T) {
+		resp, statusText, err := status.ProcessResponse(successRespOk, idx.TargetStatusResourceExists, idx.PendingStatusVerifyCreated)
+		assert.NotNil(resp)
+		assert.Equal(http.StatusText(successRespOk.StatusCode), statusText)
+		assert.NoError(err)
+	})
+
+	t.Run("verify returns correct output on resource does not exist after delete", func(t *testing.T) {
+		resp, statusText, err := status.ProcessResponse(notFoundResp, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted)
+		assert.NotNil(resp)
+		assert.Equal(http.StatusText(notFoundResp.StatusCode), statusText)
+		assert.NoError(err)
+	})
+}
