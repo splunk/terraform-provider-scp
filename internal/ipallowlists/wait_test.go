@@ -90,3 +90,40 @@ func Test_WaitIPAllowlistRead(t *testing.T) {
 		}
 	})
 }
+
+func Test_WaitIPAllowlistDelete(t *testing.T) {
+	client := &mocks.ClientInterface{}
+
+	mockDeleteBody := v2.DeleteSubnetsJSONRequestBody{
+		Subnets: &mockSubnets,
+	}
+
+	t.Run("with some client interface error", func(t *testing.T) {
+		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(nil, errors.New("some error")).Once()
+		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		assert.Error(t, err)
+	})
+
+	t.Run("with http response 200", func(t *testing.T) {
+		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(successRespOk, nil).Once()
+		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with retryable response 429", func(t *testing.T) {
+		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(rateLimitResp, nil).Once()
+		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(successRespOk, nil).Once()
+		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with unexpected http responses", func(t *testing.T) {
+		for _, statusCode := range append(clientErrorCodes, serverErrorCodes...) {
+			t.Run(fmt.Sprintf("with unexpected status %v", statusCode), func(t *testing.T) {
+				client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(getIPAllowlistResponse(statusCode), nil).Once()
+				err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+				assert.Error(t, err)
+			})
+		}
+	})
+}

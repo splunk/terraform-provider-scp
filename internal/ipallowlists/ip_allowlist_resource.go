@@ -3,41 +3,37 @@ package ipallowlists
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/errors"
 )
-
-type ipAllowlistRequestBody struct {
-	feature string
-	subnets []string
-}
 
 const (
 	ResourceKey = "scp_ip_allowlists"
+
+	schemaKeyFeature = "feature"
+	schemaKeySubnets = "subnets"
 )
 
 func ipAllowlistResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"feature": {
+		schemaKeyFeature: {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "Feature is a specified component in your Splunk Cloud Platform. Eg: search-api, hec, etc. ",
 		},
-		"subnets": {
-			Type:     schema.TypeList,
+		schemaKeySubnets: {
+			Type:     schema.TypeSet,
 			Required: true,
-			ForceNew: false,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 			Description: "Subnets is a list of IP addresses that have access to the corresponding feature.",
+			MinItems:    1,
 		},
 	}
 }
@@ -66,23 +62,21 @@ func resourceIPAllowlistCreate(ctx context.Context, d *schema.ResourceData, m in
 	stack := acsProvider.Stack
 
 	// Retrieve data for each field and create request body
-	request := parseIPAllowlistRequest(d)
-
-	tflog.Info(ctx, fmt.Sprintf("%+v\n", request.subnets))
+	feature, _, newSubnetsSet := parseIPAllowlistRequest(d)
+	addSubnets := GetSubnetsFromSet(newSubnetsSet)
 
 	// Add new subnets
-	err := WaitIPAllowlistCreate(ctx, acsClient, stack, v2.Feature(request.feature), request.subnets)
+	err := WaitIPAllowlistCreate(ctx, acsClient, stack, v2.Feature(feature), addSubnets)
 	if err != nil {
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), "unknown access feature") {
-			tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", request.feature, err))
+		if errors.IsUnknownFeatureError(err) {
+			tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 		}
-		return diag.Errorf(fmt.Sprintf("Error submitting request for IP allowlist (%s) to be created: %s", request.feature, err))
+		return diag.Errorf(fmt.Sprintf("Error submitting request for IP allowlist (%s) to be created: %s", feature, err))
 	}
 
 	// Set ID of index resource to indicate index has been created
-	d.SetId(request.feature)
-
-	tflog.Info(ctx, fmt.Sprintf("Created IP Allowlist resource for feature: %s\n", request.feature))
+	d.SetId(feature)
+	tflog.Info(ctx, fmt.Sprintf("Created IP Allowlist resource for feature: %s\n", feature))
 
 	// Call readIndex to set attributes of index
 	return resourceIPAllowlistRead(ctx, d, m)
@@ -100,7 +94,7 @@ func resourceIPAllowlistRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	if err != nil {
 		// if feature not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), "unknown access feature") {
+		if errors.IsUnknownFeatureError(err) {
 			tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
@@ -109,11 +103,11 @@ func resourceIPAllowlistRead(ctx context.Context, d *schema.ResourceData, m inte
 		}
 	}
 
-	if err := d.Set("feature", d.Id()); err != nil {
+	if err := d.Set(schemaKeyFeature, d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("subnets", subnets); err != nil {
+	if err := d.Set(schemaKeySubnets, subnets); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -121,24 +115,86 @@ func resourceIPAllowlistRead(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func resourceIPAllowlistUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.FromErr(fmt.Errorf("method not implemented"))
+	// use the meta value to retrieve client and stack from the provider configure method
+	acsProvider := m.(client.ACSProvider)
+	acsClient := *acsProvider.Client
+	stack := acsProvider.Stack
+
+	// Determine the changes to the subnets for a feature
+	feature, oldSubnetsSet, newSubnetsSet := parseIPAllowlistRequest(d)
+	addSubnets := GetSubnetsFromSet(newSubnetsSet.Difference(oldSubnetsSet))
+	deleteSubnets := GetSubnetsFromSet(oldSubnetsSet.Difference(newSubnetsSet))
+
+	// do not allow feature name to be changed
+	if d.HasChange(schemaKeyFeature) {
+		return diag.Errorf("feature name cannot be updated. Create a new resource instead for a new IP allowlist feature")
+	}
+
+	if len(deleteSubnets) > 0 {
+		if err := WaitIPAllowlistDelete(ctx, acsClient, stack, v2.Feature(feature), deleteSubnets); err != nil {
+			// if feature not found set id of resource to empty string to remove from state
+			if errors.IsUnknownFeatureError(err) {
+				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
+				return nil //if we return an error here, the set id will not take effect and state will be preserved
+			} else {
+				return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
+			}
+		}
+	}
+
+	if len(addSubnets) > 0 {
+		if err := WaitIPAllowlistCreate(ctx, acsClient, stack, v2.Feature(feature), addSubnets); err != nil {
+			return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
+		}
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Updated IP Allowlist resource for feature: %s\n", feature))
+
+	return resourceIPAllowlistRead(ctx, d, m)
 }
 
 func resourceIPAllowlistDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.FromErr(fmt.Errorf("method not implemented"))
+	// use the meta value to retrieve client and stack from the provider configure method
+	acsProvider := m.(client.ACSProvider)
+	acsClient := *acsProvider.Client
+	stack := acsProvider.Stack
+
+	// Determine the changes to the subnets for a feature
+	feature, oldSubnetsSet, _ := parseIPAllowlistRequest(d)
+	deleteSubnets := GetSubnetsFromSet(oldSubnetsSet)
+
+	if len(deleteSubnets) > 0 {
+		if err := WaitIPAllowlistDelete(ctx, acsClient, stack, v2.Feature(feature), deleteSubnets); err != nil {
+			// if feature not found set id of resource to empty string to remove from state
+			if errors.IsUnknownFeatureError(err) {
+				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
+				return nil //if we return an error here, the set id will not take effect and state will be preserved
+			} else {
+				return diag.Errorf(fmt.Sprintf("Error deleting ip allowlist (%s): %s", feature, err))
+			}
+		}
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Deleted IP Allowlist resource for feature: %s\n", feature))
+	return nil
 }
 
-func parseIPAllowlistRequest(d *schema.ResourceData) *ipAllowlistRequestBody {
-	request := ipAllowlistRequestBody{}
+func parseIPAllowlistRequest(d *schema.ResourceData) (feature string, oldSubnets *schema.Set, newSubnets *schema.Set) {
+	feature = d.Get(schemaKeyFeature).(string)
 
-	request.feature = d.Get("feature").(string)
+	rawOriginalSubnets, rawNewSubnets := d.GetChange(schemaKeySubnets)
+	oldSubnets = rawOriginalSubnets.(*schema.Set)
+	newSubnets = rawNewSubnets.(*schema.Set)
+	return feature, oldSubnets, newSubnets
+}
 
-	rawSubnets := d.Get("subnets").([]interface{})
-	subnets := make([]string, len(rawSubnets))
-	for i, v := range rawSubnets {
-		subnets[i] = v.(string)
+func GetSubnetsFromSet(subnets *schema.Set) []string {
+	result := make([]string, 0)
+	if subnets == nil {
+		return result
 	}
-	request.subnets = subnets
-
-	return &request
+	for _, subnet := range subnets.List() {
+		result = append(result, subnet.(string))
+	}
+	return result
 }
