@@ -58,6 +58,20 @@ func IPAllowlistStatusRead(ctx context.Context, acsClient v2.ClientInterface, st
 	}
 }
 
+func IPAllowlistStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, feature v2.Feature, subnets []string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		deleteBody := v2.DeleteSubnetsJSONRequestBody{
+			Subnets: &subnets,
+		}
+		resp, err := acsClient.DeleteSubnets(ctx, stack, feature, deleteBody)
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+	}
+}
+
 func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStatusCodes []string) (interface{}, string, error) {
 	if resp == nil {
 		return nil, "", &resource.UnexpectedStateError{LastError: errors.New("nil response")}

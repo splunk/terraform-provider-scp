@@ -74,3 +74,28 @@ func WaitIPAllowlistRead(ctx context.Context, acsClient v2.ClientInterface, stac
 
 	return subnets, nil
 }
+
+// WaitIPAllowlistDelete Handles retry logic for POST requests for delete lifecycle function
+func WaitIPAllowlistDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, feature v2.Feature, oldSubnets []string) error {
+	waitIPAllowlistDeleteAccepted := &resource.StateChangeConf{
+		Target:       TargetStatusResourceChange,
+		Refresh:      IPAllowlistStatusDelete(ctx, acsClient, stack, feature, oldSubnets),
+		Timeout:      Timeout,
+		Delay:        CrudDelayTime,
+		PollInterval: PollInterval,
+	}
+
+	rawResp, err := waitIPAllowlistDeleteAccepted.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error submitting request for ip allowlist (%s) to be deleted: %s", feature, err))
+		return err
+	}
+
+	resp := rawResp.(*http.Response)
+
+	// Log to user that request submitted and creation in progress
+	tflog.Info(ctx, fmt.Sprintf("Delete response status code for ip allowlist (%s): %d\n", feature, resp.StatusCode))
+	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for IP allowlist (%s): %s\n", feature, resp.Header.Get("X-REQUEST-ID")))
+
+	return nil
+}
