@@ -6,6 +6,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
+const (
+	ResourceExistsErr = "already exists, use a different name to create hec token or use terraform import to bring current hec under terraform management"
+	AcsErrSuffix      = "Please refer https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSerrormessages for general troubleshooting tips."
+)
+
 func IsUnknownFeatureError(err error) bool {
 	switch v := err.(type) {
 	case *resource.UnexpectedStateError:

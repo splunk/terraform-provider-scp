@@ -4,39 +4,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
-	"time"
-)
-
-const (
-	CrudDelayTime = 1 * time.Second
-	PollDelayTime = 3 * time.Second
-	Timeout       = 20 * time.Minute
-	PollInterval  = 1 * time.Minute
-)
-
-var (
-	PendingStatusCRUD          = []string{http.StatusText(429), http.StatusText(424)}
-	PendingStatusVerifyCreated = []string{http.StatusText(404), http.StatusText(429)}
-	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(429)}
-
-	TargetStatusResourceChange  = []string{http.StatusText(202)}
-	TargetStatusResourceExists  = []string{http.StatusText(200)}
-	TargetStatusResourceDeleted = []string{http.StatusText(404)}
 )
 
 // WaitHecCreate Handles retry logic for POST requests for create lifecycle function
 func WaitHecCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createHecRequest v2.CreateHECJSONRequestBody) error {
-	waitHecCreateAccepted := &resource.StateChangeConf{
-		Pending:      PendingStatusCRUD,
-		Target:       TargetStatusResourceChange,
-		Refresh:      HecStatusCreate(ctx, acsClient, stack, createHecRequest),
-		Timeout:      Timeout,
-		Delay:        CrudDelayTime,
-		PollInterval: PollInterval,
-	}
+	waitHecCreateAccepted := wait.GenerateWriteStateChangeConf(HecStatusCreate(ctx, acsClient, stack, createHecRequest))
 
 	rawResp, err := waitHecCreateAccepted.WaitForStateContext(ctx)
 	if err != nil {
@@ -55,29 +31,15 @@ func WaitHecCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 
 // WaitHecPoll Handles retry logic for polling after POST and DELETE requests for create/delete lifecycle functions
 func WaitHecPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string, targetStatus []string, pendingStatus []string) error {
-	waitHecCreated := &resource.StateChangeConf{
-		Pending:      pendingStatus,
-		Target:       targetStatus,
-		Refresh:      HecStatusPoll(ctx, acsClient, stack, hecName, targetStatus, pendingStatus),
-		Timeout:      Timeout,
-		Delay:        PollDelayTime,
-		PollInterval: PollInterval,
-	}
+	waitHecState := wait.GenerateReadStateChangeConf(pendingStatus, targetStatus, HecStatusPoll(ctx, acsClient, stack, hecName, targetStatus, pendingStatus))
 
-	_, err := waitHecCreated.WaitForStateContext(ctx)
+	_, err := waitHecState.WaitForStateContext(ctx)
 	return err
 }
 
 // WaitHecRead Handles retry logic for GET requests for the read lifecycle function
 func WaitHecRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) (*v2.HecSpec, error) {
-	waitHecRead := &resource.StateChangeConf{
-		Pending:      PendingStatusCRUD,
-		Target:       TargetStatusResourceExists,
-		Refresh:      HecStatusRead(ctx, acsClient, stack, hecName),
-		Timeout:      Timeout,
-		Delay:        CrudDelayTime,
-		PollInterval: PollInterval,
-	}
+	waitHecRead := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, wait.TargetStatusResourceExists, HecStatusRead(ctx, acsClient, stack, hecName))
 
 	output, err := waitHecRead.WaitForStateContext(ctx)
 
@@ -88,4 +50,55 @@ func WaitHecRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 	hec := output.(*v2.HecSpec)
 
 	return hec, nil
+}
+
+// WaitHecUpdate Handles retry logic for PATCH requests for the update lifecycle function
+func WaitHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) error {
+	waitHecUpdateAccepted := wait.GenerateWriteStateChangeConf(HecStatusUpdate(ctx, acsClient, stack, patchRequest, hecName))
+
+	rawResp, err := waitHecUpdateAccepted.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error submitting request for hec (%s) to be updated: %s", hecName, err))
+		return err
+	}
+
+	resp := rawResp.(*http.Response)
+
+	//Log to user that request submitted and update in progress
+	tflog.Info(ctx, fmt.Sprintf("Update response status code for hec (%s): %d\n", hecName, resp.StatusCode))
+	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for hec (%s): %s\n", hecName, resp.Header.Get("X-REQUEST-ID")))
+
+	return nil
+}
+
+// WaitVerifyHecUpdate Handles retry logic for GET request for the update lifecycle function to verify that the fields in the
+// Hec response match those of the patch request
+func WaitVerifyHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) error {
+	waitHecUpdateComplete := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, []string{status.UpdatedStatus}, HecStatusVerifyUpdate(ctx, acsClient, stack, patchRequest, hecName))
+
+	_, err := waitHecUpdateComplete.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error confirming hec (%s) has been updated: %s", hecName, err))
+		return err
+	}
+
+	return nil
+}
+
+// WaitHecDelete Handles retry logic for DELETE requests for the delete lifecycle function
+func WaitHecDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) error {
+	WaitHecDeleteAccepted := wait.GenerateWriteStateChangeConf(HecStatusDelete(ctx, acsClient, stack, hecName))
+
+	rawResp, err := WaitHecDeleteAccepted.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error deleting hec (%s): %s", hecName, err))
+		return err
+	}
+
+	resp := rawResp.(*http.Response)
+
+	//Log to user that request submitted and deletion in progress
+	tflog.Info(ctx, fmt.Sprintf("Delete response status code for hec (%s): %d\n", hecName, resp.StatusCode))
+	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for hec (%s): %s\n", hecName, resp.Header.Get("X-REQUEST-ID")))
+	return nil
 }

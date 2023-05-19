@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
 
@@ -24,7 +25,7 @@ func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack 
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}
 		defer resp.Body.Close()
-		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -54,7 +55,7 @@ func IndexStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2
 		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != http.StatusOK {
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{
 				State:         http.StatusText(resp.StatusCode),
-				ExpectedState: TargetStatusResourceExists,
+				ExpectedState: wait.TargetStatusResourceExists,
 				LastError:     errors.New(string(bodyBytes)),
 			}
 		}
@@ -79,7 +80,7 @@ func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -93,7 +94,7 @@ func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -120,13 +121,13 @@ func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, 
 			updateComplete = VerifyIndexUpdate(patchRequest, index)
 		}
 
-		var status string
+		var statusText string
 		if updateComplete {
-			status = "UPDATED"
-			return &index, status, nil
+			statusText = status.UpdatedStatus
+			return &index, statusText, nil
 		} else {
-			status = http.StatusText(resp.StatusCode)
-			return nil, status, nil
+			statusText = http.StatusText(resp.StatusCode)
+			return nil, statusText, nil
 		}
 	}
 }

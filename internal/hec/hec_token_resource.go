@@ -9,6 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/errors"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
 	"strings"
 )
@@ -23,7 +26,7 @@ const (
 	DefaultSourcetypeKey = "default_sourcetype"
 	DisabledKey          = "disabled"
 	TokenKey             = "token"
-	UserAckKey           = "use_ack"
+	UseAckKey            = "use_ack"
 )
 
 func hecTokenResourceSchema() map[string]*schema.Schema {
@@ -79,7 +82,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Token value for sending data to collector/event endpoint",
 		},
-		UserAckKey: {
+		UseAckKey: {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Computed:    true,
@@ -133,14 +136,14 @@ func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m inter
 	err := WaitHecCreate(ctx, acsClient, stack, createHecRequest)
 	if err != nil {
 		if stateErr := err.(*resource.UnexpectedStateError); stateErr.State == http.StatusText(http.StatusConflict) {
-			return diag.Errorf(fmt.Sprintf("Hec (%s) already exists, use a different name to create hec token or use terraform import to bring current hec under terraform management", hecRequest.Name))
+			return diag.Errorf(fmt.Sprintf("Hec (%s) %s", hecRequest.Name, errors.ResourceExistsErr))
 		}
 
 		return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be created: %s", hecRequest.Name, err))
 	}
 
 	// Poll Hec until GET returns 200 to confirm hec creation
-	err = WaitHecPoll(ctx, acsClient, stack, hecRequest.Name, TargetStatusResourceExists, PendingStatusVerifyCreated)
+	err = WaitHecPoll(ctx, acsClient, stack, hecRequest.Name, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be created: %s", hecRequest.Name, err))
 	}
@@ -167,7 +170,7 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 
 	if err != nil {
 		// if hec not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), "404-hec-not-found") {
+		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.HecNotFound) {
 			tflog.Info(ctx, fmt.Sprintf("Removing HEC token from state. Not Found error while reading HEC (%s): %s.", hecName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
@@ -208,7 +211,7 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set(UserAckKey, hec.UseAck); err != nil {
+	if err := d.Set(UseAckKey, hec.UseAck); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -216,13 +219,60 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 }
 
 func resourceHecTokenUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.FromErr(fmt.Errorf("method not implemented"))
+	// use the meta value to retrieve client from the provider configure method
+	acsProvider := m.(client.ACSProvider)
+	acsClient := *acsProvider.Client
+	stack := acsProvider.Stack
+
+	hecName := d.Id()
+
+	// Retrieve data for each field and create request body
+	hecRequest := parseHecRequest(d)
+
+	if d.HasChange(TokenKey) {
+		return diag.Errorf("token value can not be updated once HEC token has been created, create new resource instead")
+	}
+	patchRequest := setPatchRequestBody(d, hecRequest)
+
+	err := WaitHecUpdate(ctx, acsClient, stack, *patchRequest, hecName)
+	if err != nil {
+		return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be updated: %s", hecName, err))
+	}
+
+	//Poll until fields have been confirmed updated
+	err = WaitVerifyHecUpdate(ctx, acsClient, stack, *patchRequest, hecName)
+	if err != nil {
+		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be updated: %s", hecName, err))
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("updated hec resource: %s\n", hecName))
+	return resourceHecTokenRead(ctx, d, m)
 }
 
 func resourceHecTokenDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return diag.FromErr(fmt.Errorf("method not implemented"))
+	// use the meta value to retrieve client from the provider configure method
+	acsProvider := m.(client.ACSProvider)
+	acsClient := *acsProvider.Client
+	stack := acsProvider.Stack
+
+	hecName := d.Id()
+
+	err := WaitHecDelete(ctx, acsClient, stack, hecName)
+	if err != nil {
+		return diag.Errorf(fmt.Sprintf("Error deleting hec (%s): %s", hecName, err))
+	}
+
+	//Poll hec until GET returns 404 Not found - hec has been deleted
+	err = WaitHecPoll(ctx, acsClient, stack, hecName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
+	if err != nil {
+		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be deleted: %s", hecName, err))
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("deleted hec resource: %s\n", hecName))
+	return nil
 }
 
+// Parse and return hec attribute data set in configuration
 func parseHecRequest(d *schema.ResourceData) *v2.HecSpec {
 	hecRequest := v2.HecSpec{}
 
@@ -267,10 +317,43 @@ func parseHecRequest(d *schema.ResourceData) *v2.HecSpec {
 		hecRequest.Token = &parsedData
 	}
 
-	if useAck, ok := d.GetOk(UserAckKey); ok {
+	if useAck, ok := d.GetOk(UseAckKey); ok {
 		parsedData := useAck.(bool)
 		hecRequest.UseAck = &parsedData
 	}
-
 	return &hecRequest
+}
+
+// Only set params in PatchHec Request if given key has been changed in configuration
+func setPatchRequestBody(d *schema.ResourceData, hecRequest *v2.HecSpec) *v2.PatchHECJSONRequestBody {
+	patchRequest := v2.PatchHECJSONRequestBody{}
+
+	if d.HasChange(AllowedIndexesKey) {
+		patchRequest.AllowedIndexes = hecRequest.AllowedIndexes
+	}
+
+	if d.HasChange(DefaultHostKey) {
+		patchRequest.DefaultHost = hecRequest.DefaultHost
+	}
+
+	if d.HasChange(DefaultIndexKey) {
+		patchRequest.DefaultIndex = hecRequest.DefaultIndex
+	}
+
+	if d.HasChange(DefaultSourceKey) {
+		patchRequest.DefaultSource = hecRequest.DefaultSource
+	}
+
+	if d.HasChange(DefaultSourcetypeKey) {
+		patchRequest.DefaultSourcetype = hecRequest.DefaultSourcetype
+	}
+
+	if d.HasChange(DisabledKey) {
+		patchRequest.Disabled = hecRequest.Disabled
+	}
+
+	if d.HasChange(UseAckKey) {
+		patchRequest.UseAck = hecRequest.UseAck
+	}
+	return &patchRequest
 }

@@ -3,6 +3,8 @@ package indexes
 import (
 	"context"
 	"fmt"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
 	"strings"
 
@@ -109,7 +111,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	// Poll Index until GET returns 200 to confirm index creation
-	err = WaitIndexPoll(ctx, acsClient, stack, indexRequest.Name, TargetStatusResourceExists, PendingStatusVerifyCreated)
+	err = WaitIndexPoll(ctx, acsClient, stack, indexRequest.Name, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be created: %s", indexRequest.Name, err))
 	}
@@ -135,7 +137,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, m interface{
 
 	if err != nil {
 		// if index not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), "404-index-not-found") {
+		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.IndexNotFound) {
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
@@ -217,7 +219,7 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	//Poll Index until GET returns 404 Not found - index has been deleted
-	err = WaitIndexPoll(ctx, acsClient, stack, indexName, TargetStatusResourceDeleted, PendingStatusVerifyDeleted)
+	err = WaitIndexPoll(ctx, acsClient, stack, indexName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be deleted: %s", indexName, err))
 	}

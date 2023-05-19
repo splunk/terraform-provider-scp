@@ -7,9 +7,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
 )
+
+type HecBody struct {
+	HttpEventCollector *v2.HecInfo `json:"http-event-collector"`
+}
 
 var GeneralRetryableStatusCodes = map[int]string{
 	http.StatusTooManyRequests: http.StatusText(429),
@@ -23,7 +28,7 @@ func HecStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}
 		defer resp.Body.Close()
-		return status.ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -53,18 +58,122 @@ func HecStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != http.StatusOK {
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{
 				State:         http.StatusText(resp.StatusCode),
-				ExpectedState: TargetStatusResourceExists,
+				ExpectedState: wait.TargetStatusResourceExists,
 				LastError:     errors.New(string(bodyBytes)),
 			}
 		}
 
-		var hec v2.HecSpec
+		var hec HecBody
 		if resp.StatusCode == 200 {
 			if err = json.Unmarshal(bodyBytes, &hec); err != nil {
 				return nil, "", &resource.UnexpectedStateError{LastError: err}
 			}
 		}
 		status := http.StatusText(resp.StatusCode)
-		return &hec, status, nil
+		var hecSpec v2.HecSpec
+		hecSpec = *hec.HttpEventCollector.Spec //Todo nil check
+		return &hecSpec, status, nil
 	}
+}
+
+// HecStatusDelete returns StateRefreshFunc that makes DELETE request and checks if request was accepted
+func HecStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.DeleteHec(ctx, stack, v2.Hec(hecName), v2.DeleteHecJSONRequestBody{})
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+	}
+}
+
+// HecStatusUpdate returns StateRefreshFunc that makes PATCH request and checks if request was accepted
+func HecStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchHecRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+
+		resp, err := acsClient.PatchHEC(ctx, stack, v2.Hec(hecName), patchHecRequest)
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+	}
+}
+
+// HecStatusVerifyUpdate returns a StateRefreshFunc that makes a GET request and checks to see if the hec fields matches those in patch request
+func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.DescribeHec(ctx, stack, v2.Hec(hecName))
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != 200 {
+			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{LastError: errors.New(string(bodyBytes))}
+		}
+
+		var hec HecBody
+		var hecSpec v2.HecSpec
+		updateComplete := false
+		if resp.StatusCode == 200 {
+			if err = json.Unmarshal(bodyBytes, &hec); err != nil {
+				return nil, "", &resource.UnexpectedStateError{LastError: err}
+			}
+			hecSpec = *hec.HttpEventCollector.Spec //todo nil check
+			updateComplete = VerifyHecUpdate(patchRequest, hecSpec)
+		}
+
+		var statusText string
+		if updateComplete {
+			statusText = status.UpdatedStatus
+			return &hecSpec, statusText, nil
+		} else {
+			statusText = http.StatusText(resp.StatusCode)
+			return nil, statusText, nil
+		}
+	}
+}
+
+// VerifyHecUpdate is a helper to verify that the fields in patch request match fields in the hec response
+func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bool {
+	if patchRequest.AllowedIndexes != nil && (hec.AllowedIndexes == nil || !IsSpliceEqual(*patchRequest.AllowedIndexes, *hec.AllowedIndexes)) {
+		return false
+	}
+	if patchRequest.DefaultHost != nil && (hec.DefaultHost == nil || *patchRequest.DefaultHost != *hec.DefaultHost) {
+		return false
+	}
+	if patchRequest.DefaultIndex != nil && (hec.DefaultIndex == nil || *patchRequest.DefaultIndex != *hec.DefaultIndex) {
+		return false
+	}
+	if patchRequest.DefaultSource != nil && (hec.DefaultSource == nil || *patchRequest.DefaultSource != *hec.DefaultSource) {
+		return false
+	}
+	if patchRequest.DefaultSourcetype != nil && (hec.DefaultSourcetype == nil || *patchRequest.DefaultSourcetype != *hec.DefaultSourcetype) {
+		return false
+	}
+	if patchRequest.Disabled != nil && (hec.Disabled == nil || *patchRequest.Disabled != *hec.Disabled) {
+		return false
+	}
+
+	if patchRequest.UseAck != nil && (hec.UseAck == nil || *patchRequest.UseAck != *hec.UseAck) {
+		return false
+	}
+	return true
+}
+
+func IsSpliceEqual(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
