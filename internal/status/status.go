@@ -7,6 +7,12 @@ import (
 	"net/http"
 )
 
+const (
+	UpdatedStatus = "UPDATED"
+	IndexNotFound = "404-index-not-found"
+	HecNotFound   = "404-hec-not-found"
+)
+
 // IsStatusCodeExpected checks if the given status code exists in either target or pending status codes
 func IsStatusCodeExpected(statusCode int, targetStatusCodes []string, pendingStatusCodes []string) bool {
 	isRetryableError := false

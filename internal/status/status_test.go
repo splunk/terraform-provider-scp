@@ -3,6 +3,7 @@ package status_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
 	"testing"
@@ -39,7 +40,7 @@ func Test_IsStatusCodeRetryable(t *testing.T) {
 	t.Run("verify returns true on general retryable codes", func(t *testing.T) {
 		for generalCode, _ := range idx.GeneralRetryableStatusCodes {
 			t.Run(fmt.Sprintf("with general code %d", generalCode), func(t *testing.T) {
-				assert.True(status.IsStatusCodeExpected(generalCode, idx.TargetStatusResourceChange, idx.PendingStatusCRUD))
+				assert.True(status.IsStatusCodeExpected(generalCode, wait.TargetStatusResourceChange, wait.PendingStatusCRUD))
 
 			})
 		}
@@ -47,20 +48,20 @@ func Test_IsStatusCodeRetryable(t *testing.T) {
 
 	/* test target status codes input return true when present */
 	t.Run("verify returns true on target status resource change code", func(t *testing.T) {
-		assert.True(status.IsStatusCodeExpected(acceptedResp.StatusCode, idx.TargetStatusResourceChange, idx.PendingStatusCRUD))
+		assert.True(status.IsStatusCodeExpected(acceptedResp.StatusCode, wait.TargetStatusResourceChange, wait.PendingStatusCRUD))
 	})
 
 	t.Run("verify returns true on target status resource exists code", func(t *testing.T) {
-		assert.True(status.IsStatusCodeExpected(successRespOk.StatusCode, idx.TargetStatusResourceExists, idx.PendingStatusVerifyCreated))
+		assert.True(status.IsStatusCodeExpected(successRespOk.StatusCode, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated))
 	})
 
 	t.Run("verify returns true on target status resource deleted code", func(t *testing.T) {
-		assert.True(status.IsStatusCodeExpected(notFoundResp.StatusCode, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted))
+		assert.True(status.IsStatusCodeExpected(notFoundResp.StatusCode, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted))
 	})
 
 	/* test return false when status code absent in both */
 	t.Run("verify returns false on non target and non retryable code", func(t *testing.T) {
-		assert.False(status.IsStatusCodeExpected(badReqResp.StatusCode, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted))
+		assert.False(status.IsStatusCodeExpected(badReqResp.StatusCode, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted))
 	})
 }
 
@@ -69,9 +70,9 @@ func Test_ProcessResponse(t *testing.T) {
 
 	/* test nil resp, bad req status text, and error for bad request */
 	t.Run("verify returns correct output on bad requests", func(t *testing.T) {
-		for _, targetCodes := range [][]string{idx.TargetStatusResourceChange, idx.TargetStatusResourceExists, idx.TargetStatusResourceDeleted} {
+		for _, targetCodes := range [][]string{wait.TargetStatusResourceChange, wait.TargetStatusResourceExists, wait.TargetStatusResourceDeleted} {
 			t.Run(fmt.Sprintf("with target codes %v", targetCodes), func(t *testing.T) {
-				resp, statusText, err := status.ProcessResponse(badReqResp, targetCodes, idx.PendingStatusCRUD)
+				resp, statusText, err := status.ProcessResponse(badReqResp, targetCodes, wait.PendingStatusCRUD)
 				assert.Nil(resp)
 				assert.Equal(http.StatusText(badReqResp.StatusCode), statusText)
 				assert.Error(err)
@@ -81,7 +82,7 @@ func Test_ProcessResponse(t *testing.T) {
 
 	/* test nil resp returns error */
 	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
-		resp, statusText, err := status.ProcessResponse(nil, idx.TargetStatusResourceChange, idx.PendingStatusCRUD)
+		resp, statusText, err := status.ProcessResponse(nil, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 		assert.Nil(resp)
 		assert.Error(err)
 		assert.Equal(statusText, "")
@@ -89,21 +90,21 @@ func Test_ProcessResponse(t *testing.T) {
 
 	/* test non-nil resp, correct status text, and nil error for expected resp */
 	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
-		resp, statusText, err := status.ProcessResponse(acceptedResp, idx.TargetStatusResourceChange, idx.PendingStatusCRUD)
+		resp, statusText, err := status.ProcessResponse(acceptedResp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(acceptedResp.StatusCode), statusText)
 		assert.NoError(err)
 	})
 
 	t.Run("verify returns correct output on success resource exists after create", func(t *testing.T) {
-		resp, statusText, err := status.ProcessResponse(successRespOk, idx.TargetStatusResourceExists, idx.PendingStatusVerifyCreated)
+		resp, statusText, err := status.ProcessResponse(successRespOk, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(successRespOk.StatusCode), statusText)
 		assert.NoError(err)
 	})
 
 	t.Run("verify returns correct output on resource does not exist after delete", func(t *testing.T) {
-		resp, statusText, err := status.ProcessResponse(notFoundResp, idx.TargetStatusResourceDeleted, idx.PendingStatusVerifyDeleted)
+		resp, statusText, err := status.ProcessResponse(notFoundResp, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(notFoundResp.StatusCode), statusText)
 		assert.NoError(err)

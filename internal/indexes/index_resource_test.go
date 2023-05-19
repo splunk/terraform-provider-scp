@@ -8,6 +8,7 @@ import (
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
+	"github.com/splunk/terraform-provider-scp/internal/indexes"
 	"net/http"
 	"regexp"
 	"testing"
@@ -175,7 +176,7 @@ func testAccCheckIndexDestroy(s *terraform.State) error {
 	stack := providerNew.Meta().(client.ACSProvider).Stack
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "scp_indexes" {
+		if rs.Type != indexes.ResourceKey {
 			continue
 		}
 
