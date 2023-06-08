@@ -3,6 +3,9 @@ package hec
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,15 +15,12 @@ import (
 	"github.com/splunk/terraform-provider-scp/internal/errors"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
-	"net/http"
-	"strings"
 )
 
 const (
 	ResourceKey          = "scp_hec_tokens"
 	NameKey              = "name"
 	AllowedIndexesKey    = "allowed_indexes"
-	DefaultHostKey       = "default_host"
 	DefaultIndexKey      = "default_index"
 	DefaultSourceKey     = "default_source"
 	DefaultSourcetypeKey = "default_sourcetype"
@@ -38,19 +38,13 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Description: "The name of the hec token to create. Can not be updated after creation, if changed in config file terraform will propose a replacement (delete old hec token and recreate with new name).",
 		},
 		AllowedIndexesKey: {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Schema{
 				Type: schema.TypeString,
 			},
 			Description: "Set of indexes allowed for events with this token",
-		},
-		DefaultHostKey: {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Default host value for events with this token",
 		},
 		DefaultIndexKey: {
 			Type:        schema.TypeString,
@@ -61,13 +55,11 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 		DefaultSourceKey: {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
 			Description: "Default source for events with this token",
 		},
 		DefaultSourcetypeKey: {
 			Type:        schema.TypeString,
 			Optional:    true,
-			Computed:    true,
 			Description: "Default sourcetype for events with this token",
 		},
 		DisabledKey: {
@@ -77,6 +69,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Description: "Input disabled indicator: false = Input Not disabled, true = Input disabled",
 		},
 		TokenKey: {
+			ForceNew:    true,
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
@@ -86,7 +79,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Computed:    true,
-			Description: "Indexer acknowledgement for this token: false = disabled, 1 = enabled",
+			Description: "Indexer acknowledgement for this token: false = disabled, true = enabled",
 		},
 	}
 }
@@ -120,7 +113,6 @@ func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 	createHecRequest := v2.CreateHECJSONRequestBody{
 		AllowedIndexes:    hecRequest.AllowedIndexes,
-		DefaultHost:       hecRequest.DefaultHost,
 		DefaultIndex:      hecRequest.DefaultIndex,
 		DefaultSource:     hecRequest.DefaultSource,
 		DefaultSourcetype: hecRequest.DefaultSourcetype,
@@ -187,10 +179,6 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set(DefaultHostKey, hec.DefaultHost); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set(DefaultIndexKey, hec.DefaultIndex); err != nil {
 		return diag.FromErr(err)
 	}
@@ -228,10 +216,6 @@ func resourceHecTokenUpdate(ctx context.Context, d *schema.ResourceData, m inter
 
 	// Retrieve data for each field and create request body
 	hecRequest := parseHecRequest(d)
-
-	if d.HasChange(TokenKey) {
-		return diag.Errorf("token value can not be updated once HEC token has been created, create new resource instead")
-	}
 	patchRequest := setPatchRequestBody(d, hecRequest)
 
 	err := WaitHecUpdate(ctx, acsClient, stack, *patchRequest, hecName)
@@ -278,46 +262,41 @@ func parseHecRequest(d *schema.ResourceData) *v2.HecSpec {
 
 	hecRequest.Name = d.Get(NameKey).(string)
 
-	if parsedData, ok := d.GetOk(AllowedIndexesKey); ok {
-		var allowedIndexes []string
-		tflog.Info(context.Background(), fmt.Sprintf("Parsed Data: %+v\n", parsedData))
-		for _, elem := range parsedData.([]interface{}) {
-			allowedIndexes = append(allowedIndexes, elem.(string))
+	if allowedIndexes, _ := d.GetOk(AllowedIndexesKey); allowedIndexes != nil {
+		allowedIndexesSet := allowedIndexes.(*schema.Set)
+		parsedData := make([]string, 0)
+		for _, allowedIndex := range allowedIndexesSet.List() {
+			parsedData = append(parsedData, allowedIndex.(string))
 		}
-		hecRequest.AllowedIndexes = &allowedIndexes
+		hecRequest.AllowedIndexes = &parsedData
 	}
 
-	if defaultHost, ok := d.GetOk(DefaultHostKey); ok {
-		parsedData := defaultHost.(string)
-		hecRequest.DefaultHost = &parsedData
-	}
-
-	if defaultIndex, ok := d.GetOk(DefaultIndexKey); ok {
+	if defaultIndex, _ := d.GetOk(DefaultIndexKey); defaultIndex != nil {
 		parsedData := defaultIndex.(string)
 		hecRequest.DefaultIndex = &parsedData
 	}
 
-	if defaultSource, ok := d.GetOk(DefaultSourceKey); ok {
+	if defaultSource, _ := d.GetOk(DefaultSourceKey); defaultSource != nil {
 		parsedData := defaultSource.(string)
 		hecRequest.DefaultSource = &parsedData
 	}
 
-	if defaultSourcetype, ok := d.GetOk(DefaultSourcetypeKey); ok {
+	if defaultSourcetype, _ := d.GetOk(DefaultSourcetypeKey); defaultSourcetype != nil {
 		parsedData := defaultSourcetype.(string)
 		hecRequest.DefaultSourcetype = &parsedData
 	}
 
-	if disabled, ok := d.GetOk(DisabledKey); ok {
+	if disabled, _ := d.GetOk(DisabledKey); disabled != nil {
 		parsedData := disabled.(bool)
 		hecRequest.Disabled = &parsedData
 	}
 
-	if token, ok := d.GetOk(TokenKey); ok {
+	if token, _ := d.GetOk(TokenKey); token != nil {
 		parsedData := token.(string)
 		hecRequest.Token = &parsedData
 	}
 
-	if useAck, ok := d.GetOk(UseAckKey); ok {
+	if useAck, _ := d.GetOk(UseAckKey); useAck != nil {
 		parsedData := useAck.(bool)
 		hecRequest.UseAck = &parsedData
 	}
@@ -332,12 +311,12 @@ func setPatchRequestBody(d *schema.ResourceData, hecRequest *v2.HecSpec) *v2.Pat
 		patchRequest.AllowedIndexes = hecRequest.AllowedIndexes
 	}
 
-	if d.HasChange(DefaultHostKey) {
-		patchRequest.DefaultHost = hecRequest.DefaultHost
-	}
-
 	if d.HasChange(DefaultIndexKey) {
 		patchRequest.DefaultIndex = hecRequest.DefaultIndex
+	}
+
+	if d.HasChange(TokenKey) {
+		patchRequest.Token = hecRequest.Token
 	}
 
 	if d.HasChange(DefaultSourceKey) {

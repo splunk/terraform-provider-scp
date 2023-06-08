@@ -178,7 +178,6 @@ func Test_WaitVerifyHecUpdate(t *testing.T) {
 
 	mockUpdateBody := v2.PatchHECJSONRequestBody{
 		AllowedIndexes:    &mockAllowedIndexes,
-		DefaultHost:       &mockDefaultHost,
 		DefaultIndex:      &mockDefaultIndex,
 		DefaultSource:     &mockDefaultSource,
 		DefaultSourcetype: nil,
@@ -203,7 +202,6 @@ func Test_WaitVerifyHecUpdate(t *testing.T) {
 		Spec: &v2.HecSpec{
 			DefaultIndex:      &mockDefaultIndex,
 			DefaultSourcetype: &mockDefaultSourceType,
-			DefaultHost:       &mockDefaultHost,
 			DefaultSource:     &tmpDefaultSource,
 			UseAck:            &mockUseAck,
 			Disabled:          &mockDisabled,

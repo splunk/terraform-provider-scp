@@ -26,7 +26,6 @@ const (
 // an splunk installed on the stack
 type App struct {
 	AppID                      *string `json:"appID,omitempty"`
-	Build                      *string `json:"build,omitempty"`
 	Label                      *string `json:"label,omitempty"`
 	Name                       string  `json:"name"`
 	Package                    *string `json:"package,omitempty"`
