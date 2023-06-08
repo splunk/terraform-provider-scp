@@ -108,10 +108,6 @@ func TestAcc_SplunkCloudHEC_Update(t *testing.T) {
 	resourceName := resourcePrefix(hecTestUpdateResource)
 
 	//Create regexp object for Expect errors
-	tokenUpdateErr, err := regexp.Compile("token value can not be updated once HEC token has been created")
-	if err != nil {
-		t.Error()
-	}
 	acsErr, err := regexp.Compile(errors.AcsErrSuffix)
 	if err != nil {
 		t.Error()
@@ -123,7 +119,7 @@ func TestAcc_SplunkCloudHEC_Update(t *testing.T) {
 			Config: testAccInstanceConfig_Basic(hecTestUpdateResource),
 			Check:  resource.TestCheckResourceAttr(resourceName, "name", hecTestUpdateResource),
 		},
-		// Update all fields (excluding token and defaultSource/defaultHost)
+		// Update all fields (excluding token and defaultSource)
 		{
 			Config: testAccInstanceConfig_TestValidUpdate(hecTestUpdateResource),
 			Check: resource.ComposeTestCheckFunc(
@@ -135,15 +131,6 @@ func TestAcc_SplunkCloudHEC_Update(t *testing.T) {
 				resource.TestCheckResourceAttr(resourceName, hec.DisabledKey, disabled),
 				resource.TestCheckResourceAttr(resourceName, hec.UseAckKey, useAck),
 			),
-		},
-		// Expect Error on Attempt to update token attribute
-		{
-			Config: testAccInstanceConfig_TestInvalidTokenUpdate(hecTestUpdateResource),
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr(resourceName, "name", hecTestUpdateResource),
-				resource.TestCheckResourceAttr(resourceName, hec.DefaultIndexKey, "main"),
-			),
-			ExpectError: tokenUpdateErr,
 		},
 		// Expect Error from ACS API
 		{

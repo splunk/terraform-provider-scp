@@ -3224,9 +3224,6 @@
           "defaultSource": {
             "type": "string"
           },
-          "defaultHost": {
-            "type": "string"
-          },
           "defaultSourcetype": {
             "type": "string"
           },

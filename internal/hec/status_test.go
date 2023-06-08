@@ -23,7 +23,6 @@ var (
 	mockDefaultSource     = "mock-default-source"
 	mockDefaultSourceType = "mock-default-source-type"
 	mockDisabled          = false
-	mockDefaultHost       = "mock-default-host"
 	mockToken             = "mock-token"
 	mockUseAck            = false
 	mockAllowedIndexes    = []string{"main", "summary"}
@@ -63,7 +62,6 @@ func genHecResp(code int) *http.Response {
 	if code == http.StatusOK {
 		hecSpec := v2.HecSpec{
 			AllowedIndexes:    &mockAllowedIndexes,
-			DefaultHost:       &mockDefaultHost,
 			DefaultIndex:      &mockDefaultIndex,
 			DefaultSource:     &mockDefaultSource,
 			DefaultSourcetype: nil,
@@ -106,7 +104,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			true,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes:    nil,
-				DefaultHost:       nil,
 				DefaultIndex:      nil,
 				DefaultSource:     nil,
 				DefaultSourcetype: nil,
@@ -115,7 +112,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			},
 			&v2.HecSpec{
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     &mockDefaultSource,
 				DefaultSourcetype: nil,
@@ -132,7 +128,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			},
 			&v2.HecSpec{
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     &mockDefaultSource,
 				DefaultSourcetype: nil,
@@ -146,7 +141,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			true,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     &mockDefaultSource,
 				DefaultSourcetype: &mockDefaultSourceType,
@@ -156,7 +150,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			},
 			&v2.HecSpec{
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     &mockDefaultSource,
 				DefaultSourcetype: &mockDefaultSourceType,
@@ -170,13 +163,11 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  &mockDefaultSource,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  &mockUnupdated,
 				Disabled:       &mockDisabled,
@@ -188,13 +179,11 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  &mockDefaultSource,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockDisabled,
@@ -206,13 +195,11 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: nil,
-				DefaultHost:    nil,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockUnupdated,
 				DefaultSource:  nil,
 				Disabled:       &mockDisabled,
@@ -224,13 +211,11 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: nil,
-				DefaultHost:    nil,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   nil,
 				DefaultSource:  nil,
 				Disabled:       &mockDisabled,
@@ -242,13 +227,11 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    nil,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockUnupdatedAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockDisabled,
@@ -260,63 +243,27 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    nil,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: nil,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockDisabled,
 				UseAck:         &mockUseAck,
 			},
 		},
-		// Test Case 9: Tests incomplete update (defaulthost not updated)
+		// Test Case 9: Tests incomplete update (disabled not updated)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
-				DefaultIndex:   &mockDefaultIndex,
-				DefaultSource:  nil,
-			},
-			&v2.HecSpec{
-				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockUnupdated,
-				DefaultIndex:   &mockDefaultIndex,
-				DefaultSource:  nil,
-			},
-		},
-		// Test Case 10: Tests incomplete update (defaulthost nil)
-		{
-			false,
-			&v2.PatchHECJSONRequestBody{
-				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
-				DefaultIndex:   &mockDefaultIndex,
-				DefaultSource:  nil,
-			},
-			&v2.HecSpec{
-				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    nil,
-				DefaultIndex:   &mockDefaultIndex,
-				DefaultSource:  nil,
-			},
-		},
-		// Test Case 11: Tests incomplete update (disabled not updated)
-		{
-			false,
-			&v2.PatchHECJSONRequestBody{
-				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				Disabled:       &mockDisabled,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockUnupdatedBool,
@@ -324,54 +271,48 @@ func Test_VerifyHecUpdate(t *testing.T) {
 				UseAck:         &mockUseAck,
 			},
 		},
-		// Test Case 12: Tests incomplete update (disabled nil)
+		// Test Case 10: Tests incomplete update (disabled nil)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				Disabled:       &mockDisabled,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				Disabled:       nil,
 				Token:          &mockToken,
 				UseAck:         &mockUseAck,
 			},
 		},
-		// Test Case 13: Tests incomplete update (useAck not updated)
+		// Test Case 11: Tests incomplete update (useAck not updated)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				UseAck:         &mockUseAck,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockUnupdatedBool,
 				UseAck:         &mockUnupdatedBool,
 			},
 		},
-		// Test Case 14: Tests incomplete update (useAck nil)
+		// Test Case 12: Tests incomplete update (useAck nil)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				UseAck:         &mockUseAck,
 			},
 			&v2.HecSpec{
 				AllowedIndexes: &mockAllowedIndexes,
-				DefaultHost:    &mockDefaultHost,
 				DefaultIndex:   &mockDefaultIndex,
 				DefaultSource:  nil,
 				Disabled:       &mockUnupdatedBool,
@@ -379,7 +320,7 @@ func Test_VerifyHecUpdate(t *testing.T) {
 				UseAck:         nil,
 			},
 		},
-		// Test Case 15: Tests incomplete update (defaultSourcetype not updated)
+		// Test Case 13: Tests incomplete update (defaultSourcetype not updated)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
@@ -388,7 +329,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			&v2.HecSpec{
 				DefaultSourcetype: &mockUnupdated,
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     nil,
 				Disabled:          &mockDisabled,
@@ -396,7 +336,7 @@ func Test_VerifyHecUpdate(t *testing.T) {
 				UseAck:            nil,
 			},
 		},
-		// Test Case 16: Tests incomplete update (defaultSourcetype nil)
+		// Test Case 14: Tests incomplete update (defaultSourcetype nil)
 		{
 			false,
 			&v2.PatchHECJSONRequestBody{
@@ -405,7 +345,6 @@ func Test_VerifyHecUpdate(t *testing.T) {
 			&v2.HecSpec{
 				DefaultSourcetype: nil,
 				AllowedIndexes:    &mockAllowedIndexes,
-				DefaultHost:       &mockDefaultHost,
 				DefaultIndex:      &mockDefaultIndex,
 				DefaultSource:     nil,
 				Disabled:          &mockDisabled,
@@ -428,32 +367,38 @@ func Test_TestIsSliceEqual(t *testing.T) {
 
 	cases := []struct {
 		expectedResult bool
-		first          []string
-		second         []string
+		first          *[]string
+		second         *[]string
 	}{
 		// Test Case 0: Expected true for empty
 		{
 			true,
-			[]string{},
-			[]string{},
+			&[]string{},
+			&[]string{},
 		},
 		// Test Case 1: Expected true for same array
 		{
 			true,
-			[]string{"a", "b"},
-			[]string{"a", "b"},
+			&[]string{"a", "b"},
+			&[]string{"a", "b"},
 		},
-		// Test Case 1: Expected false for different length
+		// Test Case 2: Expected false for different length
 		{
 			false,
-			[]string{"a"},
-			[]string{"a", "a"},
+			&[]string{"a"},
+			&[]string{"b", "b"},
 		},
-		// Test Case 1: Expected false for different entries
+		// Test Case 3: Expected true for different order
 		{
 			false,
-			[]string{"a", "b"},
-			[]string{"a", "a"},
+			&[]string{"a", "b"},
+			&[]string{"b", "a"},
+		},
+		// Test Case 4: Expected false for different entries
+		{
+			false,
+			&[]string{"a", "b"},
+			&[]string{"a", "a"},
 		},
 	}
 	for i, test := range cases {
