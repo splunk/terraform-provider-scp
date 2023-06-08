@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"regexp"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
@@ -11,9 +15,6 @@ import (
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
 	"github.com/splunk/terraform-provider-scp/internal/errors"
 	"github.com/splunk/terraform-provider-scp/internal/hec"
-	"net/http"
-	"regexp"
-	"testing"
 )
 
 var (
@@ -40,12 +41,19 @@ func TestAcc_SplunkCloudHEC_Create(t *testing.T) {
 
 	hecCreateInvalidResource := fmt.Sprintf("%s-%s", hecCreateBasicResource, "invalid")
 
+	hecCreateEmptyDefaultIndex := fmt.Sprintf("%s-%s", hecCreateBasicResource, "empty-default")
+
 	//Create regexp object for Expect errors
 	resourceExistsErr, err := regexp.Compile(errors.ResourceExistsErr)
 	if err != nil {
 		t.Error()
 	}
 	acsErr, err := regexp.Compile(errors.AcsErrSuffix)
+	if err != nil {
+		t.Error()
+	}
+
+	emptyDefaultIndexErr, err := regexp.Compile("cannot be an empty string. Either omit it or pick an index from")
 	if err != nil {
 		t.Error()
 	}
@@ -91,6 +99,11 @@ func TestAcc_SplunkCloudHEC_Create(t *testing.T) {
 		{
 			Config:      testAccInstanceConfig_TestAcsErr(hecCreateInvalidResource),
 			ExpectError: acsErr,
+		},
+		// Expect Error from TF is default index is empty string
+		{
+			Config:      testAccInstanceConfig_TestEmptyDefaultIndex(hecCreateEmptyDefaultIndex),
+			ExpectError: emptyDefaultIndexErr,
 		},
 	}
 
@@ -219,6 +232,20 @@ func testAccInstanceConfig_TestAcsErr(name string) string {
 		use_ack = %[6]q
 }
 `, name, invalidDefaultIndex, string(allowedIndexesJSON), defaultSourcetype, disabled, useAck)
+}
+
+// Test error when users does not specify default indexes when allowed indexes is set
+func testAccInstanceConfig_TestEmptyDefaultIndex(hecName string) string {
+	allowedIndexesJSON, _ := json.Marshal(allowedIndexes)
+	return fmt.Sprintf(`
+	resource "scp_hec_tokens" %[1]q {
+		name = %[1]q
+		allowed_indexes = %[2]v
+		default_index= ""
+		default_sourcetype = %[3]q
+		disabled = %[4]q 
+		use_ack = %[5]q
+}`, hecName, string(allowedIndexesJSON), defaultSourcetype, disabled, useAck)
 }
 
 // Updates all fields except token, default_source, and default_host
