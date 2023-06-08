@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -47,10 +48,11 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Description: "Set of indexes allowed for events with this token",
 		},
 		DefaultIndexKey: {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Computed:    true,
-			Description: "Index to store generated events",
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			Description:      "Index to store generated events",
+			ValidateDiagFunc: defaultIndexValidationFunc,
 		},
 		DefaultSourceKey: {
 			Type:        schema.TypeString,
@@ -335,4 +337,22 @@ func setPatchRequestBody(d *schema.ResourceData, hecRequest *v2.HecSpec) *v2.Pat
 		patchRequest.UseAck = hecRequest.UseAck
 	}
 	return &patchRequest
+}
+
+func defaultIndexValidationFunc(v interface{}, p cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+	currentValue := v.(string)
+
+	// Splunkd automatically populates the default index (based on allowed indexes field)if not default index is provided.
+	// If the user omits this key, the value is computed and stored in the state
+	// However, we do not want users to explicitly hard code the value to be empty string
+	if strings.TrimSpace(currentValue) == "" {
+		errorDiag := diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "invalid value",
+			Detail:   fmt.Sprintf("%s cannot be an empty string. Either omit it or pick an index from %s", DefaultIndexKey, AllowedIndexesKey),
+		}
+		diags = append(diags, errorDiag)
+	}
+	return diags
 }
