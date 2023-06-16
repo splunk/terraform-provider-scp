@@ -158,6 +158,7 @@ The ab...
 - github.com/hashicorp/errwrap v1.1.0 [MPL-2.0]
 - github.com/agext/levenshtein (v1.2.2) [Apache-2.0]
 - github.com/apparentlymart/go-textseg/v13 (v13.0.0) [Multi-license: MIT OR Unicode-DFS-2016 OR Unicode-DFS-2020, Apache-2.0]
+- github.com/davecgh/go-spew (v1.1.1) [ISC]
 - github.com/deepmap/oapi-codegen (v1.9.0) [Apache-2.0]
 - github.com/hashicorp/go-checkpoint (v0.5.0) [MPL-2.0]
 - github.com/hashicorp/go-version (v1.6.0) [MPL-2.0]
@@ -169,6 +170,7 @@ The ab...
 - github.com/Masterminds/semver/v3 (v3.1.1) [MIT]
 - github.com/Masterminds/sprig/v3 (v3.2.2) [MIT]
 - github.com/mitchellh/copystructure (v1.2.0) [MIT]
+- github.com/mitchellh/go-testing-interface (v1.14.1) [MIT]
 - github.com/mitchellh/go-wordwrap (v1.0.0) [MIT]
 - github.com/mitchellh/reflectwalk (v1.0.2) [MIT]
 - github.com/oklog/run (v1.0.0) [Apache-2.0]
@@ -450,6 +452,11 @@ See the License for the specific language g...
 
 
 --------------------------------------------------------------------------------
+Package Title: github.com/davecgh/go-spew (v1.1.1)
+--------------------------------------------------------------------------------
+ISC LicenseCopyright (c) 2012-2016 Dave Collins Permission to use copy modify a...
+
+--------------------------------------------------------------------------------
 Package Title: github.com/deepmap/oapi-codegen (v1.9.0)
 --------------------------------------------------------------------------------
 
@@ -712,7 +719,10 @@ copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
 T...
-
+--------------------------------------------------------------------------------
+Package Title: github.com/mitchellh/go-testing-interface (v1.0.0)
+--------------------------------------------------------------------------------
+The MIT License (MIT) Copyright (c) 2016 Mitchell HashimotoPermission is hereby granted free of c...
 
 --------------------------------------------------------------------------------
 Package Title: github.com/mitchellh/go-wordwrap (v1.0.0)

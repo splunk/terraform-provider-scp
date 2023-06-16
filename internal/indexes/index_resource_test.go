@@ -96,7 +96,7 @@ func TestAcc_SplunkCloudIndex_DatasizeField(t *testing.T) {
 func TestAcc_SplunkCloudIndex_ArchivalField(t *testing.T) {
 	// Test creating an Index resource and then updating splunk_archival_retention_days field
 	archivalFieldResource := resource.UniqueId()
-	regex, err := regexp.Compile("splunkArchivalRetentionDays must be greater than or equal to searchableDays")
+	regex, err := regexp.Compile("splunkArchivalRetentionDays must be greater than searchableDays")
 	if err != nil {
 		t.Error()
 	}

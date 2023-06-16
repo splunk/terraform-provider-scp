@@ -27,7 +27,7 @@ func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
 		Description: "Index Data Source. Use this data source to reference default indexes " +
 			"(https://docs.splunk.com/Documentation/Splunk/latest/Indexer/Aboutmanagingindexes) or other indexes " +
-			"you do not wish Terraform to execute write operation on.",
+			"you do not wish Terraform to execute write operations on.",
 
 		ReadContext: dataSourceIndexRead,
 		Timeouts: &schema.ResourceTimeout{

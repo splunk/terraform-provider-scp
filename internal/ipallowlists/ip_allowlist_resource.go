@@ -22,9 +22,10 @@ const (
 func ipAllowlistResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		schemaKeyFeature: {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "Feature is a specified component in your Splunk Cloud Platform. Eg: search-api, hec, etc. ",
+			Type:     schema.TypeString,
+			Required: true,
+			Description: "Feature is a specified component in your Splunk Cloud Platform. Eg: search-api, hec, etc. No two " +
+				"resources should have the same feature. Use this value as the resource name itself to enforce this rule. ",
 		},
 		schemaKeySubnets: {
 			Type:     schema.TypeSet,
@@ -40,7 +41,8 @@ func ipAllowlistResourceSchema() map[string]*schema.Schema {
 
 func ResourceIPAllowlist() *schema.Resource {
 	return &schema.Resource{
-		Description: "IP Allowlist Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ConfigureIPAllowList " +
+		Description: "IP Allowlist Resource. Please see documentation to understand unique behavior regarding naming and delete operation. " +
+			"Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ConfigureIPAllowList " +
 			"for more latest, detailed information on attribute requirements and the ACS IP Allowlist API.",
 
 		CreateContext: resourceIPAllowlistCreate,

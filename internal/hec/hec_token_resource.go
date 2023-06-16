@@ -36,7 +36,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
-			Description: "The name of the hec token to create. Can not be updated after creation, if changed in config file terraform will propose a replacement (delete old hec token and recreate with new name).",
+			Description: "The name of the hec token to create. Can not be updated after creation, if changed in config file terraform will propose a replacement (delete old hec token and recreate with new name)",
 		},
 		AllowedIndexesKey: {
 			Type:     schema.TypeSet,
@@ -51,7 +51,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Type:             schema.TypeString,
 			Optional:         true,
 			Computed:         true,
-			Description:      "Index to store generated events",
+			Description:      "Index to store generated events. Must not be an empty string. If allowed_indexes is provided, default_index must be one of allowed_indexes",
 			ValidateDiagFunc: defaultIndexValidationFunc,
 		},
 		DefaultSourceKey: {
@@ -75,7 +75,7 @@ func hecTokenResourceSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			Computed:    true,
-			Description: "Token value for sending data to collector/event endpoint",
+			Description: "Token value for sending data to collector/event endpoint. Can not be updated after creation, if changed in config file terraform will propose a replacement (delete old HEC and recreate with new token)",
 		},
 		UseAckKey: {
 			Type:        schema.TypeBool,
