@@ -39,27 +39,32 @@ func indexResourceSchema() map[string]*schema.Schema {
 			Type:        schema.TypeFloat,
 			Optional:    true,
 			Computed:    true,
-			Description: "The maximum size in MB for a hot DB to reach before a roll to warm is triggered. Defaults to 0 (unlimited)",
+			Description: "The maximum size in MB for a hot DB to reach before a roll to warm is triggered. Defaults to 0 (unlimited).",
 		},
 		"searchable_days": {
 			Type:        schema.TypeFloat,
 			Optional:    true,
 			Computed:    true,
-			Description: "Number of days after which indexed data rolls to frozen. Defaults to 90 days",
+			Description: "Number of days after which indexed data rolls to frozen. Defaults to 90 days.",
 		},
 		"self_storage_bucket_path": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"splunk_archival_retention_days"},
-			Description:   "To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format: \"s3://selfStorageBucket/selfStorageBucketFolder\", where SelfStorageBucketFolder is optional, as you can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location for your deployment. Can not be set with splunk_archival_retention_days ",
+			Description: "To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format:" +
+				" \"s3://selfStorageBucket/selfStorageBucketFolder\", where SelfStorageBucketFolder is optional, as you " +
+				"can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location " +
+				"for your deployment (see https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageDDSSlocations). Can not be set with splunk_archival_retention_days. ",
 		},
 		"splunk_archival_retention_days": {
 			Type:          schema.TypeFloat,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"self_storage_bucket_path"},
-			Description:   "To create an index with DDAA enabled, you must specify the splunkArchivalRetentionDays value which must be The value of splunkArchivalRetentionDays must be positive and greater than or equal to the SearchableDays value. Can not be set with self_storage_bucket_path",
+			Description: "To create an index with DDAA enabled, you must specify the splunkArchivalRetentionDays value " +
+				"which must be The value of splunkArchivalRetentionDays must be positive and greater than the " +
+				"SearchableDays value. Can not be set with self_storage_bucket_path.",
 		},
 	}
 }

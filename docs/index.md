@@ -117,3 +117,27 @@ resource "scp_indexes" "classic-index-1" {
   name = "classic-index-1"
 }
 ```
+## General Notes/Troubleshooting
+
+### Retries
+
+The Terraform provider is configured to retry on certain error codes from the ACS API, such as error code 429 caused by
+ACS API rate limiting. When hitting a rate limit, it will likely take about 5 minutes for requests to become accepted again.
+
+### Errors from the ACS API:
+Unexpected errors received from the ACS API such as bad requests will be output to the user as indicated below.
+
+Please see https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSerrormessages for general troubleshooting tips:
+
+``` 
+Error submitting request for index (index-1) to be created: 
+unexpected state 'Not Found', wanted target 'Accepted'. 
+last error: {"code":"404-stack-not-found","message":"stack not found. 
+Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSerrormessages 
+for general troubleshooting tips."}
+```
+
+### Logs
+Please see the following for more information on viewing logs for terraform provider. https://developer.hashicorp.com/terraform/plugin/log/managing
+
+
