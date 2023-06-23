@@ -164,7 +164,7 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 
 	if err != nil {
 		// if hec not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.HecNotFound) {
+		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.ErrHecNotFound) {
 			tflog.Info(ctx, fmt.Sprintf("Removing HEC token from state. Not Found error while reading HEC (%s): %s.", hecName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
