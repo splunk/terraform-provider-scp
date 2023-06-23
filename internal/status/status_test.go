@@ -2,10 +2,13 @@ package status_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	idx "github.com/splunk/terraform-provider-scp/internal/indexes"
@@ -31,6 +34,23 @@ var notFoundResp = &http.Response{
 var badReqResp = &http.Response{
 	StatusCode: http.StatusBadRequest,
 	Body:       io.NopCloser(bytes.NewReader(nil)),
+}
+
+func genErrResp(code int, message string) *http.Response {
+	var b []byte
+
+	b, _ = json.Marshal(&v2.Error{
+		Code:    http.StatusText(code),
+		Message: message,
+	})
+
+	recorder := httptest.NewRecorder()
+	recorder.Header().Add("Content-Type", "json")
+	recorder.WriteHeader(code)
+	if b != nil {
+		_, _ = recorder.Write(b)
+	}
+	return recorder.Result()
 }
 
 func Test_IsStatusCodeRetryable(t *testing.T) {
@@ -107,6 +127,22 @@ func Test_ProcessResponse(t *testing.T) {
 		resp, statusText, err := status.ProcessResponse(notFoundResp, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(notFoundResp.StatusCode), statusText)
+		assert.NoError(err)
+	})
+
+	t.Run(fmt.Sprintf("%s results in error", status.ErrFailedDependency), func(t *testing.T) {
+		errResp := genErrResp(http.StatusFailedDependency, status.ErrFailedDependency)
+		resp, statusText, err := status.ProcessResponse(errResp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+		assert.Nil(resp)
+		assert.Equal(http.StatusText(errResp.StatusCode), statusText)
+		assert.Error(err)
+	})
+
+	t.Run(fmt.Sprintf("%s does not result in error", status.ErrDependencyIncomplete), func(t *testing.T) {
+		errResp := genErrResp(http.StatusFailedDependency, status.ErrDependencyIncomplete)
+		resp, statusText, err := status.ProcessResponse(errResp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+		assert.NotNil(resp)
+		assert.Equal(http.StatusText(errResp.StatusCode), statusText)
 		assert.NoError(err)
 	})
 }

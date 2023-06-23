@@ -119,6 +119,13 @@ resource "scp_indexes" "classic-index-1" {
 ```
 ## General Notes/Troubleshooting
 
+### Classic vs Victoria
+
+While the Terraform provider supports both Classic and Victoria deployments, there are some limitations on Classic. 
+First, user should run `terraform apply` with `-parallelism=1` flag to prevent concurrent write operations. This results in 
+Classic `terraform apply` runs taking longer than Victoria deployments. Second, when managing Hec Token resource, 
+search head targeting may not be used (see above for examples on how to target a search head for some resources and not others.)
+
 ### Retries
 
 The Terraform provider is configured to retry on certain error codes from the ACS API, such as error code 429 caused by

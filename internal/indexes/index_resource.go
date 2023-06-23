@@ -142,7 +142,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, m interface{
 
 	if err != nil {
 		// if index not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.IndexNotFound) {
+		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.ErrIndexNotFound) {
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
