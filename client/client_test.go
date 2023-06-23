@@ -170,6 +170,13 @@ func TestGenerateToken(t *testing.T) {
 		assert.Equal(token, "")
 	})
 
+	t.Run("with some unmarshal error", func(t *testing.T) {
+		mockClient.On("CreateToken", mock.Anything, v2.Stack(mockStack), mockCreateBody).Return(genInvalidTokenResp(200), errors.New("some error")).Once()
+		token, err := client.GenerateToken(context.TODO(), mockClient, mockUsername, mockStack)
+		assert.ErrorContainsf(err, err.Error(), "unmarshal error")
+		assert.Equal(token, "")
+	})
+
 	t.Run("with valid params and http response 200", func(t *testing.T) {
 		mockClient.On("CreateToken", mock.Anything, v2.Stack(mockStack), mockCreateBody).Return(genTokenResp(200), nil).Once()
 		token, err := client.GenerateToken(context.TODO(), mockClient, mockUsername, mockStack)
@@ -198,6 +205,27 @@ func genTokenResp(code int) *http.Response {
 			Id:    mockTokenId,
 			Token: &token,
 		}
+
+		b, _ = json.Marshal(&tokenInfo)
+	} else {
+		b, _ = json.Marshal(&v2.Error{
+			Code:    http.StatusText(code),
+			Message: http.StatusText(code),
+		})
+	}
+	recorder := httptest.NewRecorder()
+	recorder.Header().Add("Content-Type", "json")
+	recorder.WriteHeader(code)
+	if b != nil {
+		_, _ = recorder.Write(b)
+	}
+	return recorder.Result()
+}
+
+func genInvalidTokenResp(code int) *http.Response {
+	var b []byte
+	if code == http.StatusOK {
+		tokenInfo := v2.HecSpec{}
 
 		b, _ = json.Marshal(&tokenInfo)
 	} else {

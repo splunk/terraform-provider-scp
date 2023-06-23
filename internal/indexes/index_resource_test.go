@@ -8,6 +8,7 @@ import (
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
+	"github.com/splunk/terraform-provider-scp/internal/indexes"
 	"net/http"
 	"regexp"
 	"testing"
@@ -95,7 +96,7 @@ func TestAcc_SplunkCloudIndex_DatasizeField(t *testing.T) {
 func TestAcc_SplunkCloudIndex_ArchivalField(t *testing.T) {
 	// Test creating an Index resource and then updating splunk_archival_retention_days field
 	archivalFieldResource := resource.UniqueId()
-	regex, err := regexp.Compile("splunkArchivalRetentionDays must be greater than or equal to searchableDays")
+	regex, err := regexp.Compile("splunkArchivalRetentionDays must be greater than searchableDays")
 	if err != nil {
 		t.Error()
 	}
@@ -175,7 +176,7 @@ func testAccCheckIndexDestroy(s *terraform.State) error {
 	stack := providerNew.Meta().(client.ACSProvider).Stack
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "scp_indexes" {
+		if rs.Type != indexes.ResourceKey {
 			continue
 		}
 

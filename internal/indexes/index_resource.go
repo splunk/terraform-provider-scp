@@ -3,35 +3,24 @@ package indexes
 import (
 	"context"
 	"fmt"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
-	"net/http"
-	"strings"
 )
 
-func ResourceIndex() *schema.Resource {
-	return &schema.Resource{
-		// This description is used by the documentation generator and the language server.
-		Description: "Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/" +
-			"ManageIndexes for more latest, detailed information on attribute requirements and the ACS Indexes API. ",
+const (
+	ResourceKey = "scp_indexes"
+)
 
-		CreateContext: resourceIndexCreate,
-		ReadContext:   resourceIndexRead,
-		UpdateContext: resourceIndexUpdate,
-		DeleteContext: resourceIndexDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: IndexSchema(),
-	}
-}
-
-func IndexSchema() map[string]*schema.Schema {
+func indexResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
@@ -50,28 +39,51 @@ func IndexSchema() map[string]*schema.Schema {
 			Type:        schema.TypeFloat,
 			Optional:    true,
 			Computed:    true,
-			Description: "The maximum size in MB for a hot DB to reach before a roll to warm is triggered. Defaults to 0 (unlimited)",
+			Description: "The maximum size in MB for a hot DB to reach before a roll to warm is triggered. Defaults to 0 (unlimited).",
 		},
 		"searchable_days": {
 			Type:        schema.TypeFloat,
 			Optional:    true,
 			Computed:    true,
-			Description: "Number of days after which indexed data rolls to frozen. Defaults to 90 days",
+			Description: "Number of days after which indexed data rolls to frozen. Defaults to 90 days.",
 		},
 		"self_storage_bucket_path": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"splunk_archival_retention_days"},
-			Description:   "To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format: \"s3://selfStorageBucket/selfStorageBucketFolder\", where SelfStorageBucketFolder is optional, as you can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location for your deployment. Can not be set with splunk_archival_retention_days ",
+			Description: "To create an index with DDSS enabled, you must specify the selfStorageBucketPath value in the following format:" +
+				" \"s3://selfStorageBucket/selfStorageBucketFolder\", where SelfStorageBucketFolder is optional, as you " +
+				"can store data buckets at root. Before you can create an index with DDSS enabled, you must configure a self-storage location " +
+				"for your deployment (see https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageDDSSlocations). Can not be set with splunk_archival_retention_days. ",
 		},
 		"splunk_archival_retention_days": {
 			Type:          schema.TypeFloat,
 			Optional:      true,
 			Computed:      true,
 			ConflictsWith: []string{"self_storage_bucket_path"},
-			Description:   "To create an index with DDAA enabled, you must specify the splunkArchivalRetentionDays value which must be The value of splunkArchivalRetentionDays must be positive and greater than or equal to the SearchableDays value. Can not be set with self_storage_bucket_path",
+			Description: "To create an index with DDAA enabled, you must specify the splunkArchivalRetentionDays value " +
+				"which must be The value of splunkArchivalRetentionDays must be positive and greater than the " +
+				"SearchableDays value. Can not be set with self_storage_bucket_path.",
 		},
+	}
+}
+
+func ResourceIndex() *schema.Resource {
+	return &schema.Resource{
+		// This description is used by the documentation generator and the language server.
+		Description: "Index Resource. Please refer to https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ManageIndexes " +
+			"for more latest, detailed information on attribute requirements and the ACS Indexes API.",
+
+		CreateContext: resourceIndexCreate,
+		ReadContext:   resourceIndexRead,
+		UpdateContext: resourceIndexUpdate,
+		DeleteContext: resourceIndexDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: indexResourceSchema(),
 	}
 }
 
@@ -104,7 +116,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	// Poll Index until GET returns 200 to confirm index creation
-	err = WaitIndexPoll(ctx, acsClient, stack, indexRequest.Name, TargetStatusResourceExists, PendingStatusVerifyCreated)
+	err = WaitIndexPoll(ctx, acsClient, stack, indexRequest.Name, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be created: %s", indexRequest.Name, err))
 	}
@@ -130,7 +142,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, m interface{
 
 	if err != nil {
 		// if index not found set id of resource to empty string to remove from state
-		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), "404-index-not-found") {
+		if stateErr := err.(*resource.UnexpectedStateError); strings.Contains(stateErr.LastError.Error(), status.ErrIndexNotFound) {
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
@@ -212,7 +224,7 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, m interfac
 	}
 
 	//Poll Index until GET returns 404 Not found - index has been deleted
-	err = WaitIndexPoll(ctx, acsClient, stack, indexName, TargetStatusResourceDeleted, PendingStatusVerifyDeleted)
+	err = WaitIndexPoll(ctx, acsClient, stack, indexName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 	if err != nil {
 		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be deleted: %s", indexName, err))
 	}

@@ -123,8 +123,8 @@ func GenerateToken(ctx context.Context, clientInterface v2.ClientInterface, user
 	}
 
 	var loginResult LoginResult
-	if err := json.Unmarshal(bodyBytes, &loginResult); err != nil {
-		return "", err
+	if err = json.Unmarshal(bodyBytes, &loginResult); err != nil {
+		return "", fmt.Errorf("unmarshal error: %v", err)
 	}
 
 	return loginResult.Token, nil

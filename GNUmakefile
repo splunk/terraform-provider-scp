@@ -35,7 +35,7 @@ fmt:
 	@terraform fmt -recursive
 
 build:
-	go build -o terraform-provider-scp .
+	go build -o bin/terraform-provider-scp .
 
 ###################################
 #	Testing commands
@@ -85,3 +85,9 @@ endif
 
 ## Run acceptance tests
 #.PHONY: testacc
+
+###################################
+#	CICD
+###################################
+push-to-staging:
+	./scripts/push-to-staging.sh

@@ -40,6 +40,24 @@ type AppFeatureEnablement struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
+// capabilities list
+type CapabilitiesInfo struct {
+	GrantableCapabilities *[]string `json:"grantableCapabilities,omitempty"`
+	SystemCapabilities    *[]string `json:"systemCapabilities,omitempty"`
+}
+
+// Create user request body
+type CreateUserRequest struct {
+	CreateRole      *bool     `json:"createRole,omitempty"`
+	DefaultApp      *string   `json:"defaultApp,omitempty"`
+	Email           *string   `json:"email,omitempty"`
+	ForceChangePass *bool     `json:"forceChangePass,omitempty"`
+	FullName        *string   `json:"fullName,omitempty"`
+	Name            string    `json:"name"`
+	Password        string    `json:"password"`
+	Roles           *[]string `json:"roles,omitempty"`
+}
+
 // DescribeEligibilityPrivateConnectivity defines model for DescribeEligibilityPrivateConnectivity.
 type DescribeEligibilityPrivateConnectivity struct {
 	Eligible *bool   `json:"eligible,omitempty"`
@@ -83,6 +101,14 @@ type HecSpec struct {
 	Name              string    `json:"name"`
 	Token             *string   `json:"token,omitempty"`
 	UseAck            *bool     `json:"useAck,omitempty"`
+}
+
+// ImportedRolesInfo defines model for ImportedRolesInfo.
+type ImportedRolesInfo struct {
+	// Embedded struct due to allOf(#/components/schemas/RolesInfo)
+	RolesInfo `yaml:",inline"`
+	// Embedded fields due to inline allOf schema
+	Roles *[]string `json:"roles,omitempty"`
 }
 
 // IndexInfo defines model for IndexInfo.
@@ -220,6 +246,25 @@ type PatchSplunkbaseBody struct {
 	Version *string `json:"version,omitempty"`
 }
 
+// Patch user request body
+type PatchUserRequest struct {
+	DefaultApp      *string   `json:"defaultApp,omitempty"`
+	Email           *string   `json:"email,omitempty"`
+	ForceChangePass *bool     `json:"forceChangePass,omitempty"`
+	FullName        *string   `json:"fullName,omitempty"`
+	OldPassword     *string   `json:"oldPassword,omitempty"`
+	Password        *string   `json:"password,omitempty"`
+	Roles           *[]string `json:"roles,omitempty"`
+}
+
+// PostRolesRequest defines model for PostRolesRequest.
+type PostRolesRequest struct {
+	// Embedded struct due to allOf(#/components/schemas/RolesRequest)
+	RolesRequest `yaml:",inline"`
+	// Embedded fields due to inline allOf schema
+	Name string `json:"name"`
+}
+
 // the app package in tgz format
 type PrivateAppBody string
 
@@ -235,21 +280,82 @@ type RestartStatus struct {
 	ServiceReady            *bool   `json:"serviceReady,omitempty"`
 }
 
-// ShcPeer defines model for ShcPeer.
-type ShcPeer struct {
-	Label               string `json:"label"`
-	LastConfReplication string `json:"lastConfReplication"`
-	Status              string `json:"status"`
+// RolesInfo defines model for RolesInfo.
+type RolesInfo struct {
+	Capabilities       *[]string `json:"capabilities,omitempty"`
+	RtSrchJobsQuota    *int      `json:"rtSrchJobsQuota,omitempty"`
+	SrchDiskQuota      *int      `json:"srchDiskQuota,omitempty"`
+	SrchFilter         *string   `json:"srchFilter,omitempty"`
+	SrchIndexesAllowed *[]string `json:"srchIndexesAllowed,omitempty"`
+	SrchIndexesDefault *[]string `json:"srchIndexesDefault,omitempty"`
+	SrchJobsQuota      *int      `json:"srchJobsQuota,omitempty"`
+	SrchTimeEarliest   *int      `json:"srchTimeEarliest,omitempty"`
+	SrchTimeWin        *int      `json:"srchTimeWin,omitempty"`
 }
 
-// ShcStatus defines model for ShcStatus.
-type ShcStatus struct {
+// RolesRequest defines model for RolesRequest.
+type RolesRequest struct {
+	// Embedded struct due to allOf(#/components/schemas/RolesInfo)
+	RolesInfo `yaml:",inline"`
+	// Embedded fields due to inline allOf schema
+	CumulativeRTSrchJobsQuota *int      `json:"cumulativeRTSrchJobsQuota,omitempty"`
+	CumulativeSrchJobsQuota   *int      `json:"cumulativeSrchJobsQuota,omitempty"`
+	DefaultApp                *string   `json:"defaultApp,omitempty"`
+	ImportedRoles             *[]string `json:"importedRoles,omitempty"`
+}
 
-	// Search Head Cluster captain
-	Captain string `json:"captain"`
+// RolesResponse defines model for RolesResponse.
+type RolesResponse struct {
+	// Embedded fields due to inline allOf schema
+	CumulativeRTSrchJobsQuota *int               `json:"cumulativeRTSrchJobsQuota,omitempty"`
+	CumulativeSrchJobsQuota   *int               `json:"cumulativeSrchJobsQuota,omitempty"`
+	DefaultApp                *string            `json:"defaultApp,omitempty"`
+	Imported                  *ImportedRolesInfo `json:"imported,omitempty"`
+	Name                      string             `json:"name"`
+	// Embedded struct due to allOf(#/components/schemas/RolesInfo)
+	RolesInfo `yaml:",inline"`
+}
 
-	// Search Head Cluster peer nodes
-	Peers []ShcPeer `json:"peers"`
+// SelfStorageLocationBody defines model for SelfStorageLocationBody.
+type SelfStorageLocationBody struct {
+	BucketName  string  `json:"bucketName"`
+	Description *string `json:"description,omitempty"`
+	Folder      *string `json:"folder,omitempty"`
+	Title       string  `json:"title"`
+}
+
+// SelfStorageLocationInfo defines model for SelfStorageLocationInfo.
+type SelfStorageLocationInfo struct {
+	BucketName  string `json:"bucketName"`
+	BucketPath  string `json:"bucketPath"`
+	Description string `json:"description"`
+	Folder      string `json:"folder"`
+	Title       string `json:"title"`
+	Uri         string `json:"uri"`
+}
+
+// SelfStorageLocationPolicy defines model for SelfStorageLocationPolicy.
+type SelfStorageLocationPolicy struct {
+	Message string                 `json:"message"`
+	Policy  map[string]interface{} `json:"policy"`
+}
+
+// SelfStorageLocationPrefix defines model for SelfStorageLocationPrefix.
+type SelfStorageLocationPrefix struct {
+	Message string `json:"message"`
+	Prefix  string `json:"prefix"`
+}
+
+// SelfStorageLocationServiceAccounts defines model for SelfStorageLocationServiceAccounts.
+type SelfStorageLocationServiceAccounts struct {
+	ClusterMaster string `json:"clusterMaster"`
+	Indexer       string `json:"indexer"`
+}
+
+// SelfStorageLocationServiceAccountsResponse defines model for SelfStorageLocationServiceAccountsResponse.
+type SelfStorageLocationServiceAccountsResponse struct {
+	Message         string                              `json:"message"`
+	ServiceAccounts *SelfStorageLocationServiceAccounts `json:"serviceAccounts,omitempty"`
 }
 
 // the splunkbase app name and version to install. If no version specified, the latest version will be installed.
@@ -276,7 +382,6 @@ type StackStatus struct {
 		// The stack has a notification to restart splunk server. User should restart stack via UI for all configurations to be completed. It may take some time for the correct state for restart-required field to be populated in a Search Head Cluster, given sync delays with different Search Heads
 		RestartRequired *bool `json:"restartRequired,omitempty"`
 	} `json:"messages"`
-	ShcStatus *ShcStatus `json:"shcStatus,omitempty"`
 }
 
 // TokenBody defines model for TokenBody.
@@ -306,6 +411,19 @@ type UpdatePrivateConnectivity struct {
 	PatchedCustomerAccountIds *[]string `json:"patchedCustomerAccountIds,omitempty"`
 }
 
+// Splunk user
+type UsersResponse struct {
+	Capabilities        []string `json:"capabilities"`
+	DefaultApp          string   `json:"defaultApp"`
+	DefaultAppSource    string   `json:"defaultAppSource"`
+	Email               string   `json:"email"`
+	FullName            string   `json:"fullName"`
+	LastSuccessfulLogin *string  `json:"lastSuccessfulLogin,omitempty"`
+	LockedOut           bool     `json:"lockedOut"`
+	Name                string   `json:"name"`
+	Roles               []string `json:"roles"`
+}
+
 // WarningResponse defines model for WarningResponse.
 type WarningResponse struct {
 	Warnings *[]string `json:"warnings,omitempty"`
@@ -316,6 +434,12 @@ type AppName string
 
 // AppGroup defines model for appGroup.
 type AppGroup string
+
+// BucketName defines model for bucketName.
+type BucketName string
+
+// BucketPath defines model for bucketPath.
+type BucketPath string
 
 // Count defines model for count.
 type Count int64
@@ -336,8 +460,14 @@ const (
 // FeatureName defines model for featureName.
 type FeatureName string
 
+// FederatedSearchManage defines model for federatedSearchManage.
+type FederatedSearchManage string
+
 // FromTime defines model for fromTime.
 type FromTime string
+
+// GrantableOnly defines model for grantableOnly.
+type GrantableOnly bool
 
 // Hec defines model for hec.
 type Hec string
@@ -353,6 +483,9 @@ type NextLink string
 
 // Offset defines model for offset.
 type Offset int64
+
+// RoleName defines model for roleName.
+type RoleName string
 
 // ScheduleID defines model for scheduleID.
 type ScheduleID string
@@ -371,6 +504,9 @@ type TokenID string
 
 // TokenStatus defines model for tokenStatus.
 type TokenStatus string
+
+// UserName defines model for userName.
+type UserName string
 
 // Username defines model for username.
 type Username string
@@ -410,13 +546,28 @@ type ListAppsParams struct {
 
 	// the offset to start return items from
 	Offset *Offset `json:"offset,omitempty"`
+
+	// filter apps based on splunkbase and non-splunkbase apps
+	Splunkbase *bool `json:"splunkbase,omitempty"`
 }
 
 // InstallAppParams defines parameters for InstallApp.
 type InstallAppParams struct {
 
+	// is the app available in splunkbase
+	Splunkbase *bool `json:"splunkbase,omitempty"`
+
 	// ACS-Legal-Ack is required for installing private apps
 	ACSLegalAck string `json:"ACS-Legal-Ack"`
+
+	// Splunkbase sessionID
+	XSplunkbaseAuthorization *string `json:"X-Splunkbase-Authorization,omitempty"`
+
+	// The app inspect token
+	XSplunkAuthorization *string `json:"X-Splunk-Authorization,omitempty"`
+
+	// ACS-Licensing-Ack is required for installing splunkbase apps
+	ACSLicensingAck *string `json:"ACS-Licensing-Ack,omitempty"`
 }
 
 // ListAppsVictoriaParams defines parameters for ListAppsVictoria.
@@ -437,9 +588,6 @@ type InstallAppVictoriaParams struct {
 
 	// is the app available in splunkbase
 	Splunkbase *bool `json:"splunkbase,omitempty"`
-
-	// install local-only
-	LocalOnly *bool `json:"local-only,omitempty"`
 
 	// Splunkbase sessionID
 	XSplunkbaseAuthorization *string `json:"X-Splunkbase-Authorization,omitempty"`
@@ -463,6 +611,36 @@ type PatchAppVictoriaParams struct {
 	// ACS-Licensing-Ack is required for updating splunkbase apps
 	ACSLicensingAck string `json:"ACS-Licensing-Ack"`
 }
+
+// PatchAppClassicParams defines parameters for PatchAppClassic.
+type PatchAppClassicParams struct {
+
+	// The splunkbase sessionID
+	XSplunkbaseAuthorization string `json:"X-Splunkbase-Authorization"`
+
+	// ACS-Licensing-Ack is required for updating splunkbase apps
+	ACSLicensingAck string `json:"ACS-Licensing-Ack"`
+}
+
+// ListCapabilitiesParams defines parameters for ListCapabilities.
+type ListCapabilitiesParams struct {
+
+	// only show grantable capabilities
+	GrantableOnly *GrantableOnly `json:"grantableOnly,omitempty"`
+}
+
+// ListSelfStorageLocationsParams defines parameters for ListSelfStorageLocations.
+type ListSelfStorageLocationsParams struct {
+
+	// the count of items to return
+	Count *Count `json:"count,omitempty"`
+
+	// the offset to start return items from
+	Offset *Offset `json:"offset,omitempty"`
+}
+
+// CreateSelfStorageLocationJSONBody defines parameters for CreateSelfStorageLocation.
+type CreateSelfStorageLocationJSONBody SelfStorageLocationBody
 
 // SetAppFeatureEnablementJSONBody defines parameters for SetAppFeatureEnablement.
 type SetAppFeatureEnablementJSONBody AppFeatureEnablement
@@ -501,6 +679,9 @@ type CreateHECJSONBody HecSpec
 
 // DeleteHecJSONBody defines parameters for DeleteHec.
 type DeleteHecJSONBody map[string]interface{}
+
+// PatchHECJSONBody defines parameters for PatchHEC.
+type PatchHECJSONBody HecSpec
 
 // UpdateHECJSONBody defines parameters for UpdateHEC.
 type UpdateHECJSONBody HecSpec
@@ -543,6 +724,36 @@ type UpdatePrivateConnectivityJSONBody EnablePrivateConnectivity
 // EnablePrivateConnectivityJSONBody defines parameters for EnablePrivateConnectivity.
 type EnablePrivateConnectivityJSONBody EnablePrivateConnectivity
 
+// ListRolesParams defines parameters for ListRoles.
+type ListRolesParams struct {
+
+	// the count of items to return
+	Count *Count `json:"count,omitempty"`
+
+	// the offset to start return items from
+	Offset *Offset `json:"offset,omitempty"`
+}
+
+// CreateRoleJSONBody defines parameters for CreateRole.
+type CreateRoleJSONBody PostRolesRequest
+
+// CreateRoleParams defines parameters for CreateRole.
+type CreateRoleParams struct {
+
+	// Set Federated-Search-Manage-Ack to 'Y' to acknowledge your acceptance that roles with fsh_manage capability can send search results data outside the compliant environment
+	FederatedSearchManageAck *FederatedSearchManage `json:"Federated-Search-Manage-Ack,omitempty"`
+}
+
+// PatchRoleInfoJSONBody defines parameters for PatchRoleInfo.
+type PatchRoleInfoJSONBody RolesRequest
+
+// PatchRoleInfoParams defines parameters for PatchRoleInfo.
+type PatchRoleInfoParams struct {
+
+	// Set Federated-Search-Manage-Ack to 'Y' to acknowledge your acceptance that roles with fsh_manage capability can send search results data outside the compliant environment
+	FederatedSearchManageAck *FederatedSearchManage `json:"Federated-Search-Manage-Ack,omitempty"`
+}
+
 // ListTokensParams defines parameters for ListTokens.
 type ListTokensParams struct {
 
@@ -562,6 +773,36 @@ type ListTokensParams struct {
 // CreateTokenJSONBody defines parameters for CreateToken.
 type CreateTokenJSONBody TokenBody
 
+// ListUsersParams defines parameters for ListUsers.
+type ListUsersParams struct {
+
+	// the count of items to return
+	Count *Count `json:"count,omitempty"`
+
+	// the offset to start return items from
+	Offset *Offset `json:"offset,omitempty"`
+}
+
+// CreateUserJSONBody defines parameters for CreateUser.
+type CreateUserJSONBody CreateUserRequest
+
+// CreateUserParams defines parameters for CreateUser.
+type CreateUserParams struct {
+
+	// Set Federated-Search-Manage-Ack to 'Y' to acknowledge your acceptance that roles with fsh_manage capability can send search results data outside the compliant environment
+	FederatedSearchManageAck *FederatedSearchManage `json:"Federated-Search-Manage-Ack,omitempty"`
+}
+
+// PatchUserJSONBody defines parameters for PatchUser.
+type PatchUserJSONBody PatchUserRequest
+
+// PatchUserParams defines parameters for PatchUser.
+type PatchUserParams struct {
+
+	// Set Federated-Search-Manage-Ack to 'Y' to acknowledge your acceptance that roles with fsh_manage capability can send search results data outside the compliant environment
+	FederatedSearchManageAck *FederatedSearchManage `json:"Federated-Search-Manage-Ack,omitempty"`
+}
+
 // AddOutboundportsJSONRequestBody defines body for AddOutboundports for application/json ContentType.
 type AddOutboundportsJSONRequestBody AddOutboundportsJSONBody
 
@@ -573,6 +814,9 @@ type DeleteSubnetsJSONRequestBody DeleteSubnetsJSONBody
 
 // AddSubnetsJSONRequestBody defines body for AddSubnets for application/json ContentType.
 type AddSubnetsJSONRequestBody AddSubnetsJSONBody
+
+// CreateSelfStorageLocationJSONRequestBody defines body for CreateSelfStorageLocation for application/json ContentType.
+type CreateSelfStorageLocationJSONRequestBody CreateSelfStorageLocationJSONBody
 
 // SetAppFeatureEnablementJSONRequestBody defines body for SetAppFeatureEnablement for application/json ContentType.
 type SetAppFeatureEnablementJSONRequestBody SetAppFeatureEnablementJSONBody
@@ -592,6 +836,9 @@ type CreateHECJSONRequestBody CreateHECJSONBody
 // DeleteHecJSONRequestBody defines body for DeleteHec for application/json ContentType.
 type DeleteHecJSONRequestBody DeleteHecJSONBody
 
+// PatchHECJSONRequestBody defines body for PatchHEC for application/json ContentType.
+type PatchHECJSONRequestBody PatchHECJSONBody
+
 // UpdateHECJSONRequestBody defines body for UpdateHEC for application/json ContentType.
 type UpdateHECJSONRequestBody UpdateHECJSONBody
 
@@ -607,8 +854,20 @@ type UpdatePrivateConnectivityJSONRequestBody UpdatePrivateConnectivityJSONBody
 // EnablePrivateConnectivityJSONRequestBody defines body for EnablePrivateConnectivity for application/json ContentType.
 type EnablePrivateConnectivityJSONRequestBody EnablePrivateConnectivityJSONBody
 
+// CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
+type CreateRoleJSONRequestBody CreateRoleJSONBody
+
+// PatchRoleInfoJSONRequestBody defines body for PatchRoleInfo for application/json ContentType.
+type PatchRoleInfoJSONRequestBody PatchRoleInfoJSONBody
+
 // CreateTokenJSONRequestBody defines body for CreateToken for application/json ContentType.
 type CreateTokenJSONRequestBody CreateTokenJSONBody
+
+// CreateUserJSONRequestBody defines body for CreateUser for application/json ContentType.
+type CreateUserJSONRequestBody CreateUserJSONBody
+
+// PatchUserJSONRequestBody defines body for PatchUser for application/json ContentType.
+type PatchUserJSONRequestBody PatchUserJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -742,6 +1001,32 @@ type ClientInterface interface {
 	// DescribeApp request
 	DescribeApp(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PatchAppClassic request  with any body
+	PatchAppClassicWithBody(ctx context.Context, stack Stack, app AppName, params *PatchAppClassicParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListCapabilities request
+	ListCapabilities(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSelfStorageLocations request
+	ListSelfStorageLocations(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateSelfStorageLocation request  with any body
+	CreateSelfStorageLocationWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateSelfStorageLocation(ctx context.Context, stack Stack, body CreateSelfStorageLocationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSelfStorageLocationPolicy request
+	GetSelfStorageLocationPolicy(ctx context.Context, stack Stack, bucketName BucketName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeSelfStorageLocation request
+	DescribeSelfStorageLocation(ctx context.Context, stack Stack, bucketPath BucketPath, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSelfStorageLocationPrefix request
+	GetSelfStorageLocationPrefix(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSelfStorageLocationServiceAccounts request
+	GetSelfStorageLocationServiceAccounts(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablement(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -786,6 +1071,11 @@ type ClientInterface interface {
 
 	// DescribeHec request
 	DescribeHec(ctx context.Context, stack Stack, hec Hec, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchHEC request  with any body
+	PatchHECWithBody(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchHEC(ctx context.Context, stack Stack, hec Hec, body PatchHECJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateHEC request  with any body
 	UpdateHECWithBody(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -848,6 +1138,25 @@ type ClientInterface interface {
 	// RestartStatus request
 	RestartStatus(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListRoles request
+	ListRoles(ctx context.Context, stack Stack, params *ListRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateRole request  with any body
+	CreateRoleWithBody(ctx context.Context, stack Stack, params *CreateRoleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateRole(ctx context.Context, stack Stack, params *CreateRoleParams, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteRole request
+	DeleteRole(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeRole request
+	DescribeRole(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchRoleInfo request  with any body
+	PatchRoleInfoWithBody(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchRoleInfo(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, body PatchRoleInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DescribeStack request
 	DescribeStack(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -864,6 +1173,25 @@ type ClientInterface interface {
 
 	// GetTokenInfo request
 	GetTokenInfo(ctx context.Context, stack Stack, tokenID TokenID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListUsers request
+	ListUsers(ctx context.Context, stack Stack, params *ListUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateUser request  with any body
+	CreateUserWithBody(ctx context.Context, stack Stack, params *CreateUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateUser(ctx context.Context, stack Stack, params *CreateUserParams, body CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteUser request
+	DeleteUser(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeUser request
+	DescribeUser(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchUser request  with any body
+	PatchUserWithBody(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchUser(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetOutboundports(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1118,6 +1446,114 @@ func (c *Client) DescribeApp(ctx context.Context, stack Stack, app AppName, reqE
 	return c.Client.Do(req)
 }
 
+func (c *Client) PatchAppClassicWithBody(ctx context.Context, stack Stack, app AppName, params *PatchAppClassicParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchAppClassicRequestWithBody(c.Server, stack, app, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListCapabilities(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListCapabilitiesRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListSelfStorageLocations(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSelfStorageLocationsRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSelfStorageLocationWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSelfStorageLocationRequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateSelfStorageLocation(ctx context.Context, stack Stack, body CreateSelfStorageLocationJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateSelfStorageLocationRequest(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSelfStorageLocationPolicy(ctx context.Context, stack Stack, bucketName BucketName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSelfStorageLocationPolicyRequest(c.Server, stack, bucketName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeSelfStorageLocation(ctx context.Context, stack Stack, bucketPath BucketPath, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeSelfStorageLocationRequest(c.Server, stack, bucketPath)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSelfStorageLocationPrefix(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSelfStorageLocationPrefixRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetSelfStorageLocationServiceAccounts(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSelfStorageLocationServiceAccountsRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DescribeAppFeatureEnablement(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDescribeAppFeatureEnablementRequest(c.Server, stack, appGroup, featureName)
 	if err != nil {
@@ -1312,6 +1748,30 @@ func (c *Client) DeleteHec(ctx context.Context, stack Stack, hec Hec, body Delet
 
 func (c *Client) DescribeHec(ctx context.Context, stack Stack, hec Hec, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDescribeHecRequest(c.Server, stack, hec)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchHECWithBody(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchHECRequestWithBody(c.Server, stack, hec, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchHEC(ctx context.Context, stack Stack, hec Hec, body PatchHECJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchHECRequest(c.Server, stack, hec, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1586,6 +2046,90 @@ func (c *Client) RestartStatus(ctx context.Context, stack Stack, reqEditors ...R
 	return c.Client.Do(req)
 }
 
+func (c *Client) ListRoles(ctx context.Context, stack Stack, params *ListRolesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListRolesRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateRoleWithBody(ctx context.Context, stack Stack, params *CreateRoleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequestWithBody(c.Server, stack, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateRole(ctx context.Context, stack Stack, params *CreateRoleParams, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateRoleRequest(c.Server, stack, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteRole(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteRoleRequest(c.Server, stack, roleName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeRole(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeRoleRequest(c.Server, stack, roleName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchRoleInfoWithBody(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchRoleInfoRequestWithBody(c.Server, stack, roleName, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchRoleInfo(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, body PatchRoleInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchRoleInfoRequest(c.Server, stack, roleName, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DescribeStack(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDescribeStackRequest(c.Server, stack)
 	if err != nil {
@@ -1648,6 +2192,90 @@ func (c *Client) DeleteToken(ctx context.Context, stack Stack, tokenID TokenID, 
 
 func (c *Client) GetTokenInfo(ctx context.Context, stack Stack, tokenID TokenID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTokenInfoRequest(c.Server, stack, tokenID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListUsers(ctx context.Context, stack Stack, params *ListUsersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListUsersRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateUserWithBody(ctx context.Context, stack Stack, params *CreateUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateUserRequestWithBody(c.Server, stack, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateUser(ctx context.Context, stack Stack, params *CreateUserParams, body CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateUserRequest(c.Server, stack, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteUser(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteUserRequest(c.Server, stack, userName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeUser(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeUserRequest(c.Server, stack, userName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUserWithBody(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUserRequestWithBody(c.Server, stack, userName, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchUser(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchUserRequest(c.Server, stack, userName, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2091,6 +2719,22 @@ func NewListAppsRequest(server string, stack Stack, params *ListAppsParams) (*ht
 
 	}
 
+	if params.Splunkbase != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "splunkbase", runtime.ParamLocationQuery, *params.Splunkbase); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
@@ -2127,6 +2771,26 @@ func NewInstallAppRequestWithBody(server string, stack Stack, params *InstallApp
 
 	queryURL := serverURL.ResolveReference(&operationURL)
 
+	queryValues := queryURL.Query()
+
+	if params.Splunkbase != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "splunkbase", runtime.ParamLocationQuery, *params.Splunkbase); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
 	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
@@ -2142,6 +2806,39 @@ func NewInstallAppRequestWithBody(server string, stack Stack, params *InstallApp
 	}
 
 	req.Header.Set("ACS-Legal-Ack", headerParam0)
+
+	if params.XSplunkbaseAuthorization != nil {
+		var headerParam1 string
+
+		headerParam1, err = runtime.StyleParamWithLocation("simple", false, "X-Splunkbase-Authorization", runtime.ParamLocationHeader, *params.XSplunkbaseAuthorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Splunkbase-Authorization", headerParam1)
+	}
+
+	if params.XSplunkAuthorization != nil {
+		var headerParam2 string
+
+		headerParam2, err = runtime.StyleParamWithLocation("simple", false, "X-Splunk-Authorization", runtime.ParamLocationHeader, *params.XSplunkAuthorization)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("X-Splunk-Authorization", headerParam2)
+	}
+
+	if params.ACSLicensingAck != nil {
+		var headerParam3 string
+
+		headerParam3, err = runtime.StyleParamWithLocation("simple", false, "ACS-Licensing-Ack", runtime.ParamLocationHeader, *params.ACSLicensingAck)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("ACS-Licensing-Ack", headerParam3)
+	}
 
 	return req, nil
 }
@@ -2263,22 +2960,6 @@ func NewInstallAppVictoriaRequestWithBody(server string, stack Stack, params *In
 	if params.Splunkbase != nil {
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "splunkbase", runtime.ParamLocationQuery, *params.Splunkbase); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.LocalOnly != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "local-only", runtime.ParamLocationQuery, *params.LocalOnly); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -2556,6 +3237,388 @@ func NewDescribeAppRequest(server string, stack Stack, app AppName) (*http.Reque
 	}
 
 	operationPath := fmt.Sprintf("/%s/adminconfig/v2/apps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchAppClassicRequestWithBody generates requests for PatchAppClassic with any type of body
+func NewPatchAppClassicRequestWithBody(server string, stack Stack, app AppName, params *PatchAppClassicParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app", runtime.ParamLocationPath, app)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/apps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	var headerParam0 string
+
+	headerParam0, err = runtime.StyleParamWithLocation("simple", false, "X-Splunkbase-Authorization", runtime.ParamLocationHeader, params.XSplunkbaseAuthorization)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("X-Splunkbase-Authorization", headerParam0)
+
+	var headerParam1 string
+
+	headerParam1, err = runtime.StyleParamWithLocation("simple", false, "ACS-Licensing-Ack", runtime.ParamLocationHeader, params.ACSLicensingAck)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("ACS-Licensing-Ack", headerParam1)
+
+	return req, nil
+}
+
+// NewListCapabilitiesRequest generates requests for ListCapabilities
+func NewListCapabilitiesRequest(server string, stack Stack, params *ListCapabilitiesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/capabilities", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.GrantableOnly != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "grantableOnly", runtime.ParamLocationQuery, *params.GrantableOnly); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListSelfStorageLocationsRequest generates requests for ListSelfStorageLocations
+func NewListSelfStorageLocationsRequest(server string, stack Stack, params *ListSelfStorageLocationsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/buckets", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Offset != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateSelfStorageLocationRequest calls the generic CreateSelfStorageLocation builder with application/json body
+func NewCreateSelfStorageLocationRequest(server string, stack Stack, body CreateSelfStorageLocationJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateSelfStorageLocationRequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewCreateSelfStorageLocationRequestWithBody generates requests for CreateSelfStorageLocation with any type of body
+func NewCreateSelfStorageLocationRequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/buckets", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetSelfStorageLocationPolicyRequest generates requests for GetSelfStorageLocationPolicy
+func NewGetSelfStorageLocationPolicyRequest(server string, stack Stack, bucketName BucketName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "bucketName", runtime.ParamLocationPath, bucketName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/buckets/%s/policy", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDescribeSelfStorageLocationRequest generates requests for DescribeSelfStorageLocation
+func NewDescribeSelfStorageLocationRequest(server string, stack Stack, bucketPath BucketPath) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "bucketPath", runtime.ParamLocationPath, bucketPath)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/buckets/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSelfStorageLocationPrefixRequest generates requests for GetSelfStorageLocationPrefix
+func NewGetSelfStorageLocationPrefixRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/configs/prefix", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSelfStorageLocationServiceAccountsRequest generates requests for GetSelfStorageLocationServiceAccounts
+func NewGetSelfStorageLocationServiceAccountsRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/self-storage-locations/configs/service-accounts", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = operationPath[1:]
 	}
@@ -3156,6 +4219,60 @@ func NewDescribeHecRequest(server string, stack Stack, hec Hec) (*http.Request, 
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewPatchHECRequest calls the generic PatchHEC builder with application/json body
+func NewPatchHECRequest(server string, stack Stack, hec Hec, body PatchHECJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchHECRequestWithBody(server, stack, hec, "application/json", bodyReader)
+}
+
+// NewPatchHECRequestWithBody generates requests for PatchHEC with any type of body
+func NewPatchHECRequestWithBody(server string, stack Stack, hec Hec, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "hec", runtime.ParamLocationPath, hec)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/inputs/http-event-collectors/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -3970,6 +5087,281 @@ func NewRestartStatusRequest(server string, stack Stack) (*http.Request, error) 
 	return req, nil
 }
 
+// NewListRolesRequest generates requests for ListRoles
+func NewListRolesRequest(server string, stack Stack, params *ListRolesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/roles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Offset != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateRoleRequest calls the generic CreateRole builder with application/json body
+func NewCreateRoleRequest(server string, stack Stack, params *CreateRoleParams, body CreateRoleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateRoleRequestWithBody(server, stack, params, "application/json", bodyReader)
+}
+
+// NewCreateRoleRequestWithBody generates requests for CreateRole with any type of body
+func NewCreateRoleRequestWithBody(server string, stack Stack, params *CreateRoleParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/roles", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params.FederatedSearchManageAck != nil {
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Federated-Search-Manage-Ack", runtime.ParamLocationHeader, *params.FederatedSearchManageAck)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Federated-Search-Manage-Ack", headerParam0)
+	}
+
+	return req, nil
+}
+
+// NewDeleteRoleRequest generates requests for DeleteRole
+func NewDeleteRoleRequest(server string, stack Stack, roleName RoleName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "roleName", runtime.ParamLocationPath, roleName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/roles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDescribeRoleRequest generates requests for DescribeRole
+func NewDescribeRoleRequest(server string, stack Stack, roleName RoleName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "roleName", runtime.ParamLocationPath, roleName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/roles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchRoleInfoRequest calls the generic PatchRoleInfo builder with application/json body
+func NewPatchRoleInfoRequest(server string, stack Stack, roleName RoleName, params *PatchRoleInfoParams, body PatchRoleInfoJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchRoleInfoRequestWithBody(server, stack, roleName, params, "application/json", bodyReader)
+}
+
+// NewPatchRoleInfoRequestWithBody generates requests for PatchRoleInfo with any type of body
+func NewPatchRoleInfoRequestWithBody(server string, stack Stack, roleName RoleName, params *PatchRoleInfoParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "roleName", runtime.ParamLocationPath, roleName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/roles/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params.FederatedSearchManageAck != nil {
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Federated-Search-Manage-Ack", runtime.ParamLocationHeader, *params.FederatedSearchManageAck)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Federated-Search-Manage-Ack", headerParam0)
+	}
+
+	return req, nil
+}
+
 // NewDescribeStackRequest generates requests for DescribeStack
 func NewDescribeStackRequest(server string, stack Stack) (*http.Request, error) {
 	var err error
@@ -4235,6 +5627,281 @@ func NewGetTokenInfoRequest(server string, stack Stack, tokenID TokenID) (*http.
 	return req, nil
 }
 
+// NewListUsersRequest generates requests for ListUsers
+func NewListUsersRequest(server string, stack Stack, params *ListUsersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/users", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Offset != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateUserRequest calls the generic CreateUser builder with application/json body
+func NewCreateUserRequest(server string, stack Stack, params *CreateUserParams, body CreateUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateUserRequestWithBody(server, stack, params, "application/json", bodyReader)
+}
+
+// NewCreateUserRequestWithBody generates requests for CreateUser with any type of body
+func NewCreateUserRequestWithBody(server string, stack Stack, params *CreateUserParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/users", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params.FederatedSearchManageAck != nil {
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Federated-Search-Manage-Ack", runtime.ParamLocationHeader, *params.FederatedSearchManageAck)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Federated-Search-Manage-Ack", headerParam0)
+	}
+
+	return req, nil
+}
+
+// NewDeleteUserRequest generates requests for DeleteUser
+func NewDeleteUserRequest(server string, stack Stack, userName UserName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "userName", runtime.ParamLocationPath, userName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/users/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDescribeUserRequest generates requests for DescribeUser
+func NewDescribeUserRequest(server string, stack Stack, userName UserName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "userName", runtime.ParamLocationPath, userName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/users/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchUserRequest calls the generic PatchUser builder with application/json body
+func NewPatchUserRequest(server string, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchUserRequestWithBody(server, stack, userName, params, "application/json", bodyReader)
+}
+
+// NewPatchUserRequestWithBody generates requests for PatchUser with any type of body
+func NewPatchUserRequestWithBody(server string, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "userName", runtime.ParamLocationPath, userName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/users/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	if params.FederatedSearchManageAck != nil {
+		var headerParam0 string
+
+		headerParam0, err = runtime.StyleParamWithLocation("simple", false, "Federated-Search-Manage-Ack", runtime.ParamLocationHeader, *params.FederatedSearchManageAck)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Federated-Search-Manage-Ack", headerParam0)
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -4337,6 +6004,32 @@ type ClientWithResponsesInterface interface {
 	// DescribeApp request
 	DescribeAppWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*DescribeAppResponse, error)
 
+	// PatchAppClassic request  with any body
+	PatchAppClassicWithBodyWithResponse(ctx context.Context, stack Stack, app AppName, params *PatchAppClassicParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAppClassicResponse, error)
+
+	// ListCapabilities request
+	ListCapabilitiesWithResponse(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*ListCapabilitiesResponse, error)
+
+	// ListSelfStorageLocations request
+	ListSelfStorageLocationsWithResponse(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*ListSelfStorageLocationsResponse, error)
+
+	// CreateSelfStorageLocation request  with any body
+	CreateSelfStorageLocationWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSelfStorageLocationResponse, error)
+
+	CreateSelfStorageLocationWithResponse(ctx context.Context, stack Stack, body CreateSelfStorageLocationJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSelfStorageLocationResponse, error)
+
+	// GetSelfStorageLocationPolicy request
+	GetSelfStorageLocationPolicyWithResponse(ctx context.Context, stack Stack, bucketName BucketName, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationPolicyResponse, error)
+
+	// DescribeSelfStorageLocation request
+	DescribeSelfStorageLocationWithResponse(ctx context.Context, stack Stack, bucketPath BucketPath, reqEditors ...RequestEditorFn) (*DescribeSelfStorageLocationResponse, error)
+
+	// GetSelfStorageLocationPrefix request
+	GetSelfStorageLocationPrefixWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationPrefixResponse, error)
+
+	// GetSelfStorageLocationServiceAccounts request
+	GetSelfStorageLocationServiceAccountsWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationServiceAccountsResponse, error)
+
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablementWithResponse(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*DescribeAppFeatureEnablementResponse, error)
 
@@ -4381,6 +6074,11 @@ type ClientWithResponsesInterface interface {
 
 	// DescribeHec request
 	DescribeHecWithResponse(ctx context.Context, stack Stack, hec Hec, reqEditors ...RequestEditorFn) (*DescribeHecResponse, error)
+
+	// PatchHEC request  with any body
+	PatchHECWithBodyWithResponse(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchHECResponse, error)
+
+	PatchHECWithResponse(ctx context.Context, stack Stack, hec Hec, body PatchHECJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchHECResponse, error)
 
 	// UpdateHEC request  with any body
 	UpdateHECWithBodyWithResponse(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateHECResponse, error)
@@ -4443,6 +6141,25 @@ type ClientWithResponsesInterface interface {
 	// RestartStatus request
 	RestartStatusWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*RestartStatusResponse, error)
 
+	// ListRoles request
+	ListRolesWithResponse(ctx context.Context, stack Stack, params *ListRolesParams, reqEditors ...RequestEditorFn) (*ListRolesResponse, error)
+
+	// CreateRole request  with any body
+	CreateRoleWithBodyWithResponse(ctx context.Context, stack Stack, params *CreateRoleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	CreateRoleWithResponse(ctx context.Context, stack Stack, params *CreateRoleParams, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error)
+
+	// DeleteRole request
+	DeleteRoleWithResponse(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error)
+
+	// DescribeRole request
+	DescribeRoleWithResponse(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*DescribeRoleResponse, error)
+
+	// PatchRoleInfo request  with any body
+	PatchRoleInfoWithBodyWithResponse(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchRoleInfoResponse, error)
+
+	PatchRoleInfoWithResponse(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, body PatchRoleInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchRoleInfoResponse, error)
+
 	// DescribeStack request
 	DescribeStackWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeStackResponse, error)
 
@@ -4459,6 +6176,25 @@ type ClientWithResponsesInterface interface {
 
 	// GetTokenInfo request
 	GetTokenInfoWithResponse(ctx context.Context, stack Stack, tokenID TokenID, reqEditors ...RequestEditorFn) (*GetTokenInfoResponse, error)
+
+	// ListUsers request
+	ListUsersWithResponse(ctx context.Context, stack Stack, params *ListUsersParams, reqEditors ...RequestEditorFn) (*ListUsersResponse, error)
+
+	// CreateUser request  with any body
+	CreateUserWithBodyWithResponse(ctx context.Context, stack Stack, params *CreateUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateUserResponse, error)
+
+	CreateUserWithResponse(ctx context.Context, stack Stack, params *CreateUserParams, body CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateUserResponse, error)
+
+	// DeleteUser request
+	DeleteUserWithResponse(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*DeleteUserResponse, error)
+
+	// DescribeUser request
+	DescribeUserWithResponse(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*DescribeUserResponse, error)
+
+	// PatchUser request  with any body
+	PatchUserWithBodyWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
+
+	PatchUserWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
 }
 
 type GetOutboundportsResponse struct {
@@ -4867,6 +6603,193 @@ func (r DescribeAppResponse) StatusCode() int {
 	return 0
 }
 
+type PatchAppClassicResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *App
+	JSON202      *App
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchAppClassicResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchAppClassicResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListCapabilitiesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *CapabilitiesInfo
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListCapabilitiesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListCapabilitiesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListSelfStorageLocationsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		SelfStorageLocations []SelfStorageLocationInfo `json:"selfStorageLocations"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSelfStorageLocationsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSelfStorageLocationsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateSelfStorageLocationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *SelfStorageLocationInfo
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateSelfStorageLocationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateSelfStorageLocationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSelfStorageLocationPolicyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SelfStorageLocationPolicy
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSelfStorageLocationPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSelfStorageLocationPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeSelfStorageLocationResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SelfStorageLocationInfo
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeSelfStorageLocationResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeSelfStorageLocationResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSelfStorageLocationPrefixResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SelfStorageLocationPrefix
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSelfStorageLocationPrefixResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSelfStorageLocationPrefixResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetSelfStorageLocationServiceAccountsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *SelfStorageLocationServiceAccountsResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSelfStorageLocationServiceAccountsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSelfStorageLocationServiceAccountsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DescribeAppFeatureEnablementResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5122,6 +7045,29 @@ func (r DescribeHecResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r DescribeHecResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchHECResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *string
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchHECResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchHECResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5524,6 +7470,122 @@ func (r RestartStatusResponse) StatusCode() int {
 	return 0
 }
 
+type ListRolesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Roles *[]RolesResponse `json:"roles,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListRolesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListRolesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RolesResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeRoleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RolesResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeRoleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeRoleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchRoleInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *RolesResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchRoleInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchRoleInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DescribeStackResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5640,6 +7702,122 @@ func (r GetTokenInfoResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetTokenInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListUsersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Users *[]UsersResponse `json:"users,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListUsersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListUsersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UsersResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UsersResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeUserResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchUserResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UsersResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchUserResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchUserResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5831,6 +8009,86 @@ func (c *ClientWithResponses) DescribeAppWithResponse(ctx context.Context, stack
 	return ParseDescribeAppResponse(rsp)
 }
 
+// PatchAppClassicWithBodyWithResponse request with arbitrary body returning *PatchAppClassicResponse
+func (c *ClientWithResponses) PatchAppClassicWithBodyWithResponse(ctx context.Context, stack Stack, app AppName, params *PatchAppClassicParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchAppClassicResponse, error) {
+	rsp, err := c.PatchAppClassicWithBody(ctx, stack, app, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchAppClassicResponse(rsp)
+}
+
+// ListCapabilitiesWithResponse request returning *ListCapabilitiesResponse
+func (c *ClientWithResponses) ListCapabilitiesWithResponse(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*ListCapabilitiesResponse, error) {
+	rsp, err := c.ListCapabilities(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListCapabilitiesResponse(rsp)
+}
+
+// ListSelfStorageLocationsWithResponse request returning *ListSelfStorageLocationsResponse
+func (c *ClientWithResponses) ListSelfStorageLocationsWithResponse(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*ListSelfStorageLocationsResponse, error) {
+	rsp, err := c.ListSelfStorageLocations(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSelfStorageLocationsResponse(rsp)
+}
+
+// CreateSelfStorageLocationWithBodyWithResponse request with arbitrary body returning *CreateSelfStorageLocationResponse
+func (c *ClientWithResponses) CreateSelfStorageLocationWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateSelfStorageLocationResponse, error) {
+	rsp, err := c.CreateSelfStorageLocationWithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSelfStorageLocationResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateSelfStorageLocationWithResponse(ctx context.Context, stack Stack, body CreateSelfStorageLocationJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateSelfStorageLocationResponse, error) {
+	rsp, err := c.CreateSelfStorageLocation(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateSelfStorageLocationResponse(rsp)
+}
+
+// GetSelfStorageLocationPolicyWithResponse request returning *GetSelfStorageLocationPolicyResponse
+func (c *ClientWithResponses) GetSelfStorageLocationPolicyWithResponse(ctx context.Context, stack Stack, bucketName BucketName, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationPolicyResponse, error) {
+	rsp, err := c.GetSelfStorageLocationPolicy(ctx, stack, bucketName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSelfStorageLocationPolicyResponse(rsp)
+}
+
+// DescribeSelfStorageLocationWithResponse request returning *DescribeSelfStorageLocationResponse
+func (c *ClientWithResponses) DescribeSelfStorageLocationWithResponse(ctx context.Context, stack Stack, bucketPath BucketPath, reqEditors ...RequestEditorFn) (*DescribeSelfStorageLocationResponse, error) {
+	rsp, err := c.DescribeSelfStorageLocation(ctx, stack, bucketPath, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeSelfStorageLocationResponse(rsp)
+}
+
+// GetSelfStorageLocationPrefixWithResponse request returning *GetSelfStorageLocationPrefixResponse
+func (c *ClientWithResponses) GetSelfStorageLocationPrefixWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationPrefixResponse, error) {
+	rsp, err := c.GetSelfStorageLocationPrefix(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSelfStorageLocationPrefixResponse(rsp)
+}
+
+// GetSelfStorageLocationServiceAccountsWithResponse request returning *GetSelfStorageLocationServiceAccountsResponse
+func (c *ClientWithResponses) GetSelfStorageLocationServiceAccountsWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationServiceAccountsResponse, error) {
+	rsp, err := c.GetSelfStorageLocationServiceAccounts(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSelfStorageLocationServiceAccountsResponse(rsp)
+}
+
 // DescribeAppFeatureEnablementWithResponse request returning *DescribeAppFeatureEnablementResponse
 func (c *ClientWithResponses) DescribeAppFeatureEnablementWithResponse(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*DescribeAppFeatureEnablementResponse, error) {
 	rsp, err := c.DescribeAppFeatureEnablement(ctx, stack, appGroup, featureName, reqEditors...)
@@ -5976,6 +8234,23 @@ func (c *ClientWithResponses) DescribeHecWithResponse(ctx context.Context, stack
 		return nil, err
 	}
 	return ParseDescribeHecResponse(rsp)
+}
+
+// PatchHECWithBodyWithResponse request with arbitrary body returning *PatchHECResponse
+func (c *ClientWithResponses) PatchHECWithBodyWithResponse(ctx context.Context, stack Stack, hec Hec, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchHECResponse, error) {
+	rsp, err := c.PatchHECWithBody(ctx, stack, hec, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchHECResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchHECWithResponse(ctx context.Context, stack Stack, hec Hec, body PatchHECJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchHECResponse, error) {
+	rsp, err := c.PatchHEC(ctx, stack, hec, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchHECResponse(rsp)
 }
 
 // UpdateHECWithBodyWithResponse request with arbitrary body returning *UpdateHECResponse
@@ -6171,6 +8446,67 @@ func (c *ClientWithResponses) RestartStatusWithResponse(ctx context.Context, sta
 	return ParseRestartStatusResponse(rsp)
 }
 
+// ListRolesWithResponse request returning *ListRolesResponse
+func (c *ClientWithResponses) ListRolesWithResponse(ctx context.Context, stack Stack, params *ListRolesParams, reqEditors ...RequestEditorFn) (*ListRolesResponse, error) {
+	rsp, err := c.ListRoles(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListRolesResponse(rsp)
+}
+
+// CreateRoleWithBodyWithResponse request with arbitrary body returning *CreateRoleResponse
+func (c *ClientWithResponses) CreateRoleWithBodyWithResponse(ctx context.Context, stack Stack, params *CreateRoleParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRoleWithBody(ctx, stack, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateRoleWithResponse(ctx context.Context, stack Stack, params *CreateRoleParams, body CreateRoleJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateRoleResponse, error) {
+	rsp, err := c.CreateRole(ctx, stack, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateRoleResponse(rsp)
+}
+
+// DeleteRoleWithResponse request returning *DeleteRoleResponse
+func (c *ClientWithResponses) DeleteRoleWithResponse(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*DeleteRoleResponse, error) {
+	rsp, err := c.DeleteRole(ctx, stack, roleName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteRoleResponse(rsp)
+}
+
+// DescribeRoleWithResponse request returning *DescribeRoleResponse
+func (c *ClientWithResponses) DescribeRoleWithResponse(ctx context.Context, stack Stack, roleName RoleName, reqEditors ...RequestEditorFn) (*DescribeRoleResponse, error) {
+	rsp, err := c.DescribeRole(ctx, stack, roleName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeRoleResponse(rsp)
+}
+
+// PatchRoleInfoWithBodyWithResponse request with arbitrary body returning *PatchRoleInfoResponse
+func (c *ClientWithResponses) PatchRoleInfoWithBodyWithResponse(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchRoleInfoResponse, error) {
+	rsp, err := c.PatchRoleInfoWithBody(ctx, stack, roleName, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchRoleInfoResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchRoleInfoWithResponse(ctx context.Context, stack Stack, roleName RoleName, params *PatchRoleInfoParams, body PatchRoleInfoJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchRoleInfoResponse, error) {
+	rsp, err := c.PatchRoleInfo(ctx, stack, roleName, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchRoleInfoResponse(rsp)
+}
+
 // DescribeStackWithResponse request returning *DescribeStackResponse
 func (c *ClientWithResponses) DescribeStackWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeStackResponse, error) {
 	rsp, err := c.DescribeStack(ctx, stack, reqEditors...)
@@ -6222,6 +8558,67 @@ func (c *ClientWithResponses) GetTokenInfoWithResponse(ctx context.Context, stac
 		return nil, err
 	}
 	return ParseGetTokenInfoResponse(rsp)
+}
+
+// ListUsersWithResponse request returning *ListUsersResponse
+func (c *ClientWithResponses) ListUsersWithResponse(ctx context.Context, stack Stack, params *ListUsersParams, reqEditors ...RequestEditorFn) (*ListUsersResponse, error) {
+	rsp, err := c.ListUsers(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListUsersResponse(rsp)
+}
+
+// CreateUserWithBodyWithResponse request with arbitrary body returning *CreateUserResponse
+func (c *ClientWithResponses) CreateUserWithBodyWithResponse(ctx context.Context, stack Stack, params *CreateUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateUserResponse, error) {
+	rsp, err := c.CreateUserWithBody(ctx, stack, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) CreateUserWithResponse(ctx context.Context, stack Stack, params *CreateUserParams, body CreateUserJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateUserResponse, error) {
+	rsp, err := c.CreateUser(ctx, stack, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateUserResponse(rsp)
+}
+
+// DeleteUserWithResponse request returning *DeleteUserResponse
+func (c *ClientWithResponses) DeleteUserWithResponse(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*DeleteUserResponse, error) {
+	rsp, err := c.DeleteUser(ctx, stack, userName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteUserResponse(rsp)
+}
+
+// DescribeUserWithResponse request returning *DescribeUserResponse
+func (c *ClientWithResponses) DescribeUserWithResponse(ctx context.Context, stack Stack, userName UserName, reqEditors ...RequestEditorFn) (*DescribeUserResponse, error) {
+	rsp, err := c.DescribeUser(ctx, stack, userName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeUserResponse(rsp)
+}
+
+// PatchUserWithBodyWithResponse request with arbitrary body returning *PatchUserResponse
+func (c *ClientWithResponses) PatchUserWithBodyWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUserResponse, error) {
+	rsp, err := c.PatchUserWithBody(ctx, stack, userName, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUserResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchUserWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error) {
+	rsp, err := c.PatchUser(ctx, stack, userName, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchUserResponse(rsp)
 }
 
 // ParseGetOutboundportsResponse parses an HTTP response from a GetOutboundportsWithResponse call
@@ -6794,6 +9191,279 @@ func ParseDescribeAppResponse(rsp *http.Response) (*DescribeAppResponse, error) 
 	return response, nil
 }
 
+// ParsePatchAppClassicResponse parses an HTTP response from a PatchAppClassicWithResponse call
+func ParsePatchAppClassicResponse(rsp *http.Response) (*PatchAppClassicResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchAppClassicResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest App
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest App
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListCapabilitiesResponse parses an HTTP response from a ListCapabilitiesWithResponse call
+func ParseListCapabilitiesResponse(rsp *http.Response) (*ListCapabilitiesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListCapabilitiesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CapabilitiesInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListSelfStorageLocationsResponse parses an HTTP response from a ListSelfStorageLocationsWithResponse call
+func ParseListSelfStorageLocationsResponse(rsp *http.Response) (*ListSelfStorageLocationsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSelfStorageLocationsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			SelfStorageLocations []SelfStorageLocationInfo `json:"selfStorageLocations"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateSelfStorageLocationResponse parses an HTTP response from a CreateSelfStorageLocationWithResponse call
+func ParseCreateSelfStorageLocationResponse(rsp *http.Response) (*CreateSelfStorageLocationResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateSelfStorageLocationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest SelfStorageLocationInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSelfStorageLocationPolicyResponse parses an HTTP response from a GetSelfStorageLocationPolicyWithResponse call
+func ParseGetSelfStorageLocationPolicyResponse(rsp *http.Response) (*GetSelfStorageLocationPolicyResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSelfStorageLocationPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfStorageLocationPolicy
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeSelfStorageLocationResponse parses an HTTP response from a DescribeSelfStorageLocationWithResponse call
+func ParseDescribeSelfStorageLocationResponse(rsp *http.Response) (*DescribeSelfStorageLocationResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeSelfStorageLocationResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfStorageLocationInfo
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSelfStorageLocationPrefixResponse parses an HTTP response from a GetSelfStorageLocationPrefixWithResponse call
+func ParseGetSelfStorageLocationPrefixResponse(rsp *http.Response) (*GetSelfStorageLocationPrefixResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSelfStorageLocationPrefixResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfStorageLocationPrefix
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSelfStorageLocationServiceAccountsResponse parses an HTTP response from a GetSelfStorageLocationServiceAccountsWithResponse call
+func ParseGetSelfStorageLocationServiceAccountsResponse(rsp *http.Response) (*GetSelfStorageLocationServiceAccountsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSelfStorageLocationServiceAccountsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SelfStorageLocationServiceAccountsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDescribeAppFeatureEnablementResponse parses an HTTP response from a DescribeAppFeatureEnablementWithResponse call
 func ParseDescribeAppFeatureEnablementResponse(rsp *http.Response) (*DescribeAppFeatureEnablementResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -7140,6 +9810,39 @@ func ParseDescribeHecResponse(rsp *http.Response) (*DescribeHecResponse, error) 
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchHECResponse parses an HTTP response from a PatchHECWithResponse call
+func ParsePatchHECResponse(rsp *http.Response) (*PatchHECResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchHECResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest string
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -7713,6 +10416,166 @@ func ParseRestartStatusResponse(rsp *http.Response) (*RestartStatusResponse, err
 	return response, nil
 }
 
+// ParseListRolesResponse parses an HTTP response from a ListRolesWithResponse call
+func ParseListRolesResponse(rsp *http.Response) (*ListRolesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListRolesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Roles *[]RolesResponse `json:"roles,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateRoleResponse parses an HTTP response from a CreateRoleWithResponse call
+func ParseCreateRoleResponse(rsp *http.Response) (*CreateRoleResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RolesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteRoleResponse parses an HTTP response from a DeleteRoleWithResponse call
+func ParseDeleteRoleResponse(rsp *http.Response) (*DeleteRoleResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeRoleResponse parses an HTTP response from a DescribeRoleWithResponse call
+func ParseDescribeRoleResponse(rsp *http.Response) (*DescribeRoleResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeRoleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RolesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchRoleInfoResponse parses an HTTP response from a PatchRoleInfoWithResponse call
+func ParsePatchRoleInfoResponse(rsp *http.Response) (*PatchRoleInfoResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchRoleInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RolesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDescribeStackResponse parses an HTTP response from a DescribeStackWithResponse call
 func ParseDescribeStackResponse(rsp *http.Response) (*DescribeStackResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -7862,6 +10725,166 @@ func ParseGetTokenInfoResponse(rsp *http.Response) (*GetTokenInfoResponse, error
 		var dest struct {
 			Tokeninfo *TokenInfo `json:"tokeninfo,omitempty"`
 		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListUsersResponse parses an HTTP response from a ListUsersWithResponse call
+func ParseListUsersResponse(rsp *http.Response) (*ListUsersResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListUsersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Users *[]UsersResponse `json:"users,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateUserResponse parses an HTTP response from a CreateUserWithResponse call
+func ParseCreateUserResponse(rsp *http.Response) (*CreateUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UsersResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteUserResponse parses an HTTP response from a DeleteUserWithResponse call
+func ParseDeleteUserResponse(rsp *http.Response) (*DeleteUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeUserResponse parses an HTTP response from a DescribeUserWithResponse call
+func ParseDescribeUserResponse(rsp *http.Response) (*DescribeUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UsersResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchUserResponse parses an HTTP response from a PatchUserWithResponse call
+func ParsePatchUserResponse(rsp *http.Response) (*PatchUserResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchUserResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UsersResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

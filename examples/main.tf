@@ -31,3 +31,11 @@ resource "scp_indexes" "index-4" {
   searchable_days = 90
   max_data_size_mb = 512
 }
+
+data "scp_indexes" "main" {
+  name = "main"
+}
+
+data "scp_indexes" "history" {
+  name = "history"
+}

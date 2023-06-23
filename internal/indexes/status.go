@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/internal/status"
 )
 
 var GeneralRetryableStatusCodes = map[int]string{
@@ -22,7 +25,7 @@ func IndexStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack 
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}
 		defer resp.Body.Close()
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -35,7 +38,7 @@ func IndexStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, targetStatus, pendingStatus)
+		return status.ProcessResponse(resp, targetStatus, pendingStatus)
 	}
 }
 
@@ -52,7 +55,7 @@ func IndexStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2
 		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != http.StatusOK {
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{
 				State:         http.StatusText(resp.StatusCode),
-				ExpectedState: TargetStatusResourceExists,
+				ExpectedState: wait.TargetStatusResourceExists,
 				LastError:     errors.New(string(bodyBytes)),
 			}
 		}
@@ -77,7 +80,7 @@ func IndexStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -91,7 +94,7 @@ func IndexStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack 
 		}
 		defer resp.Body.Close()
 
-		return ProcessResponse(resp, TargetStatusResourceChange, PendingStatusCRUD)
+		return status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
 	}
 }
 
@@ -118,13 +121,13 @@ func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, 
 			updateComplete = VerifyIndexUpdate(patchRequest, index)
 		}
 
-		var status string
+		var statusText string
 		if updateComplete {
-			status = "UPDATED"
-			return &index, status, nil
+			statusText = status.UpdatedStatus
+			return &index, statusText, nil
 		} else {
-			status = http.StatusText(resp.StatusCode)
-			return nil, status, nil
+			statusText = http.StatusText(resp.StatusCode)
+			return nil, statusText, nil
 		}
 	}
 }
@@ -149,41 +152,4 @@ func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.I
 	}
 
 	return true
-}
-
-func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStatusCodes []string) (interface{}, string, error) {
-	if resp == nil {
-		return nil, "", &resource.UnexpectedStateError{LastError: errors.New("nil response")}
-	}
-	statusCode := resp.StatusCode
-	statusText := http.StatusText(statusCode)
-
-	if !IsStatusCodeExpected(statusCode, targetStateCodes, pendingStatusCodes) {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, statusText, &resource.UnexpectedStateError{
-			State:         statusText,
-			ExpectedState: targetStateCodes,
-			LastError:     errors.New(string(bodyBytes))}
-	}
-	return resp, statusText, nil
-}
-
-// IsStatusCodeExpected checks if the given status code exists in either target or pending status codes
-func IsStatusCodeExpected(statusCode int, targetStatusCodes []string, pendingStatusCodes []string) bool {
-	isRetryableError := false
-	isTargetStatus := false
-
-	for _, code := range targetStatusCodes {
-		if code == http.StatusText(statusCode) {
-			isTargetStatus = true
-		}
-	}
-
-	for _, code := range pendingStatusCodes {
-		if code == http.StatusText(statusCode) {
-			isRetryableError = true
-		}
-	}
-
-	return isTargetStatus || isRetryableError
 }
