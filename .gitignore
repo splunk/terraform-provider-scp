@@ -18,9 +18,6 @@ modules-dev/
 # Log files
 *.log
 
-# Gitlab
-.gitlab-ci.yml
-
 # Website
 website/vendor
 website/.vagrant
