@@ -6,7 +6,6 @@ import (
 	"fmt"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/hec"
-	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -391,7 +390,7 @@ func Test_TestIsSliceEqual(t *testing.T) {
 		},
 		// Test Case 3: Expected true for different order
 		{
-			true,
+			false,
 			&[]string{"a", "b"},
 			&[]string{"b", "a"},
 		},
@@ -405,7 +404,7 @@ func Test_TestIsSliceEqual(t *testing.T) {
 	for i, test := range cases {
 		test := test // Capture
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			result := utils.IsSpliceEqual(test.first, test.second)
+			result := hec.IsSpliceEqual(test.first, test.second)
 			assert.Equal(result, test.expectedResult)
 		})
 	}
