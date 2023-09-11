@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/splunk/terraform-provider-scp/internal/hec"
+	"github.com/splunk/terraform-provider-scp/internal/users"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -52,6 +53,7 @@ func providerResources() map[string]*schema.Resource {
 		indexes.ResourceKey:      indexes.ResourceIndex(),
 		hec.ResourceKey:          hec.ResourceHecToken(),
 		ipallowlists.ResourceKey: ipallowlists.ResourceIPAllowlist(),
+		users.ResourceKey:        users.ResourceUser(),
 	}
 }
 
