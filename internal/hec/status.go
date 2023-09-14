@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
-	"sort"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
+	"io"
+	"net/http"
 )
 
 type HecBody struct {
@@ -144,7 +143,7 @@ func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 
 // VerifyHecUpdate is a helper to verify that the fields in patch request match fields in the hec response
 func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bool {
-	if patchRequest.AllowedIndexes != nil && !IsSpliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
+	if patchRequest.AllowedIndexes != nil && !utils.IsSpliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
 		return false
 	}
 	if patchRequest.DefaultIndex != nil && (hec.DefaultIndex == nil || *patchRequest.DefaultIndex != *hec.DefaultIndex) {
@@ -162,31 +161,6 @@ func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bo
 
 	if patchRequest.UseAck != nil && (hec.UseAck == nil || *patchRequest.UseAck != *hec.UseAck) {
 		return false
-	}
-	return true
-}
-
-func IsSpliceEqual(in_a *[]string, in_b *[]string) bool {
-	var a, b []string
-	if in_a != nil {
-		a = *in_a
-	}
-	if in_b != nil {
-		b = *in_b
-	}
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	//Sort a and b to allow different ordering
-	a = sort.StringSlice(a)
-	b = sort.StringSlice(b)
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
 	}
 	return true
 }
