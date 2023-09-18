@@ -38,7 +38,7 @@ func GenerateWriteStateChangeConf(fn resource.StateRefreshFunc) *resource.StateC
 
 // GenerateReadStateChangeConf creates configuration struct for the WaitForStateContext on resources undergoing read operation
 func GenerateReadStateChangeConf(pending []string, target []string, fn resource.StateRefreshFunc) *resource.StateChangeConf {
-	waitResourceUpdateAccepted := &resource.StateChangeConf{
+	waitResourceRead := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
 		Refresh:    fn,
@@ -46,5 +46,5 @@ func GenerateReadStateChangeConf(pending []string, target []string, fn resource.
 		Delay:      PollDelayTime,
 		MinTimeout: MinTimeOut,
 	}
-	return waitResourceUpdateAccepted
+	return waitResourceRead
 }

@@ -40,6 +40,23 @@ type AppFeatureEnablement struct {
 	Enabled *bool `json:"enabled,omitempty"`
 }
 
+// App Permissions
+type AppPerms struct {
+	Name  string             `json:"name"`
+	Perms AppPermsProperties `json:"perms"`
+}
+
+// AppPermsList defines model for AppPermsList.
+type AppPermsList struct {
+	Apps *[]AppPerms `json:"apps,omitempty"`
+}
+
+// AppPermsProperties defines model for AppPermsProperties.
+type AppPermsProperties struct {
+	Read  *[]string `json:"read,omitempty"`
+	Write *[]string `json:"write,omitempty"`
+}
+
 // capabilities list
 type CapabilitiesInfo struct {
 	GrantableCapabilities *[]string `json:"grantableCapabilities,omitempty"`
@@ -56,6 +73,24 @@ type CreateUserRequest struct {
 	Name            string    `json:"name"`
 	Password        string    `json:"password"`
 	Roles           *[]string `json:"roles,omitempty"`
+}
+
+// DeploymentInfo defines model for DeploymentInfo.
+type DeploymentInfo struct {
+
+	// the id of the latest deployment task
+	Id string `json:"id"`
+
+	// the status of the last deployment task, possible values are new, completed, pending, running, failed.
+	Status *string `json:"status,omitempty"`
+
+	// timestamp of the latest deployment task
+	Timestamp *string `json:"timestamp,omitempty"`
+}
+
+// DeploymentStatus defines model for DeploymentStatus.
+type DeploymentStatus struct {
+	LastDeployment DeploymentInfo `json:"lastDeployment"`
 }
 
 // DescribeEligibilityPrivateConnectivity defines model for DescribeEligibilityPrivateConnectivity.
@@ -177,6 +212,9 @@ type MaintenanceWindowsOperation struct {
 	// time at which the operation ended
 	EndTime *time.Time `json:"endTime,omitempty"`
 
+	// map containing metadata like target version, target instance, customerAckRequired, customerAckReceived etc.
+	Metadata *map[string]interface{} `json:"metadata,omitempty"`
+
 	// notes for splunk customer
 	Notes *[]string `json:"notes,omitempty"`
 
@@ -231,6 +269,12 @@ type OutboundResponse struct {
 	DestinationRanges *[]string `json:"destinationRanges,omitempty"`
 	Name              *string   `json:"name,omitempty"`
 	Port              *int32    `json:"port,omitempty"`
+}
+
+// patch permissions apps body
+type PatchAppPermsRequest struct {
+	Read  *[]string `json:"read,omitempty"`
+	Write *[]string `json:"write,omitempty"`
 }
 
 // PatchIndexInfo defines model for PatchIndexInfo.
@@ -443,6 +487,9 @@ type BucketPath string
 
 // Count defines model for count.
 type Count int64
+
+// DeploymentID defines model for deploymentID.
+type DeploymentID string
 
 // Feature defines model for feature.
 type Feature string
@@ -718,6 +765,19 @@ type AuditMaintenanceWindowsScheduleParams struct {
 	ToTime *ToTime `json:"toTime,omitempty"`
 }
 
+// ListPermissionsAppsParams defines parameters for ListPermissionsApps.
+type ListPermissionsAppsParams struct {
+
+	// the count of items to return
+	Count *Count `json:"count,omitempty"`
+
+	// the offset to start return items from
+	Offset *Offset `json:"offset,omitempty"`
+}
+
+// PatchPermissionsAppsJSONBody defines parameters for PatchPermissionsApps.
+type PatchPermissionsAppsJSONBody PatchAppPermsRequest
+
 // UpdatePrivateConnectivityJSONBody defines parameters for UpdatePrivateConnectivity.
 type UpdatePrivateConnectivityJSONBody EnablePrivateConnectivity
 
@@ -847,6 +907,9 @@ type AddLimitConfigJSONRequestBody AddLimitConfigJSONBody
 
 // ResetLimitConfigJSONRequestBody defines body for ResetLimitConfig for application/json ContentType.
 type ResetLimitConfigJSONRequestBody ResetLimitConfigJSONBody
+
+// PatchPermissionsAppsJSONRequestBody defines body for PatchPermissionsApps for application/json ContentType.
+type PatchPermissionsAppsJSONRequestBody PatchPermissionsAppsJSONBody
 
 // UpdatePrivateConnectivityJSONRequestBody defines body for UpdatePrivateConnectivity for application/json ContentType.
 type UpdatePrivateConnectivityJSONRequestBody UpdatePrivateConnectivityJSONBody
@@ -1027,6 +1090,15 @@ type ClientInterface interface {
 	// GetSelfStorageLocationServiceAccounts request
 	GetSelfStorageLocationServiceAccounts(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// RetryDeployment request
+	RetryDeployment(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDeployment request
+	ListDeployment(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeDeployment request
+	DescribeDeployment(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablement(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1115,6 +1187,17 @@ type ClientInterface interface {
 
 	// AuditMaintenanceWindowsSchedule request
 	AuditMaintenanceWindowsSchedule(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListPermissionsApps request
+	ListPermissionsApps(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribePermissionsApps request
+	DescribePermissionsApps(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PatchPermissionsApps request  with any body
+	PatchPermissionsAppsWithBody(ctx context.Context, stack Stack, app AppName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PatchPermissionsApps(ctx context.Context, stack Stack, app AppName, body PatchPermissionsAppsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ValidatePrivateConnectivity request
 	ValidatePrivateConnectivity(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1554,6 +1637,42 @@ func (c *Client) GetSelfStorageLocationServiceAccounts(ctx context.Context, stac
 	return c.Client.Do(req)
 }
 
+func (c *Client) RetryDeployment(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRetryDeploymentRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListDeployment(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDeploymentRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeDeployment(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeDeploymentRequest(c.Server, stack, deploymentID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DescribeAppFeatureEnablement(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDescribeAppFeatureEnablementRequest(c.Server, stack, appGroup, featureName)
 	if err != nil {
@@ -1940,6 +2059,54 @@ func (c *Client) DescribeMaintenanceWindowsSchedule(ctx context.Context, stack S
 
 func (c *Client) AuditMaintenanceWindowsSchedule(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAuditMaintenanceWindowsScheduleRequest(c.Server, stack, scheduleID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListPermissionsApps(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListPermissionsAppsRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribePermissionsApps(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribePermissionsAppsRequest(c.Server, stack, app)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchPermissionsAppsWithBody(ctx context.Context, stack Stack, app AppName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchPermissionsAppsRequestWithBody(c.Server, stack, app, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PatchPermissionsApps(ctx context.Context, stack Stack, app AppName, body PatchPermissionsAppsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchPermissionsAppsRequest(c.Server, stack, app, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3636,6 +3803,115 @@ func NewGetSelfStorageLocationServiceAccountsRequest(server string, stack Stack)
 	return req, nil
 }
 
+// NewRetryDeploymentRequest generates requests for RetryDeployment
+func NewRetryDeploymentRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/deployment/retry", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListDeploymentRequest generates requests for ListDeployment
+func NewListDeploymentRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/deployment/status", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDescribeDeploymentRequest generates requests for DescribeDeployment
+func NewDescribeDeploymentRequest(server string, stack Stack, deploymentID DeploymentID) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "deploymentID", runtime.ParamLocationPath, deploymentID)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/deployment/status/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDescribeAppFeatureEnablementRequest generates requests for DescribeAppFeatureEnablement
 func NewDescribeAppFeatureEnablementRequest(server string, stack Stack, appGroup AppGroup, featureName FeatureName) (*http.Request, error) {
 	var err error
@@ -4857,6 +5133,171 @@ func NewAuditMaintenanceWindowsScheduleRequest(server string, stack Stack, sched
 	return req, nil
 }
 
+// NewListPermissionsAppsRequest generates requests for ListPermissionsApps
+func NewListPermissionsAppsRequest(server string, stack Stack, params *ListPermissionsAppsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/permissions/apps", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Count != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "count", runtime.ParamLocationQuery, *params.Count); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Offset != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDescribePermissionsAppsRequest generates requests for DescribePermissionsApps
+func NewDescribePermissionsAppsRequest(server string, stack Stack, app AppName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app", runtime.ParamLocationPath, app)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/permissions/apps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPatchPermissionsAppsRequest calls the generic PatchPermissionsApps builder with application/json body
+func NewPatchPermissionsAppsRequest(server string, stack Stack, app AppName, body PatchPermissionsAppsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPatchPermissionsAppsRequestWithBody(server, stack, app, "application/json", bodyReader)
+}
+
+// NewPatchPermissionsAppsRequestWithBody generates requests for PatchPermissionsApps with any type of body
+func NewPatchPermissionsAppsRequestWithBody(server string, stack Stack, app AppName, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app", runtime.ParamLocationPath, app)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/permissions/apps/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PATCH", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewValidatePrivateConnectivityRequest generates requests for ValidatePrivateConnectivity
 func NewValidatePrivateConnectivityRequest(server string, stack Stack) (*http.Request, error) {
 	var err error
@@ -6030,6 +6471,15 @@ type ClientWithResponsesInterface interface {
 	// GetSelfStorageLocationServiceAccounts request
 	GetSelfStorageLocationServiceAccountsWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetSelfStorageLocationServiceAccountsResponse, error)
 
+	// RetryDeployment request
+	RetryDeploymentWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*RetryDeploymentResponse, error)
+
+	// ListDeployment request
+	ListDeploymentWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ListDeploymentResponse, error)
+
+	// DescribeDeployment request
+	DescribeDeploymentWithResponse(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*DescribeDeploymentResponse, error)
+
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablementWithResponse(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*DescribeAppFeatureEnablementResponse, error)
 
@@ -6118,6 +6568,17 @@ type ClientWithResponsesInterface interface {
 
 	// AuditMaintenanceWindowsSchedule request
 	AuditMaintenanceWindowsScheduleWithResponse(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*AuditMaintenanceWindowsScheduleResponse, error)
+
+	// ListPermissionsApps request
+	ListPermissionsAppsWithResponse(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*ListPermissionsAppsResponse, error)
+
+	// DescribePermissionsApps request
+	DescribePermissionsAppsWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*DescribePermissionsAppsResponse, error)
+
+	// PatchPermissionsApps request  with any body
+	PatchPermissionsAppsWithBodyWithResponse(ctx context.Context, stack Stack, app AppName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPermissionsAppsResponse, error)
+
+	PatchPermissionsAppsWithResponse(ctx context.Context, stack Stack, app AppName, body PatchPermissionsAppsJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPermissionsAppsResponse, error)
 
 	// ValidatePrivateConnectivity request
 	ValidatePrivateConnectivityWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ValidatePrivateConnectivityResponse, error)
@@ -6790,6 +7251,81 @@ func (r GetSelfStorageLocationServiceAccountsResponse) StatusCode() int {
 	return 0
 }
 
+type RetryDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Status *DeploymentInfo `json:"status,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r RetryDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RetryDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Status *DeploymentStatus `json:"status,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeDeploymentResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Status *DeploymentInfo `json:"status,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeDeploymentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DescribeAppFeatureEnablementResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7324,6 +7860,76 @@ func (r AuditMaintenanceWindowsScheduleResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AuditMaintenanceWindowsScheduleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ListPermissionsAppsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Tokeninfo *AppPermsList `json:"tokeninfo,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListPermissionsAppsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListPermissionsAppsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribePermissionsAppsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *AppPerms
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribePermissionsAppsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribePermissionsAppsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PatchPermissionsAppsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PatchPermissionsAppsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PatchPermissionsAppsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8089,6 +8695,33 @@ func (c *ClientWithResponses) GetSelfStorageLocationServiceAccountsWithResponse(
 	return ParseGetSelfStorageLocationServiceAccountsResponse(rsp)
 }
 
+// RetryDeploymentWithResponse request returning *RetryDeploymentResponse
+func (c *ClientWithResponses) RetryDeploymentWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*RetryDeploymentResponse, error) {
+	rsp, err := c.RetryDeployment(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRetryDeploymentResponse(rsp)
+}
+
+// ListDeploymentWithResponse request returning *ListDeploymentResponse
+func (c *ClientWithResponses) ListDeploymentWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ListDeploymentResponse, error) {
+	rsp, err := c.ListDeployment(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDeploymentResponse(rsp)
+}
+
+// DescribeDeploymentWithResponse request returning *DescribeDeploymentResponse
+func (c *ClientWithResponses) DescribeDeploymentWithResponse(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*DescribeDeploymentResponse, error) {
+	rsp, err := c.DescribeDeployment(ctx, stack, deploymentID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeDeploymentResponse(rsp)
+}
+
 // DescribeAppFeatureEnablementWithResponse request returning *DescribeAppFeatureEnablementResponse
 func (c *ClientWithResponses) DescribeAppFeatureEnablementWithResponse(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*DescribeAppFeatureEnablementResponse, error) {
 	rsp, err := c.DescribeAppFeatureEnablement(ctx, stack, appGroup, featureName, reqEditors...)
@@ -8374,6 +9007,41 @@ func (c *ClientWithResponses) AuditMaintenanceWindowsScheduleWithResponse(ctx co
 		return nil, err
 	}
 	return ParseAuditMaintenanceWindowsScheduleResponse(rsp)
+}
+
+// ListPermissionsAppsWithResponse request returning *ListPermissionsAppsResponse
+func (c *ClientWithResponses) ListPermissionsAppsWithResponse(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*ListPermissionsAppsResponse, error) {
+	rsp, err := c.ListPermissionsApps(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListPermissionsAppsResponse(rsp)
+}
+
+// DescribePermissionsAppsWithResponse request returning *DescribePermissionsAppsResponse
+func (c *ClientWithResponses) DescribePermissionsAppsWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*DescribePermissionsAppsResponse, error) {
+	rsp, err := c.DescribePermissionsApps(ctx, stack, app, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribePermissionsAppsResponse(rsp)
+}
+
+// PatchPermissionsAppsWithBodyWithResponse request with arbitrary body returning *PatchPermissionsAppsResponse
+func (c *ClientWithResponses) PatchPermissionsAppsWithBodyWithResponse(ctx context.Context, stack Stack, app AppName, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchPermissionsAppsResponse, error) {
+	rsp, err := c.PatchPermissionsAppsWithBody(ctx, stack, app, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchPermissionsAppsResponse(rsp)
+}
+
+func (c *ClientWithResponses) PatchPermissionsAppsWithResponse(ctx context.Context, stack Stack, app AppName, body PatchPermissionsAppsJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchPermissionsAppsResponse, error) {
+	rsp, err := c.PatchPermissionsApps(ctx, stack, app, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePatchPermissionsAppsResponse(rsp)
 }
 
 // ValidatePrivateConnectivityWithResponse request returning *ValidatePrivateConnectivityResponse
@@ -9464,6 +10132,111 @@ func ParseGetSelfStorageLocationServiceAccountsResponse(rsp *http.Response) (*Ge
 	return response, nil
 }
 
+// ParseRetryDeploymentResponse parses an HTTP response from a RetryDeploymentWithResponse call
+func ParseRetryDeploymentResponse(rsp *http.Response) (*RetryDeploymentResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RetryDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Status *DeploymentInfo `json:"status,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDeploymentResponse parses an HTTP response from a ListDeploymentWithResponse call
+func ParseListDeploymentResponse(rsp *http.Response) (*ListDeploymentResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Status *DeploymentStatus `json:"status,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeDeploymentResponse parses an HTTP response from a DescribeDeploymentWithResponse call
+func ParseDescribeDeploymentResponse(rsp *http.Response) (*DescribeDeploymentResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeDeploymentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Status *DeploymentInfo `json:"status,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDescribeAppFeatureEnablementResponse parses an HTTP response from a DescribeAppFeatureEnablementWithResponse call
 func ParseDescribeAppFeatureEnablementResponse(rsp *http.Response) (*DescribeAppFeatureEnablementResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -10204,6 +10977,100 @@ func ParseAuditMaintenanceWindowsScheduleResponse(rsp *http.Response) (*AuditMai
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListPermissionsAppsResponse parses an HTTP response from a ListPermissionsAppsWithResponse call
+func ParseListPermissionsAppsResponse(rsp *http.Response) (*ListPermissionsAppsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListPermissionsAppsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Tokeninfo *AppPermsList `json:"tokeninfo,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribePermissionsAppsResponse parses an HTTP response from a DescribePermissionsAppsWithResponse call
+func ParseDescribePermissionsAppsResponse(rsp *http.Response) (*DescribePermissionsAppsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribePermissionsAppsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AppPerms
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePatchPermissionsAppsResponse parses an HTTP response from a PatchPermissionsAppsWithResponse call
+func ParsePatchPermissionsAppsResponse(rsp *http.Response) (*PatchPermissionsAppsResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PatchPermissionsAppsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {

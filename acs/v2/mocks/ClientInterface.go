@@ -1068,6 +1068,36 @@ func (_m *ClientInterface) DescribeAppVictoria(ctx context.Context, stack v2.Sta
 	return r0, r1
 }
 
+// DescribeDeployment provides a mock function with given fields: ctx, stack, deploymentID, reqEditors
+func (_m *ClientInterface) DescribeDeployment(ctx context.Context, stack v2.Stack, deploymentID v2.DeploymentID, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack, deploymentID)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.DeploymentID, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, deploymentID, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.DeploymentID, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, deploymentID, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DescribeHec provides a mock function with given fields: ctx, stack, hec, reqEditors
 func (_m *ClientInterface) DescribeHec(ctx context.Context, stack v2.Stack, hec v2.Hec, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
@@ -1151,6 +1181,36 @@ func (_m *ClientInterface) DescribeOutboundports(ctx context.Context, stack v2.S
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, int32, ...v2.RequestEditorFn) error); ok {
 		r1 = rf(ctx, stack, port, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DescribePermissionsApps provides a mock function with given fields: ctx, stack, app, reqEditors
+func (_m *ClientInterface) DescribePermissionsApps(ctx context.Context, stack v2.Stack, app v2.AppName, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack, app)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, app, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.AppName, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, app, reqEditors...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1848,6 +1908,36 @@ func (_m *ClientInterface) ListCapabilities(ctx context.Context, stack v2.Stack,
 	return r0, r1
 }
 
+// ListDeployment provides a mock function with given fields: ctx, stack, reqEditors
+func (_m *ClientInterface) ListDeployment(ctx context.Context, stack v2.Stack, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ListHECs provides a mock function with given fields: ctx, stack, params, reqEditors
 func (_m *ClientInterface) ListHECs(ctx context.Context, stack v2.Stack, params *v2.ListHECsParams, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
@@ -1930,6 +2020,36 @@ func (_m *ClientInterface) ListMaintenanceWindowsSchedules(ctx context.Context, 
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, *v2.ListMaintenanceWindowsSchedulesParams, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, params, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ListPermissionsApps provides a mock function with given fields: ctx, stack, params, reqEditors
+func (_m *ClientInterface) ListPermissionsApps(ctx context.Context, stack v2.Stack, params *v2.ListPermissionsAppsParams, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack, params)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, *v2.ListPermissionsAppsParams, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, params, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, *v2.ListPermissionsAppsParams, ...v2.RequestEditorFn) error); ok {
 		r1 = rf(ctx, stack, params, reqEditors...)
 	} else {
 		r1 = ret.Error(1)
@@ -2238,6 +2358,66 @@ func (_m *ClientInterface) PatchIndexInfoWithBody(ctx context.Context, stack v2.
 	return r0, r1
 }
 
+// PatchPermissionsApps provides a mock function with given fields: ctx, stack, app, body, reqEditors
+func (_m *ClientInterface) PatchPermissionsApps(ctx context.Context, stack v2.Stack, app v2.AppName, body v2.PatchPermissionsAppsJSONRequestBody, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack, app, body)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, v2.PatchPermissionsAppsJSONRequestBody, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, app, body, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.AppName, v2.PatchPermissionsAppsJSONRequestBody, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, app, body, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PatchPermissionsAppsWithBody provides a mock function with given fields: ctx, stack, app, contentType, body, reqEditors
+func (_m *ClientInterface) PatchPermissionsAppsWithBody(ctx context.Context, stack v2.Stack, app v2.AppName, contentType string, body io.Reader, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack, app, contentType, body)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, string, io.Reader, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, app, contentType, body, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.AppName, string, io.Reader, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, app, contentType, body, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PatchRoleInfo provides a mock function with given fields: ctx, stack, roleName, params, body, reqEditors
 func (_m *ClientInterface) PatchRoleInfo(ctx context.Context, stack v2.Stack, roleName v2.RoleName, params *v2.PatchRoleInfoParams, body v2.PatchRoleInfoJSONRequestBody, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
@@ -2450,6 +2630,36 @@ func (_m *ClientInterface) RestartStack(ctx context.Context, stack v2.Stack, req
 
 // RestartStatus provides a mock function with given fields: ctx, stack, reqEditors
 func (_m *ClientInterface) RestartStatus(ctx context.Context, stack v2.Stack, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+	_va := make([]interface{}, len(reqEditors))
+	for _i := range reqEditors {
+		_va[_i] = reqEditors[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, stack)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *http.Response
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, reqEditors...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*http.Response)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, reqEditors...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RetryDeployment provides a mock function with given fields: ctx, stack, reqEditors
+func (_m *ClientInterface) RetryDeployment(ctx context.Context, stack v2.Stack, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
 	for _i := range reqEditors {
 		_va[_i] = reqEditors[_i]
