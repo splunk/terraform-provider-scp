@@ -164,3 +164,62 @@ func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bo
 	}
 	return true
 }
+
+// HecStatusRetryTaskComplete returns StateRefreshFunc that makes GET request and checks if request was successful. If the request was successful, we return
+// deployment info to access status
+func HecStatusRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentId string) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.DescribeDeployment(ctx, stack, v2.DeploymentID(deploymentId))
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+
+		defer resp.Body.Close()
+
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != 200 {
+			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{LastError: errors.New(string(bodyBytes))}
+		}
+
+		var deploymentInfo v2.DeploymentInfo
+		statusText := http.StatusText(resp.StatusCode)
+
+		if resp.StatusCode == 200 {
+			if err = json.Unmarshal(bodyBytes, &deploymentInfo); err != nil {
+				return nil, "", &resource.UnexpectedStateError{LastError: err}
+			}
+			if deploymentInfo.Status != nil {
+				statusText = *deploymentInfo.Status
+			}
+			return &deploymentInfo, statusText, nil
+		} else {
+			return nil, statusText, nil
+		}
+	}
+}
+
+// HecStatusRetryTask returns StateRefreshFunc that makes POST request and checks if request was accepted
+func HecStatusRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.RetryDeployment(ctx, stack)
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		_, statusText, statusErr := status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+
+		var deploymentInfo v2.DeploymentInfo
+
+		if resp.StatusCode == 202 {
+			if err = json.Unmarshal(bodyBytes, &deploymentInfo); err != nil {
+				return nil, "", &resource.UnexpectedStateError{LastError: err}
+			}
+			return &deploymentInfo, statusText, statusErr
+		}
+
+		return nil, statusText, statusErr
+	}
+}

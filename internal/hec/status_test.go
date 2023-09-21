@@ -27,36 +27,75 @@ var (
 	mockToken             = "mock-token"
 	mockUseAck            = false
 	mockAllowedIndexes    = []string{"main", "summary"}
+	mockDeploymentId      = "mock-id"
+	mockStatusRunning     = "running"
+	mockStatusSucceeded   = "completed"
+	mockStatusFailed      = "failed"
+	mockStatusNew         = "new"
 
 	mockUnupdated               = "some-other-value"
 	mockUnupdatedAllowedIndexes = []string{"main", "index1"}
 	mockUnupdatedBool           = true
+
+	successRespSucceeded = &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Body:       io.NopCloser(bytes.NewReader(deploymentInfoSucceededBody)),
+	}
+
+	successRespFailed = &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Body:       io.NopCloser(bytes.NewReader(deploymentInfoFailedBody)),
+	}
+
+	successRespNew = &http.Response{
+		StatusCode: http.StatusAccepted,
+		Status:     "202-Accepted",
+		Body:       io.NopCloser(bytes.NewReader(deploymentInfoNewBody)),
+	}
+
+	successRespRunning = &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Body:       io.NopCloser(bytes.NewReader(deploymentInfoRunningBody)),
+	}
+
+	acceptedResp = &http.Response{
+		StatusCode: http.StatusAccepted,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	successRespOk = &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	notFoundResp = &http.Response{
+		StatusCode: http.StatusNotFound,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	badReqResp = &http.Response{
+		StatusCode: http.StatusBadRequest,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	rateLimitResp = &http.Response{
+		StatusCode: http.StatusTooManyRequests,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	failedDependencyResp = &http.Response{
+		StatusCode: http.StatusFailedDependency,
+		Body:       io.NopCloser(bytes.NewReader(nil)),
+	}
+
+	deploymentInfoRunningBody, _   = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusRunning})
+	deploymentInfoSucceededBody, _ = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusSucceeded})
+	deploymentInfoFailedBody, _    = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusFailed})
+	deploymentInfoNewBody, _       = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusNew})
 )
-
-var acceptedResp = &http.Response{
-	StatusCode: http.StatusAccepted,
-	Body:       io.NopCloser(bytes.NewReader(nil)),
-}
-
-var successRespOk = &http.Response{
-	StatusCode: http.StatusOK,
-	Body:       io.NopCloser(bytes.NewReader(nil)),
-}
-
-var notFoundResp = &http.Response{
-	StatusCode: http.StatusNotFound,
-	Body:       io.NopCloser(bytes.NewReader(nil)),
-}
-
-var badReqResp = &http.Response{
-	StatusCode: http.StatusBadRequest,
-	Body:       io.NopCloser(bytes.NewReader(nil)),
-}
-
-var rateLimitResp = &http.Response{
-	StatusCode: http.StatusTooManyRequests,
-	Body:       io.NopCloser(bytes.NewReader(nil)),
-}
 
 func genHecResp(code int) *http.Response {
 	var b []byte
@@ -77,6 +116,30 @@ func genHecResp(code int) *http.Response {
 		}}
 
 		b, _ = json.Marshal(&hec)
+	} else {
+		b, _ = json.Marshal(&v2.Error{
+			Code:    http.StatusText(code),
+			Message: http.StatusText(code),
+		})
+	}
+	recorder := httptest.NewRecorder()
+	recorder.Header().Add("Content-Type", "json")
+	recorder.WriteHeader(code)
+	if b != nil {
+		_, _ = recorder.Write(b)
+	}
+	return recorder.Result()
+}
+
+func genDeploymentInfoResp(code int, status string) *http.Response {
+	var b []byte
+	if code == http.StatusOK {
+		deploymentInfo := v2.DeploymentInfo{
+			Id:     mockDeploymentId,
+			Status: &status,
+		}
+
+		b, _ = json.Marshal(&deploymentInfo)
 	} else {
 		b, _ = json.Marshal(&v2.Error{
 			Code:    http.StatusText(code),

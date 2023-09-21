@@ -17,6 +17,11 @@ import (
 	"testing"
 )
 
+var (
+	unexpectedStatusCodes     = []int{400, 401, 403, 404, 409, 501}
+	unexpectedStatusCodesPoll = []int{400, 401, 403, 409, 501, 500, 503}
+)
+
 func Test_WaitHecCreate(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
@@ -44,9 +49,9 @@ func Test_WaitHecCreate(t *testing.T) {
 	})
 
 	t.Run("with unexpected http responses", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 409, 501} {
-			t.Run(fmt.Sprintf("with unexpected status %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("CreateHEC", mock.Anything, v2.Stack(mockStack), mockCreateBody).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected status %v", code), func(t *testing.T) {
+				client.On("CreateHEC", mock.Anything, v2.Stack(mockStack), mockCreateBody).Return(genHecResp(code), nil).Once()
 				err := hec.WaitHecCreate(context.TODO(), client, mockStack, mockCreateBody)
 				assert.Error(t, err)
 			})
@@ -78,9 +83,9 @@ func Test_WaitHecPoll(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 409, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodesPoll {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(code), nil).Once()
 				err := hec.WaitHecPoll(context.TODO(), client, mockStack, mockHecName, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 				assert.Error(t, err)
 			})
@@ -102,9 +107,9 @@ func Test_WaitHecPoll(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 409, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodesPoll {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(code), nil).Once()
 				err := hec.WaitHecPoll(context.TODO(), client, mockStack, mockHecName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 				assert.Error(t, err)
 			})
@@ -131,9 +136,9 @@ func Test_WaitHecRead(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 409, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(code), nil).Once()
 				Hec, err := hec.WaitHecRead(context.TODO(), client, mockStack, mockHecName)
 				assert.Error(t, err)
 				assert.Nil(t, Hec)
@@ -163,9 +168,9 @@ func Test_WaitHecUpdate(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("PatchHEC", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName), mockUpdateBody).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("PatchHEC", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName), mockUpdateBody).Return(genHecResp(code), nil).Once()
 				err := hec.WaitHecUpdate(context.TODO(), client, mockStack, mockUpdateBody, mockHecName)
 				assert.Error(t, err)
 			})
@@ -222,9 +227,9 @@ func Test_WaitVerifyHecUpdate(t *testing.T) {
 	})
 
 	t.Run("with unexpected response", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 409, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
-				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(unexpectedStatusCode), nil).Once()
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("DescribeHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName)).Return(genHecResp(code), nil).Once()
 				err := hec.WaitVerifyHecUpdate(context.TODO(), client, mockStack, mockUpdateBody, mockHecName)
 				assert.Error(t, err)
 			})
@@ -258,11 +263,110 @@ func Test_WaitHecDelete(t *testing.T) {
 	})
 
 	t.Run("with unexpected error resp", func(t *testing.T) {
-		for _, unexpectedStatusCode := range []int{400, 401, 403, 404, 409, 501, 500, 503} {
-			t.Run(fmt.Sprintf("with unexpected response %v", unexpectedStatusCode), func(t *testing.T) {
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
 				client.On("DeleteHec", mock.Anything, v2.Stack(mockStack), v2.Hec(mockHecName),
 					v2.DeleteHecJSONRequestBody{}).Return(badReqResp, nil).Once()
 				err := hec.WaitHecDelete(context.TODO(), client, mockStack, mockHecName)
+				assert.Error(t, err)
+			})
+		}
+	})
+}
+
+func Test_WaitHecRetryTask(t *testing.T) {
+	client := &mocks.ClientInterface{}
+
+	t.Run("with some client interface error", func(t *testing.T) {
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(nil, errors.New("some error")).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(nil, errors.New("some error")).Once()
+		err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+		assert.Error(t, err)
+	})
+
+	t.Run("with retry task successful", func(t *testing.T) {
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(successRespNew, nil).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespSucceeded, nil).Once()
+		err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with retry deployment task failed", func(t *testing.T) {
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(successRespNew, nil).Once()
+		err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+		assert.Error(t, err)
+	})
+
+	t.Run("with deployment task failed", func(t *testing.T) {
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(successRespNew, nil).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespFailed, nil).Once()
+		err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+		assert.Error(t, err)
+	})
+
+	t.Run("with retry on rate limit", func(t *testing.T) {
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(rateLimitResp, nil).Once()
+		client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(successRespNew, nil).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespSucceeded, nil).Once()
+		err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with unexpected error resp", func(t *testing.T) {
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("RetryDeployment", mock.Anything, v2.Stack(mockStack)).Return(badReqResp, nil).Once()
+				client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(badReqResp, nil).Once()
+
+				err := hec.WaitHecRetryTask(context.TODO(), client, mockStack)
+				assert.Error(t, err)
+			})
+		}
+	})
+}
+
+func Test_WaitHecRetryTaskComplete(t *testing.T) {
+	client := &mocks.ClientInterface{}
+
+	t.Run("with some client interface error", func(t *testing.T) {
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(nil, errors.New("some error")).Once()
+		err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
+		assert.Error(t, err)
+	})
+
+	t.Run("with retry task successful", func(t *testing.T) {
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespSucceeded, nil).Once()
+		err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with deployment task failed", func(t *testing.T) {
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespFailed, nil).Once()
+		err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
+		assert.Error(t, err)
+		assert.ErrorContains(t, err, fmt.Sprintf(hec.DeploymentTaskFailedErr, mockDeploymentId))
+	})
+
+	t.Run("with retry on rate limit", func(t *testing.T) {
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(rateLimitResp, nil).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespSucceeded, nil).Once()
+		err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with retry on running task", func(t *testing.T) {
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespRunning, nil).Once()
+		client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(successRespSucceeded, nil).Once()
+		err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
+		assert.NoError(t, err)
+	})
+
+	t.Run("with unexpected error resp", func(t *testing.T) {
+		for _, code := range unexpectedStatusCodes {
+			t.Run(fmt.Sprintf("with unexpected response %v", code), func(t *testing.T) {
+				client.On("DescribeDeployment", mock.Anything, v2.Stack(mockStack), v2.DeploymentID(mockDeploymentId)).Return(badReqResp, nil).Once()
+
+				err := hec.WaitHecRetryTaskComplete(context.TODO(), client, mockStack, mockDeploymentId)
 				assert.Error(t, err)
 			})
 		}
