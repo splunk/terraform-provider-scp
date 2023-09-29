@@ -2,3 +2,5 @@ github.com/splunk/terraform-provider-scp/internal/indexes/index_resource.go
 github.com/splunk/terraform-provider-scp/internal/indexes/index_data_source.go
 github.com/splunk/terraform-provider-scp/internal/hec/hec_token_resource.go
 github.com/splunk/terraform-provider-scp/internal/ipallowlists/ip_allowlist_resource.go
+github.com/splunk/terraform-provider-scp/internal/roles/role_resource.go
+github.com/splunk/terraform-provider-scp/internal/users/user_resource.go
