@@ -12,6 +12,8 @@ const (
 	UpdatedStatus           = "UPDATED"
 	ErrIndexNotFound        = "404-index-not-found"
 	ErrHecNotFound          = "404-hec-not-found"
+	ErrUserNotFound         = "404-user-not-found"
+	ErrRoleNotFound         = "404-role-not-found"
 	ErrDependencyIncomplete = "424-dependency-incomplete"
 	ErrFailedDependency     = "424-failed-dependency"
 )

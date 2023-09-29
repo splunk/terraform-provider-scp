@@ -468,7 +468,7 @@ func Test_TestIsSliceEqual(t *testing.T) {
 	for i, test := range cases {
 		test := test // Capture
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
-			result := utils.IsSpliceEqual(test.first, test.second)
+			result := utils.IsSliceEqual(test.first, test.second)
 			assert.Equal(result, test.expectedResult)
 		})
 	}

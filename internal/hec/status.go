@@ -143,7 +143,7 @@ func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 
 // VerifyHecUpdate is a helper to verify that the fields in patch request match fields in the hec response
 func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bool {
-	if patchRequest.AllowedIndexes != nil && !utils.IsSpliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
+	if patchRequest.AllowedIndexes != nil && !utils.IsSliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
 		return false
 	}
 	if patchRequest.DefaultIndex != nil && (hec.DefaultIndex == nil || *patchRequest.DefaultIndex != *hec.DefaultIndex) {
