@@ -11,3 +11,8 @@
 * Introduced support for HEC Token resource 
 * Introduced support for IPAllowlist resource 
 
+## Version v1.2.0
+* Terraform Provider Phase Three release
+* Introduced support for User resource
+* Introduced support for Role resource 
+* Added enhancement to HEC token resource to retry previous failed deployment task when creating, updating, deleting Hec Tokens
