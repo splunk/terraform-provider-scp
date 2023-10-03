@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
-	"sort"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
+	"io"
+	"net/http"
 )
 
 type HecBody struct {
@@ -144,7 +143,7 @@ func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 
 // VerifyHecUpdate is a helper to verify that the fields in patch request match fields in the hec response
 func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bool {
-	if patchRequest.AllowedIndexes != nil && !IsSpliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
+	if patchRequest.AllowedIndexes != nil && !utils.IsSliceEqual(patchRequest.AllowedIndexes, hec.AllowedIndexes) {
 		return false
 	}
 	if patchRequest.DefaultIndex != nil && (hec.DefaultIndex == nil || *patchRequest.DefaultIndex != *hec.DefaultIndex) {
@@ -166,27 +165,61 @@ func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bo
 	return true
 }
 
-func IsSpliceEqual(in_a *[]string, in_b *[]string) bool {
-	var a, b []string
-	if in_a != nil {
-		a = *in_a
-	}
-	if in_b != nil {
-		b = *in_b
-	}
+// HecStatusRetryTaskComplete returns StateRefreshFunc that makes GET request and checks if request was successful. If the request was successful, we return
+// deployment info to access status
+func HecStatusRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentId string) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.DescribeDeployment(ctx, stack, v2.DeploymentID(deploymentId))
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
 
-	if len(a) != len(b) {
-		return false
-	}
+		defer resp.Body.Close()
 
-	//Sort a and b to allow different ordering
-	a = sort.StringSlice(a)
-	b = sort.StringSlice(b)
+		bodyBytes, _ := io.ReadAll(resp.Body)
 
-	for i := range a {
-		if a[i] != b[i] {
-			return false
+		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != 200 {
+			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{LastError: errors.New(string(bodyBytes))}
+		}
+
+		var deploymentInfo v2.DeploymentInfo
+		statusText := http.StatusText(resp.StatusCode)
+
+		if resp.StatusCode == 200 {
+			if err = json.Unmarshal(bodyBytes, &deploymentInfo); err != nil {
+				return nil, "", &resource.UnexpectedStateError{LastError: err}
+			}
+			if deploymentInfo.Status != nil {
+				statusText = *deploymentInfo.Status
+			}
+			return &deploymentInfo, statusText, nil
+		} else {
+			return nil, statusText, nil
 		}
 	}
-	return true
+}
+
+// HecStatusRetryTask returns StateRefreshFunc that makes POST request and checks if request was accepted
+func HecStatusRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) resource.StateRefreshFunc {
+	return func() (any, string, error) {
+		resp, err := acsClient.RetryDeployment(ctx, stack)
+		if err != nil {
+			return nil, "", &resource.UnexpectedStateError{LastError: err}
+		}
+		defer resp.Body.Close()
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		_, statusText, statusErr := status.ProcessResponse(resp, wait.TargetStatusResourceChange, wait.PendingStatusCRUD)
+
+		var deploymentInfo v2.DeploymentInfo
+
+		if resp.StatusCode == 202 {
+			if err = json.Unmarshal(bodyBytes, &deploymentInfo); err != nil {
+				return nil, "", &resource.UnexpectedStateError{LastError: err}
+			}
+			return &deploymentInfo, statusText, statusErr
+		}
+
+		return nil, statusText, statusErr
+	}
 }

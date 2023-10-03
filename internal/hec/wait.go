@@ -2,12 +2,24 @@ package hec
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
+)
+
+var (
+	taskStatusFailed    = "failed"
+	taskStatusSucceeded = "completed"
+	taskStatusNew       = "new"
+	taskStatusRunning   = "running"
+)
+
+const (
+	DeploymentTaskFailedErr = "Retry of deployment task %s resulted in failed status upon completion"
 )
 
 // WaitHecCreate Handles retry logic for POST requests for create lifecycle function
@@ -101,4 +113,44 @@ func WaitHecDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	tflog.Info(ctx, fmt.Sprintf("Delete response status code for hec (%s): %d\n", hecName, resp.StatusCode))
 	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for hec (%s): %s\n", hecName, resp.Header.Get("X-REQUEST-ID")))
 	return nil
+}
+
+// WaitHecRetryTaskComplete Handles retry logic for GET requests to check status of deployment task until completion
+func WaitHecRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentId string) error {
+	pendingState := []string{http.StatusText(429), taskStatusRunning, taskStatusNew}
+	targetState := []string{taskStatusFailed, taskStatusSucceeded}
+	WaitRetryTaskComplete := wait.GenerateReadStateChangeConf(pendingState, targetState, HecStatusRetryTaskComplete(ctx, acsClient, stack, deploymentId))
+
+	output, err := WaitRetryTaskComplete.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error checking status of deployment (%s): %s", deploymentId, err))
+		return err
+	}
+
+	deploymentInfo := output.(*v2.DeploymentInfo)
+
+	if *deploymentInfo.Status == taskStatusFailed {
+		tflog.Error(ctx, fmt.Sprintf("Retry of deployment task %s failed", deploymentId))
+		return errors.New(fmt.Sprintf(DeploymentTaskFailedErr, deploymentId))
+	}
+	return nil
+}
+
+// WaitHecRetryTask Handles retry logic for retrying a previously failed deployment task.
+func WaitHecRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) error {
+	// Retry last deployment task
+	waitRetryTaskAccepted := wait.GenerateWriteStateChangeConf(HecStatusRetryTask(ctx, acsClient, stack))
+	output, err := waitRetryTaskAccepted.WaitForStateContext(ctx)
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("Error retrying previous task: %s \n", err))
+		return err
+	}
+
+	deploymentInfo := output.(*v2.DeploymentInfo)
+
+	tflog.Info(ctx, fmt.Sprintf("Retry task status: %d\n", deploymentInfo.Status))
+	tflog.Info(ctx, fmt.Sprintf("Retry task deployment id: %s\n", deploymentInfo.Id))
+
+	// Poll retry task status until completion
+	return WaitHecRetryTaskComplete(ctx, acsClient, stack, deploymentInfo.Id)
 }

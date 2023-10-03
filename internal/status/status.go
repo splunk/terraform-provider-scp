@@ -12,6 +12,8 @@ const (
 	UpdatedStatus           = "UPDATED"
 	ErrIndexNotFound        = "404-index-not-found"
 	ErrHecNotFound          = "404-hec-not-found"
+	ErrUserNotFound         = "404-user-not-found"
+	ErrRoleNotFound         = "404-role-not-found"
 	ErrDependencyIncomplete = "424-dependency-incomplete"
 	ErrFailedDependency     = "424-failed-dependency"
 )
@@ -54,14 +56,12 @@ func ProcessResponse(resp *http.Response, targetStateCodes []string, pendingStat
 	// We will add logic to handle retry failed tasks or any general actions on behalf of the user here.
 	if statusCode == http.StatusFailedDependency && !strings.Contains(string(bodyBytes), ErrDependencyIncomplete) {
 
-		// As a temporary solution, we will catch and return any 424 error that is not a 424-dependency-incomplete.
-		// In future version, we will remove this error check and, at the resource level (hec-tokens), check the
-		// response and statusText/trigger retry task accordingly. This will require an upgrade of the provider/will
-		// be an enhancement.
+		// We will catch and return any 424 error that is not a 424-dependency-incomplete and set more specific state
 		return nil, statusText, &resource.UnexpectedStateError{
-			State:         statusText,
+			State:         ErrDependencyIncomplete,
 			ExpectedState: targetStateCodes,
 			LastError:     errors.New(string(bodyBytes))}
 	}
 	return resp, statusText, nil
+
 }

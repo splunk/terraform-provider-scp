@@ -10,6 +10,7 @@ modules-dev/
 *.iml
 *.test
 *.iml
+vendor/
 
 # Backups
 *.backup
