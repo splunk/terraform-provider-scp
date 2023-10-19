@@ -23,7 +23,7 @@ Instead, it is recommended to using a dedicated secret store such as Vault or AW
 The following attributes must be set for the provider to work.
 - `server`
 - `stack`
-- Either `auth_token` or `username`/`password`
+- Either `auth_token` or `username`/`password` NOTE: IL2 environment will not be able to use `username`/`password` for authentication.
 
 ## Schema
 
