@@ -75,6 +75,22 @@ Defaults are currently set to:
 
 ## Notes/Troubleshooting
 
+### Setting fields to zero value
+**Issue**: The [GetOk](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetOk) 
+implementation in the Legacy SDK does not recognize zero values for fields. However, 0 is a valid value for various fields 
+such as `cumulative_rt_srch_jobs_quota` and `rt_srch_jobs_quota`
+
+**Solution:** If possible, please set these values to a non-zero value. If you would like to set either of these fields 
+to zero, the user can choose to manage this field exclusively through UI/ACS API/ACS CLI - only adding the field to their 
+configuration if they would like to set it to a non-zero value. 
+
+Alternatively users should upgrade to at least v1.2.1 of this provider to leverage a workaround which relies on the 
+[GetChange](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetChange) 
+functionality of the Legacy SDK. The caveat is that you must run `terraform apply` twice when first creating a new role in 
+order for the zero values to be set (they will only be set when updating a resource, not when creating one). Please note that 
+terraform config and real infrastructure should converge after the second run of `terraform apply`. 
+
+
 ### Terraform Import 
 **Issue:** If you receive a 409 conflict error when creating a resource, either use a different role name to create a new resource, or use `terraform import` to bring
   the resource under terraform management. 
