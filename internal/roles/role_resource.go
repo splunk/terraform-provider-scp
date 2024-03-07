@@ -302,6 +302,8 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	patchParam := v2.PatchRoleInfoParams{
 		FederatedSearchManageAck: roleParam,
 	}
+	tflog.Info(ctx, fmt.Sprintf("updated role resource: %d\n", patchRequest.CumulativeRTSrchJobsQuota))
+
 	patchRequestBody := v2.PatchRoleInfoJSONRequestBody{
 		RolesInfo:                 patchRequest.RolesInfo,
 		CumulativeRTSrchJobsQuota: patchRequest.CumulativeRTSrchJobsQuota,
@@ -320,7 +322,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		return diag.Errorf(fmt.Sprintf("Error waiting for role (%s) to be updated: %s", roleName, err))
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("updated hec resource: %s\n", roleName))
+	tflog.Info(ctx, fmt.Sprintf("updated role resource: %s\n", roleName))
 	return resourceRoleRead(ctx, d, m)
 }
 
@@ -349,13 +351,23 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 	name := d.Get(schemaKeyName).(string)
 
 	// RolesRequest attributes
+
+	//	workaround to allow 0 value, repeated for all fields where 0 is valid value
 	if value, ok := d.GetOk(schemaKeyCumulativeRTSrchJobsQuota); ok {
 		parsedData := value.(int)
+		rolesRequest.CumulativeRTSrchJobsQuota = &parsedData
+	} else if d.HasChange(schemaKeyCumulativeRTSrchJobsQuota) {
+		_, new_val := d.GetChange(schemaKeyCumulativeRTSrchJobsQuota)
+		parsedData := new_val.(int)
 		rolesRequest.CumulativeRTSrchJobsQuota = &parsedData
 	}
 
 	if value, ok := d.GetOk(schemaKeyCumulativeSrchJobsQuota); ok {
 		parsedData := value.(int)
+		rolesRequest.CumulativeSrchJobsQuota = &parsedData
+	} else if d.HasChange(schemaKeyCumulativeSrchJobsQuota) {
+		_, new_val := d.GetChange(schemaKeyCumulativeSrchJobsQuota)
+		parsedData := new_val.(int)
 		rolesRequest.CumulativeSrchJobsQuota = &parsedData
 	}
 
@@ -375,18 +387,22 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		rolesRequest.Capabilities = &parsedData
 	}
 
+	// workaround to allow zero value
 	if value, ok := d.GetOk(schemaKeyRTSrchJobsQuota); ok {
 		parsedData := value.(int)
+		rolesRequest.RtSrchJobsQuota = &parsedData
+	} else if d.HasChange(schemaKeyRTSrchJobsQuota) {
+		_, new_val := d.GetChange(schemaKeyRTSrchJobsQuota)
+		parsedData := new_val.(int)
 		rolesRequest.RtSrchJobsQuota = &parsedData
 	}
 
 	if value, ok := d.GetOk(schemaKeySrchDiskQuota); ok {
 		parsedData := value.(int)
 		rolesRequest.SrchDiskQuota = &parsedData
-	}
-
-	if value, ok := d.GetOk(schemaKeySrchDiskQuota); ok {
-		parsedData := value.(int)
+	} else if d.HasChange(schemaKeySrchDiskQuota) {
+		_, new_val := d.GetChange(schemaKeySrchDiskQuota)
+		parsedData := new_val.(int)
 		rolesRequest.SrchDiskQuota = &parsedData
 	}
 
@@ -402,21 +418,33 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 
 	if values, ok := d.GetOk(schemaKeySrchIndexesDefault); ok {
 		parsedData := utils.ParseSetValues(values)
-		rolesRequest.SrchIndexesAllowed = &parsedData
+		rolesRequest.SrchIndexesDefault = &parsedData
 	}
 
 	if value, ok := d.GetOk(schemaKeySrchJobsQuota); ok {
 		parsedData := value.(int)
+		rolesRequest.SrchJobsQuota = &parsedData
+	} else if d.HasChange(schemaKeySrchJobsQuota) {
+		_, new_val := d.GetChange(schemaKeySrchJobsQuota)
+		parsedData := new_val.(int)
 		rolesRequest.SrchJobsQuota = &parsedData
 	}
 
 	if value, ok := d.GetOk(schemaKeySrchTimeEarliest); ok {
 		parsedData := value.(int)
 		rolesRequest.SrchTimeEarliest = &parsedData
+	} else if d.HasChange(schemaKeySrchTimeEarliest) {
+		_, new_val := d.GetChange(schemaKeySrchTimeEarliest)
+		parsedData := new_val.(int)
+		rolesRequest.SrchTimeEarliest = &parsedData
 	}
 
 	if value, ok := d.GetOk(schemaKeySrchTimeWin); ok {
 		parsedData := value.(int)
+		rolesRequest.SrchTimeWin = &parsedData
+	} else if d.HasChange(schemaKeySrchTimeWin) {
+		_, new_val := d.GetChange(schemaKeySrchTimeWin)
+		parsedData := new_val.(int)
 		rolesRequest.SrchTimeWin = &parsedData
 	}
 	return &rolesRequest, name

@@ -1,6 +1,11 @@
 # Terraform Provider for Splunk Cloud Platform 
 
-At this point in time, this provider only supports the index resource for Splunk Cloud Platform deployments. 
+At this point in time, this provider supports the following resources for Splunk Cloud Platform deployments.
+- Indexes
+- Hec Tokens
+- IP Allowlist 
+- Users
+- Roles
 
 ```
 Copyright 2023 Splunk Inc. 
