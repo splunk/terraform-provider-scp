@@ -43,7 +43,12 @@ terraform.tfstate
 # Vagrant
 .vagrant/
 
+# tmp directory
+golangci-lint/
+
 # Test exclusions
+test.txt
+coverage.txt
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
 

@@ -31,7 +31,7 @@ func Test_WaitIPAllowlistCreate(t *testing.T) {
 		Subnets: &mockSubnets,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(nil, errors.New("some error")).Once()
 		err := ipallowlists.WaitIPAllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.Error(t, err)
@@ -98,7 +98,7 @@ func Test_WaitIPAllowlistDelete(t *testing.T) {
 		Subnets: &mockSubnets,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(nil, errors.New("some error")).Once()
 		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.Error(t, err)

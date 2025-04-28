@@ -185,9 +185,8 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 			tflog.Info(ctx, fmt.Sprintf("Removing HEC token from state. Not Found error while reading HEC (%s): %s.", hecName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading HEC (%s): %s", hecName, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading HEC (%s): %s", hecName, err))
 	}
 
 	if err := d.Set(NameKey, d.Id()); err != nil {
@@ -388,7 +387,7 @@ func setPatchRequestBody(d *schema.ResourceData, hecRequest *v2.HecSpec) *v2.Pat
 	return &patchRequest
 }
 
-func defaultIndexValidationFunc(v interface{}, p cty.Path) diag.Diagnostics {
+func defaultIndexValidationFunc(v interface{}, _ cty.Path) diag.Diagnostics {
 	var diags diag.Diagnostics
 	currentValue := v.(string)
 

@@ -3,8 +3,6 @@ package indexes
 import (
 	"context"
 	"fmt"
-	"github.com/splunk/terraform-provider-scp/internal/status"
-	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
 	"strings"
 
@@ -14,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 )
 
 const (
@@ -146,9 +146,8 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, m interface{
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
 	}
 
 	if err := d.Set("name", d.Id()); err != nil {

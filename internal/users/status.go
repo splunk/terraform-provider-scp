@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
-	"io"
-	"net/http"
 )
 
 var GeneralRetryableStatusCodes = map[int]string{
-	http.StatusTooManyRequests: http.StatusText(429),
+	http.StatusTooManyRequests: http.StatusText(http.StatusTooManyRequests),
 }
 
 // UserStatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
@@ -112,10 +113,9 @@ func UserStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, s
 		if updateComplete {
 			statusText = status.UpdatedStatus
 			return &user, statusText, nil
-		} else {
-			statusText = http.StatusText(resp.StatusCode)
-			return nil, statusText, nil
 		}
+		statusText = http.StatusText(resp.StatusCode)
+		return nil, statusText, nil
 	}
 }
 
@@ -124,13 +124,13 @@ func VerifyUserUpdate(patchRequest v2.PatchUserJSONRequestBody, user v2.UsersRes
 	if patchRequest.Roles != nil && !utils.IsSliceEqual(patchRequest.Roles, &user.Roles) {
 		return false
 	}
-	if patchRequest.FullName != nil && (&user.FullName == nil || *patchRequest.FullName != user.FullName) {
+	if patchRequest.FullName != nil && *patchRequest.FullName != user.FullName {
 		return false
 	}
-	if patchRequest.DefaultApp != nil && (&user.DefaultApp == nil || *patchRequest.DefaultApp != user.DefaultApp) {
+	if patchRequest.DefaultApp != nil && *patchRequest.DefaultApp != user.DefaultApp {
 		return false
 	}
-	if patchRequest.Email != nil && (&user.Email == nil || *patchRequest.Email != user.Email) {
+	if patchRequest.Email != nil && *patchRequest.Email != user.Email {
 		return false
 	}
 	return true

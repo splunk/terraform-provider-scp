@@ -4,18 +4,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
 	"github.com/splunk/terraform-provider-scp/internal/indexes"
-	"net/http"
-	"testing"
 )
 
 var (
-	roles                    = []string{"user", "sc_admin"}
+	roles = []string{"user", "sc_admin"}
+	// nolint
 	password                 = "8bpKOEtnnGVGR2c"
 	defaultApp               = "launcher"
 	defaultAppUpdated        = "search"
@@ -38,12 +40,12 @@ func TestAcc_SplunkCloudUser_Create(t *testing.T) {
 	nameResourceTest := []resource.TestStep{
 		// Create default user resource
 		{
-			Config: testAccInstanceConfig_Basic(userCreateResource),
+			Config: testAccInstanceConfigBasic(userCreateResource),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(userCreateResource), "name", userCreateResource),
 		},
 		// Another user
 		{
-			Config: testAccInstanceConfig_Basic(userCreateResourceNew),
+			Config: testAccInstanceConfigBasic(userCreateResourceNew),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(userCreateResourceNew), "name", userCreateResourceNew),
 		},
 	}
@@ -62,11 +64,11 @@ func TestAcc_SplunkCloudUser_UpdateAttributes(t *testing.T) {
 	nameResourceTest := []resource.TestStep{
 		// Create default user resource
 		{
-			Config: testAccInstanceConfig_Basic(userCreateResource),
+			Config: testAccInstanceConfigBasic(userCreateResource),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(userCreateResource), "name", userCreateResource),
 		},
 		{
-			Config: testAccInstanceConfig_BasicUpdateAttributes(userCreateResource),
+			Config: testAccInstanceConfigBasicUpdateAttributes(userCreateResource),
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr(resourcePrefix(userCreateResource), "email", emailUpdated),
 				resource.TestCheckResourceAttr(resourcePrefix(userCreateResource), "default_app", defaultAppUpdated),
@@ -83,7 +85,7 @@ func TestAcc_SplunkCloudUser_UpdateAttributes(t *testing.T) {
 	})
 }
 
-func testAccInstanceConfig_Basic(name string) string {
+func testAccInstanceConfigBasic(name string) string {
 	roleList, _ := json.Marshal(roles)
 	return fmt.Sprintf(`resource "scp_users" %[1]q {
 		name = %[1]q
@@ -96,7 +98,7 @@ func testAccInstanceConfig_Basic(name string) string {
 	}`, name, password, defaultApp, string(roleList), federatedSearchManageAck, email, fullName)
 }
 
-func testAccInstanceConfig_BasicUpdateAttributes(name string) string {
+func testAccInstanceConfigBasicUpdateAttributes(name string) string {
 	roleList, _ := json.Marshal(roles)
 	return fmt.Sprintf(`resource "scp_users" %[1]q {
 		name = %[1]q

@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/acs/v2/mocks"
 	"github.com/splunk/terraform-provider-scp/internal/roles"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 var (
@@ -36,7 +37,7 @@ func Test_WaitRoleCreate(t *testing.T) {
 		Name: mockRoleName,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("CreateRole", mock.Anything, v2.Stack(mockStack), &mockCreateParam, mockCreateBody).Return(nil, errors.New("some error")).Once()
 		err := roles.WaitRoleCreate(context.TODO(), client, mockStack, mockCreateParam, mockCreateBody)
 		assert.Error(t, err)
@@ -102,7 +103,7 @@ func generateResponse(code int) *http.Response {
 func Test_WaitRoleRead(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("DescribeRole", mock.Anything, v2.Stack(mockStack), v2.RoleName(mockRoleName)).Return(nil, errors.New("some error")).Once()
 		user, err := roles.WaitRoleRead(context.TODO(), client, mockStack, mockRoleName)
 		assert.Error(t, err)
@@ -152,7 +153,7 @@ func Test_WaitRoleUpdate(t *testing.T) {
 		},
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("PatchRoleInfo", mock.Anything, v2.Stack(mockStack), v2.RoleName(mockRoleName), &mockUpdateParam, mockUpdateBody).Return(nil, errors.New("some error")).Once()
 		err := roles.WaitRoleUpdate(context.TODO(), client, mockStack, mockUpdateParam, mockUpdateBody, mockRoleName)
 		assert.Error(t, err)
@@ -194,7 +195,7 @@ func Test_WaitVerifyRoleUpdate(t *testing.T) {
 		},
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client := &mocks.ClientInterface{}
 		client.On("DescribeRole", mock.Anything, v2.Stack(mockStack), v2.RoleName(mockRoleName)).Return(nil, errors.New("some error")).Once()
 		err := roles.WaitVerifyRoleUpdate(context.TODO(), client, mockStack, mockUpdateBody, mockRoleName)
@@ -230,7 +231,7 @@ func Test_WaitVerifyRoleUpdate(t *testing.T) {
 func Test_WaitRoleDelete(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("DeleteRole", mock.Anything, v2.Stack(mockStack), v2.RoleName(mockRoleName)).Return(nil, errors.New("some error")).Once()
 		err := roles.WaitRoleDelete(context.TODO(), client, mockStack, mockRoleName)
 		assert.Error(t, err)

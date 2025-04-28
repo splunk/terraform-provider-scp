@@ -35,7 +35,7 @@ func Test_ProcessResponse(t *testing.T) {
 	/* test nil resp, bad req status text, and error for bad request */
 	t.Run("verify returns correct output on bad requests", func(t *testing.T) {
 		for _, targetCodes := range [][]string{ipallowlists.TargetStatusResourceChange, ipallowlists.TargetStatusResourceExists, ipallowlists.TargetStatusResourceDeleted} {
-			t.Run(fmt.Sprintf("with target codes %v", targetCodes), func(t *testing.T) {
+			t.Run(fmt.Sprintf("with target codes %v", targetCodes), func(_ *testing.T) {
 				resp, statusText, err := ipallowlists.ProcessResponse(badReqResp, targetCodes, ipallowlists.PendingStatusCRUD)
 				assert.Nil(resp)
 				assert.Equal(http.StatusText(badReqResp.StatusCode), statusText)
@@ -45,14 +45,14 @@ func Test_ProcessResponse(t *testing.T) {
 	})
 
 	/* test nil resp returns error */
-	t.Run("verify returns correct output on success resource change", func(t *testing.T) {
+	t.Run("verify returns correct output on success resource change", func(_ *testing.T) {
 		resp, statusText, err := ipallowlists.ProcessResponse(nil, ipallowlists.TargetStatusResourceChange, ipallowlists.PendingStatusCRUD)
 		assert.Nil(resp)
 		assert.Error(err)
 		assert.Equal(statusText, "")
 	})
 
-	t.Run("verify returns correct output on accepted resource change", func(t *testing.T) {
+	t.Run("verify returns correct output on accepted resource change", func(_ *testing.T) {
 		resp, statusText, err := ipallowlists.ProcessResponse(successRespOk, ipallowlists.TargetStatusResourceChange, ipallowlists.PendingStatusCRUD)
 		assert.NotNil(resp)
 		assert.Equal(http.StatusText(successRespOk.StatusCode), statusText)

@@ -1,0 +1,29 @@
+version:
+  major: 1
+  minor: 48
+  patch: 0
+run:
+  go: "1.19"
+linters:
+  enable:
+    - gosec
+    - revive
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+      - acs/v2/api.gen.go

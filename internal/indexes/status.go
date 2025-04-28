@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"io"
 	"net/http"
+
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
@@ -14,7 +15,7 @@ import (
 )
 
 var GeneralRetryableStatusCodes = map[int]string{
-	http.StatusTooManyRequests: http.StatusText(429),
+	http.StatusTooManyRequests: http.StatusText(http.StatusTooManyRequests),
 }
 
 // IndexStatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
@@ -125,19 +126,19 @@ func IndexStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, 
 		if updateComplete {
 			statusText = status.UpdatedStatus
 			return &index, statusText, nil
-		} else {
-			statusText = http.StatusText(resp.StatusCode)
-			return nil, statusText, nil
 		}
+		statusText = http.StatusText(resp.StatusCode)
+		return nil, statusText, nil
 	}
 }
 
 // VerifyIndexUpdate is a helper to verify that the fields in patch request match fields in the index response
 func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.IndexResponse) bool {
-	if patchRequest.MaxDataSizeMB != nil && uint64(*patchRequest.MaxDataSizeMB) != index.MaxDataSizeMB {
+	// nolint
+	if patchRequest.MaxDataSizeMB != nil && *patchRequest.MaxDataSizeMB >= 0 && uint64(*patchRequest.MaxDataSizeMB) != index.MaxDataSizeMB {
 		return false
 	}
-	if patchRequest.SearchableDays != nil && uint64(*patchRequest.SearchableDays) != index.SearchableDays {
+	if patchRequest.SearchableDays != nil && *patchRequest.SearchableDays >= 0 && uint64(*patchRequest.SearchableDays) != index.SearchableDays {
 		return false
 	}
 	if patchRequest.SelfStorageBucketPath != nil {
@@ -146,7 +147,7 @@ func VerifyIndexUpdate(patchRequest v2.PatchIndexInfoJSONRequestBody, index v2.I
 		}
 	}
 	if patchRequest.SplunkArchivalRetentionDays != nil {
-		if index.SplunkArchivalRetentionDays == nil || uint64(*patchRequest.SplunkArchivalRetentionDays) != *index.SplunkArchivalRetentionDays {
+		if index.SplunkArchivalRetentionDays == nil || *patchRequest.SplunkArchivalRetentionDays >= 0 && uint64(*patchRequest.SplunkArchivalRetentionDays) != *index.SplunkArchivalRetentionDays {
 			return false
 		}
 	}

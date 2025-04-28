@@ -100,9 +100,8 @@ func resourceIPAllowlistRead(ctx context.Context, d *schema.ResourceData, m inte
 			tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading ip allowlist (%s): %s", feature, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading ip allowlist (%s): %s", feature, err))
 	}
 
 	if err := d.Set(schemaKeyFeature, d.Id()); err != nil {
@@ -138,9 +137,8 @@ func resourceIPAllowlistUpdate(ctx context.Context, d *schema.ResourceData, m in
 			if errors.IsUnknownFeatureError(err) {
 				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
-			} else {
-				return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
 			}
+			return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
 		}
 	}
 
@@ -171,9 +169,8 @@ func resourceIPAllowlistDelete(ctx context.Context, d *schema.ResourceData, m in
 			if errors.IsUnknownFeatureError(err) {
 				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
-			} else {
-				return diag.Errorf(fmt.Sprintf("Error deleting ip allowlist (%s): %s", feature, err))
 			}
+			return diag.Errorf(fmt.Sprintf("Error deleting ip allowlist (%s): %s", feature, err))
 		}
 	}
 

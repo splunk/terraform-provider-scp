@@ -1,9 +1,10 @@
 package wait
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"net/http"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
@@ -14,11 +15,11 @@ const (
 )
 
 var (
-	PendingStatusCRUD          = []string{http.StatusText(429), http.StatusText(424)}
-	PendingStatusVerifyCreated = []string{http.StatusText(404), http.StatusText(429)}
-	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(429)}
+	PendingStatusCRUD          = []string{http.StatusText(http.StatusTooManyRequests), http.StatusText(http.StatusFailedDependency)}
+	PendingStatusVerifyCreated = []string{http.StatusText(http.StatusFailedDependency), http.StatusText(http.StatusTooManyRequests)}
+	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(http.StatusTooManyRequests)}
 
-	TargetStatusResourceChange  = []string{http.StatusText(202)}
+	TargetStatusResourceChange  = []string{http.StatusText(http.StatusAccepted)}
 	TargetStatusResourceExists  = []string{http.StatusText(200)}
 	TargetStatusResourceDeleted = []string{http.StatusText(404)}
 )
