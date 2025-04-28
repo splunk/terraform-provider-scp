@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
 	"github.com/splunk/terraform-provider-scp/internal/acctest"
 	"github.com/splunk/terraform-provider-scp/internal/indexes"
-	"net/http"
-	"testing"
 )
 
 var (
@@ -47,12 +48,12 @@ func TestAcc_SplunkCloudRole_Create(t *testing.T) {
 	nameResourceTest := []resource.TestStep{
 		// Create default role resource
 		{
-			Config: testAccInstanceConfig_Basic(roleCreateResource),
+			Config: testAccInstanceConfigBasic(roleCreateResource),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(roleCreateResource), "name", roleCreateResource),
 		},
 		// Another role
 		{
-			Config: testAccInstanceConfig_Basic(roleCreateResourceNew),
+			Config: testAccInstanceConfigBasic(roleCreateResourceNew),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(roleCreateResourceNew), "name", roleCreateResourceNew),
 		},
 	}
@@ -71,11 +72,11 @@ func TestAcc_SplunkCloudRole_UpdateAttributes(t *testing.T) {
 	nameResourceTest := []resource.TestStep{
 		// Create default role resource
 		{
-			Config: testAccInstanceConfig_Basic(roleCreateResource),
+			Config: testAccInstanceConfigBasic(roleCreateResource),
 			Check:  resource.TestCheckResourceAttr(resourcePrefix(roleCreateResource), "name", roleCreateResource),
 		},
 		{
-			Config: testAccInstanceConfig_BasicUpdateAttributes(roleCreateResource),
+			Config: testAccInstanceConfigBasicUpdateAttributes(roleCreateResource),
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr(resourcePrefix(roleCreateResource), "cumulative_rt_srch_jobs_quota", cumulativeRTsrchJobsQuotaUpdated),
 				resource.TestCheckResourceAttr(resourcePrefix(roleCreateResource), "cumulative_srch_jobs_quota", cumulativeSrchJobsQuotaUpdated),
@@ -97,7 +98,7 @@ func TestAcc_SplunkCloudRole_UpdateAttributes(t *testing.T) {
 	})
 }
 
-func testAccInstanceConfig_Basic(name string) string {
+func testAccInstanceConfigBasic(name string) string {
 	roleList, _ := json.Marshal(importedRoles)
 	indexList, _ := json.Marshal(srchIndexesAllowed)
 	return fmt.Sprintf(`resource "scp_roles" %[1]q {
@@ -117,7 +118,7 @@ func testAccInstanceConfig_Basic(name string) string {
 		srchJobsQuota, srchDiskQuota, srchFilter, srchTimeEarliest, srchTimeWin, string(indexList))
 }
 
-func testAccInstanceConfig_BasicUpdateAttributes(name string) string {
+func testAccInstanceConfigBasicUpdateAttributes(name string) string {
 	roleList, _ := json.Marshal(importedRoles)
 	updatedIndexList, _ := json.Marshal(srchIndexesAllowedUpdated)
 	return fmt.Sprintf(`resource "scp_roles" %[1]q {

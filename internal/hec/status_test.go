@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
-	"github.com/splunk/terraform-provider-scp/internal/hec"
-	"github.com/splunk/terraform-provider-scp/internal/utils"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
+	"github.com/splunk/terraform-provider-scp/internal/hec"
+	"github.com/splunk/terraform-provider-scp/internal/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -27,7 +28,7 @@ var (
 	mockToken             = "mock-token"
 	mockUseAck            = false
 	mockAllowedIndexes    = []string{"main", "summary"}
-	mockDeploymentId      = "mock-id"
+	mockDeploymentID      = "mock-id"
 	mockStatusRunning     = "running"
 	mockStatusSucceeded   = "completed"
 	mockStatusFailed      = "failed"
@@ -86,15 +87,16 @@ var (
 		Body:       io.NopCloser(bytes.NewReader(nil)),
 	}
 
+	//nolint
 	failedDependencyResp = &http.Response{
 		StatusCode: http.StatusFailedDependency,
 		Body:       io.NopCloser(bytes.NewReader(nil)),
 	}
 
-	deploymentInfoRunningBody, _   = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusRunning})
-	deploymentInfoSucceededBody, _ = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusSucceeded})
-	deploymentInfoFailedBody, _    = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusFailed})
-	deploymentInfoNewBody, _       = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentId, Status: &mockStatusNew})
+	deploymentInfoRunningBody, _   = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentID, Status: &mockStatusRunning})
+	deploymentInfoSucceededBody, _ = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentID, Status: &mockStatusSucceeded})
+	deploymentInfoFailedBody, _    = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentID, Status: &mockStatusFailed})
+	deploymentInfoNewBody, _       = json.Marshal(&v2.DeploymentInfo{Id: mockDeploymentID, Status: &mockStatusNew})
 )
 
 func genHecResp(code int) *http.Response {
@@ -110,7 +112,7 @@ func genHecResp(code int) *http.Response {
 			Token:             &mockToken,
 			UseAck:            &mockUseAck,
 		}
-		hec := hec.HecBody{HttpEventCollector: &v2.HecInfo{
+		hec := hec.Body{HTTPEventCollector: &v2.HecInfo{
 			Spec:  &hecSpec,
 			Token: nil,
 		}}
@@ -131,11 +133,12 @@ func genHecResp(code int) *http.Response {
 	return recorder.Result()
 }
 
+// nolint
 func genDeploymentInfoResp(code int, status string) *http.Response {
 	var b []byte
 	if code == http.StatusOK {
 		deploymentInfo := v2.DeploymentInfo{
-			Id:     mockDeploymentId,
+			Id:     mockDeploymentID,
 			Status: &status,
 		}
 
@@ -419,7 +422,7 @@ func Test_VerifyHecUpdate(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := hec.VerifyHecUpdate(*test.patchRequest, *test.hecResponse)
 			assert.Equal(result, test.expectedResult)
 		})
@@ -467,7 +470,7 @@ func Test_TestIsSliceEqual(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := utils.IsSliceEqual(test.first, test.second)
 			assert.Equal(result, test.expectedResult)
 		})

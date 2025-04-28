@@ -40,6 +40,7 @@ var rateLimitResp = &http.Response{
 }
 
 func uint64Ptr(value int64) *uint64 {
+	// nolint
 	uint64Val := uint64(value)
 	return &uint64Val
 }
@@ -49,9 +50,11 @@ func genIndexResp(code int) *http.Response {
 	var b []byte
 	if code == http.StatusOK {
 		index := v2.IndexResponse{
-			Datatype:                    mockDatatype,
-			MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-			Name:                        mockIndexName,
+			Datatype: mockDatatype,
+			// nolint
+			MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+			Name:          mockIndexName,
+			// nolint
 			SearchableDays:              uint64(mockSearchableDays),
 			SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 			SplunkArchivalRetentionDays: nil,
@@ -95,9 +98,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 				SplunkArchivalRetentionDays: nil,
@@ -115,9 +120,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 				SplunkArchivalRetentionDays: nil,
@@ -135,9 +142,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: &mockSplunkArchivalRetentionDays,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 				SplunkArchivalRetentionDays: uint64Ptr(mockSplunkArchivalRetentionDays),
@@ -155,9 +164,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 				SplunkArchivalRetentionDays: nil,
@@ -175,9 +186,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       nil,
 				SplunkArchivalRetentionDays: nil,
@@ -195,9 +208,10 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(512),
-				Name:                        mockIndexName,
+				Datatype:      mockDatatype,
+				MaxDataSizeMB: uint64(512),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       nil,
 				SplunkArchivalRetentionDays: nil,
@@ -215,7 +229,8 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
+				Datatype: mockDatatype,
+				// nolint
 				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
 				Name:                        mockIndexName,
 				SearchableDays:              uint64(90),
@@ -235,9 +250,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: nil,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &altMockBucketPath,
 				SplunkArchivalRetentionDays: nil,
@@ -255,9 +272,11 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 				SplunkArchivalRetentionDays: &mockSplunkArchivalRetentionDays,
 			},
 			&v2.IndexResponse{
-				Datatype:                    mockDatatype,
-				MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-				Name:                        mockIndexName,
+				Datatype: mockDatatype,
+				// nolint
+				MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+				Name:          mockIndexName,
+				// nolint
 				SearchableDays:              uint64(mockSearchableDays),
 				SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 				SplunkArchivalRetentionDays: uint64Ptr(400),
@@ -268,7 +287,7 @@ func Test_VerifyIndexUpdate(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := idx.VerifyIndexUpdate(*test.patchRequest, *test.indexResponse)
 			assert.Equal(result, test.expectedResult)
 		})

@@ -2,10 +2,11 @@ package roles_test
 
 import (
 	"fmt"
+	"testing"
+
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/roles"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var (
@@ -690,7 +691,7 @@ func Test_VerifyRoleUpdate(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := roles.VerifyRoleUpdate(*test.patchRequest, *test.roleResponse)
 			compare := assert.Equal(test.expectedResult, result)
 			if compare == false {

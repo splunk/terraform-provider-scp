@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -50,7 +51,7 @@ func Test_IsFailedDeploymentTaskError(t *testing.T) {
 
 	t.Run("is a failed deployment error", func(t *testing.T) {
 		err := &resource.UnexpectedStateError{
-			LastError: fmt.Errorf(FailedDeploymentTaskErr),
+			LastError: errors.New(FailedDeploymentTaskErr),
 		}
 		got := IsFailedDeploymentTaskError(err)
 		assert.True(t, got)

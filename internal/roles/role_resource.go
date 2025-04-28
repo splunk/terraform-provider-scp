@@ -3,6 +3,8 @@ package roles
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,7 +14,6 @@ import (
 	"github.com/splunk/terraform-provider-scp/internal/errors"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
-	"strings"
 )
 
 const (
@@ -207,7 +208,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	tflog.Info(ctx, fmt.Sprintf("resourceRoleRead invoked"))
+	tflog.Info(ctx, "resourceRoleRead invoked")
 	// use the meta value to retrieve your client from the provider configure method
 	acsProvider := m.(client.ACSProvider)
 	acsClient := *acsProvider.Client
@@ -223,9 +224,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			tflog.Info(ctx, fmt.Sprintf("Removing role from state. Not Found error while reading role (%s): %s.", roleName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading role (%s): %s", roleName, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading role (%s): %s", roleName, err))
 	}
 
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
@@ -293,8 +293,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
-	roleName := d.Id()
-
 	// Retrieve data for each field and create request body
 	patchRequest, roleName := parseRoleRequest(d)
 
@@ -357,8 +355,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.CumulativeRTSrchJobsQuota = &parsedData
 	} else if d.HasChange(schemaKeyCumulativeRTSrchJobsQuota) {
-		_, new_val := d.GetChange(schemaKeyCumulativeRTSrchJobsQuota)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeyCumulativeRTSrchJobsQuota)
+		parsedData := newVal.(int)
 		rolesRequest.CumulativeRTSrchJobsQuota = &parsedData
 	}
 
@@ -366,8 +364,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.CumulativeSrchJobsQuota = &parsedData
 	} else if d.HasChange(schemaKeyCumulativeSrchJobsQuota) {
-		_, new_val := d.GetChange(schemaKeyCumulativeSrchJobsQuota)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeyCumulativeSrchJobsQuota)
+		parsedData := newVal.(int)
 		rolesRequest.CumulativeSrchJobsQuota = &parsedData
 	}
 
@@ -392,8 +390,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.RtSrchJobsQuota = &parsedData
 	} else if d.HasChange(schemaKeyRTSrchJobsQuota) {
-		_, new_val := d.GetChange(schemaKeyRTSrchJobsQuota)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeyRTSrchJobsQuota)
+		parsedData := newVal.(int)
 		rolesRequest.RtSrchJobsQuota = &parsedData
 	}
 
@@ -401,8 +399,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.SrchDiskQuota = &parsedData
 	} else if d.HasChange(schemaKeySrchDiskQuota) {
-		_, new_val := d.GetChange(schemaKeySrchDiskQuota)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeySrchDiskQuota)
+		parsedData := newVal.(int)
 		rolesRequest.SrchDiskQuota = &parsedData
 	}
 
@@ -425,8 +423,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.SrchJobsQuota = &parsedData
 	} else if d.HasChange(schemaKeySrchJobsQuota) {
-		_, new_val := d.GetChange(schemaKeySrchJobsQuota)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeySrchJobsQuota)
+		parsedData := newVal.(int)
 		rolesRequest.SrchJobsQuota = &parsedData
 	}
 
@@ -434,8 +432,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.SrchTimeEarliest = &parsedData
 	} else if d.HasChange(schemaKeySrchTimeEarliest) {
-		_, new_val := d.GetChange(schemaKeySrchTimeEarliest)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeySrchTimeEarliest)
+		parsedData := newVal.(int)
 		rolesRequest.SrchTimeEarliest = &parsedData
 	}
 
@@ -443,8 +441,8 @@ func parseRoleRequest(d *schema.ResourceData) (*v2.RolesRequest, string) {
 		parsedData := value.(int)
 		rolesRequest.SrchTimeWin = &parsedData
 	} else if d.HasChange(schemaKeySrchTimeWin) {
-		_, new_val := d.GetChange(schemaKeySrchTimeWin)
-		parsedData := new_val.(int)
+		_, newVal := d.GetChange(schemaKeySrchTimeWin)
+		parsedData := newVal.(int)
 		rolesRequest.SrchTimeWin = &parsedData
 	}
 	return &rolesRequest, name

@@ -19,9 +19,9 @@ const (
 )
 
 var (
-	PendingStatusCRUD          = []string{http.StatusText(429)}
-	PendingStatusVerifyCreated = []string{http.StatusText(429)}
-	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(429)}
+	PendingStatusCRUD          = []string{http.StatusText(http.StatusTooManyRequests)}
+	PendingStatusVerifyCreated = []string{http.StatusText(http.StatusTooManyRequests)}
+	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(http.StatusTooManyRequests)}
 
 	TargetStatusResourceChange  = []string{http.StatusText(200)}
 	TargetStatusResourceExists  = []string{http.StatusText(200)}

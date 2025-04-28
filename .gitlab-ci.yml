@@ -27,7 +27,7 @@ unittest:
   stage: build
   coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
   script:
-    - make vendor test
+    - make vendor lint test
     - go run github.com/boumenot/gocover-cobertura@latest < coverage.txt > cobertura-coverage.xml
   artifacts:
     paths:

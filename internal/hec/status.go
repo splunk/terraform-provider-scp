@@ -4,25 +4,26 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
-	"io"
-	"net/http"
 )
 
-type HecBody struct {
-	HttpEventCollector *v2.HecInfo `json:"http-event-collector"`
+type Body struct {
+	HTTPEventCollector *v2.HecInfo `json:"http-event-collector"`
 }
 
 var GeneralRetryableStatusCodes = map[int]string{
-	http.StatusTooManyRequests: http.StatusText(429),
+	http.StatusTooManyRequests: http.StatusText(http.StatusTooManyRequests),
 }
 
-// HecStatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
-func HecStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createHecRequest v2.CreateHECJSONRequestBody) resource.StateRefreshFunc {
+// StatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
+func StatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createHecRequest v2.CreateHECJSONRequestBody) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.CreateHEC(ctx, stack, createHecRequest)
 		if err != nil {
@@ -33,8 +34,8 @@ func HecStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	}
 }
 
-// HecStatusPoll returns StateRefreshFunc that makes GET request and checks if response is desired target (200 for create and 404 for delete)
-func HecStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
+// StatusPoll returns StateRefreshFunc that makes GET request and checks if response is desired target (200 for create and 404 for delete)
+func StatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string, targetStatus []string, pendingStatus []string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DescribeHec(ctx, stack, v2.Hec(hecName))
 		if err != nil {
@@ -46,8 +47,8 @@ func HecStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	}
 }
 
-// HecStatusRead returns StateRefreshFunc that makes GET request, checks if request was successful, and returns hec response
-func HecStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) resource.StateRefreshFunc {
+// StatusRead returns StateRefreshFunc that makes GET request, checks if request was successful, and returns hec response
+func StatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DescribeHec(ctx, stack, v2.Hec(hecName))
 		if err != nil {
@@ -64,22 +65,21 @@ func HecStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 			}
 		}
 
-		var hec HecBody
+		var hec Body
 		if resp.StatusCode == 200 {
 			if err = json.Unmarshal(bodyBytes, &hec); err != nil {
 				return nil, "", &resource.UnexpectedStateError{LastError: err}
 			}
 		}
 		status := http.StatusText(resp.StatusCode)
-		var hecSpec v2.HecSpec
-		hecSpec = *hec.HttpEventCollector.Spec
-		hecSpec.Token = hec.HttpEventCollector.Token
+		hecSpec := *hec.HTTPEventCollector.Spec
+		hecSpec.Token = hec.HTTPEventCollector.Token
 		return &hecSpec, status, nil
 	}
 }
 
-// HecStatusDelete returns StateRefreshFunc that makes DELETE request and checks if request was accepted
-func HecStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) resource.StateRefreshFunc {
+// StatusDelete returns StateRefreshFunc that makes DELETE request and checks if request was accepted
+func StatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DeleteHec(ctx, stack, v2.Hec(hecName), v2.DeleteHecJSONRequestBody{})
 		if err != nil {
@@ -91,8 +91,8 @@ func HecStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	}
 }
 
-// HecStatusUpdate returns StateRefreshFunc that makes PATCH request and checks if request was accepted
-func HecStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchHecRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
+// StatusUpdate returns StateRefreshFunc that makes PATCH request and checks if request was accepted
+func StatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchHecRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
 		resp, err := acsClient.PatchHEC(ctx, stack, v2.Hec(hecName), patchHecRequest)
@@ -105,8 +105,8 @@ func HecStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	}
 }
 
-// HecStatusVerifyUpdate returns a StateRefreshFunc that makes a GET request and checks to see if the hec fields matches those in patch request
-func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
+// StatusVerifyUpdate returns a StateRefreshFunc that makes a GET request and checks to see if the hec fields matches those in patch request
+func StatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DescribeHec(ctx, stack, v2.Hec(hecName))
 		if err != nil {
@@ -119,14 +119,14 @@ func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{LastError: errors.New(string(bodyBytes))}
 		}
 
-		var hec HecBody
+		var hec Body
 		var hecSpec v2.HecSpec
 		updateComplete := false
 		if resp.StatusCode == 200 {
 			if err = json.Unmarshal(bodyBytes, &hec); err != nil {
 				return nil, "", &resource.UnexpectedStateError{LastError: err}
 			}
-			hecSpec = *hec.HttpEventCollector.Spec //todo nil check
+			hecSpec = *hec.HTTPEventCollector.Spec //todo nil check
 			updateComplete = VerifyHecUpdate(patchRequest, hecSpec)
 		}
 
@@ -134,10 +134,9 @@ func HecStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, st
 		if updateComplete {
 			statusText = status.UpdatedStatus
 			return &hecSpec, statusText, nil
-		} else {
-			statusText = http.StatusText(resp.StatusCode)
-			return nil, statusText, nil
 		}
+		statusText = http.StatusText(resp.StatusCode)
+		return nil, statusText, nil
 	}
 }
 
@@ -165,11 +164,11 @@ func VerifyHecUpdate(patchRequest v2.PatchHECJSONRequestBody, hec v2.HecSpec) bo
 	return true
 }
 
-// HecStatusRetryTaskComplete returns StateRefreshFunc that makes GET request and checks if request was successful. If the request was successful, we return
+// StatusRetryTaskComplete returns StateRefreshFunc that makes GET request and checks if request was successful. If the request was successful, we return
 // deployment info to access status
-func HecStatusRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentId string) resource.StateRefreshFunc {
+func StatusRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentID string) resource.StateRefreshFunc {
 	return func() (any, string, error) {
-		resp, err := acsClient.DescribeDeployment(ctx, stack, v2.DeploymentID(deploymentId))
+		resp, err := acsClient.DescribeDeployment(ctx, stack, v2.DeploymentID(deploymentID))
 		if err != nil {
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}
@@ -193,14 +192,13 @@ func HecStatusRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterfac
 				statusText = *deploymentInfo.Status
 			}
 			return &deploymentInfo, statusText, nil
-		} else {
-			return nil, statusText, nil
 		}
+		return nil, statusText, nil
 	}
 }
 
-// HecStatusRetryTask returns StateRefreshFunc that makes POST request and checks if request was accepted
-func HecStatusRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) resource.StateRefreshFunc {
+// StatusRetryTask returns StateRefreshFunc that makes POST request and checks if request was accepted
+func StatusRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.RetryDeployment(ctx, stack)
 		if err != nil {

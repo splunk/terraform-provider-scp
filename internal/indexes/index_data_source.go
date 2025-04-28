@@ -58,9 +58,8 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, m interfac
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
 	}
 
 	if err := d.Set("name", index.Name); err != nil {

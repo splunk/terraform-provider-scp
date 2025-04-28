@@ -3,6 +3,8 @@ package users
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,7 +14,6 @@ import (
 	"github.com/splunk/terraform-provider-scp/internal/errors"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
-	"strings"
 )
 
 const (
@@ -192,7 +193,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	tflog.Info(ctx, fmt.Sprintf("resourceUserRead invoked"))
+	tflog.Info(ctx, "resourceUserRead invoked")
 	// use the meta value to retrieve your client from the provider configure method
 	acsProvider := m.(client.ACSProvider)
 	acsClient := *acsProvider.Client
@@ -208,9 +209,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			tflog.Info(ctx, fmt.Sprintf("Removing user from state. Not Found error while reading user (%s): %s.", userName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading user (%s): %s", userName, err))
 		}
+		return diag.Errorf(fmt.Sprintf("Error reading user (%s): %s", userName, err))
 	}
 
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
