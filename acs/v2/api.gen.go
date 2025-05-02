@@ -63,6 +63,16 @@ type CapabilitiesInfo struct {
 	SystemCapabilities    *[]string `json:"systemCapabilities,omitempty"`
 }
 
+// ChangePythonVersionRequest defines model for ChangePythonVersionRequest.
+type ChangePythonVersionRequest struct {
+	PythonVersion *string `json:"pythonVersion,omitempty"`
+}
+
+// ID for pairing Splunk Cloud stack with Observability organization
+type CreateEcSsoPairingResponse struct {
+	PairingId *string `json:"pairingId,omitempty"`
+}
+
 // Create user request body
 type CreateUserRequest struct {
 	CreateRole      *bool     `json:"createRole,omitempty"`
@@ -99,24 +109,59 @@ type DescribeEligibilityPrivateConnectivity struct {
 	Reason   *string `json:"reason,omitempty"`
 }
 
+// DescribeManagedGlueResources defines model for DescribeManagedGlueResources.
+type DescribeManagedGlueResources struct {
+	ManagedGlueResources *[]ManagedGlueResources `json:"managedGlueResources,omitempty"`
+	Status               *string                 `json:"status,omitempty"`
+}
+
 // DescribePrivateConnectivity defines model for DescribePrivateConnectivity.
 type DescribePrivateConnectivity struct {
-	CustomerAccountIds *[]string `json:"customerAccountIds,omitempty"`
-	Endpoint           *string   `json:"endpoint,omitempty"`
-	Message            *string   `json:"message,omitempty"`
-	Reason             *string   `json:"reason,omitempty"`
-	Status             *string   `json:"status,omitempty"`
+	Endpoints *[]PrivateConnectivityEndpoints `json:"endpoints,omitempty"`
+}
+
+// DescribeWorkflowResponseObject defines model for DescribeWorkflowResponseObject.
+type DescribeWorkflowResponseObject struct {
+	CreatedAt  *string `json:"createdAt,omitempty"`
+	FinishedAt *string `json:"finishedAt,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	StartedAt  *string `json:"startedAt,omitempty"`
+	Status     *string `json:"status,omitempty"`
+}
+
+// EmekKeyUploadResponse defines model for EmekKeyUploadResponse.
+type EmekKeyUploadResponse struct {
+	Message string `json:"message"`
+}
+
+// EmekPolicy defines model for EmekPolicy.
+type EmekPolicy struct {
+	Message string                 `json:"message"`
+	Policy  map[string]interface{} `json:"policy"`
+	Region  string                 `json:"region"`
+}
+
+// CO2 spec value of the o11y key
+type EnableObservabilityCapabilitiesResponse struct {
+	CentralizedRBACEnabled *bool `json:"centralizedRBACEnabled,omitempty"`
 }
 
 // EnablePrivateConnectivity defines model for EnablePrivateConnectivity.
 type EnablePrivateConnectivity struct {
-	CustomerAccountIds *[]string `json:"customerAccountIds,omitempty"`
+	CustomerAccountIds *[]string                    `json:"customerAccountIds,omitempty"`
+	Feature            *PrivateConnectivityFeatures `json:"feature,omitempty"`
 }
 
 // Error defines model for Error.
 type Error struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+// Status for pairing Splunk Cloud stack with Observability organization
+type GetEcSsoPairingStatusResponse struct {
+	PairingId *string `json:"pairingId,omitempty"`
+	Status    *string `json:"status,omitempty"`
 }
 
 // HecInfo defines model for HecInfo.
@@ -202,34 +247,115 @@ type MaintenanceWindowsAuditResponse struct {
 	Audits []MaintenanceWindowsSchedule `json:"audits"`
 }
 
+// MaintenanceWindowsChangeFreezeRequest defines model for MaintenanceWindowsChangeFreezeRequest.
+type MaintenanceWindowsChangeFreezeRequest struct {
+	CustomerInitiatedFreezes []MaintenanceWindowsCustomerInitiatedFreezeRequest `json:"customerInitiatedFreezes"`
+}
+
+// MaintenanceWindowsChangeFreezeResponse defines model for MaintenanceWindowsChangeFreezeResponse.
+type MaintenanceWindowsChangeFreezeResponse struct {
+	CustomerInitiatedFreezes []MaintenanceWindowsCustomerInitiatedFreezeResponse `json:"customerInitiatedFreezes"`
+	SplunkInitiatedFreezes   []MaintenanceWindowsSplunkInitiatedFreezeResponse   `json:"splunkInitiatedFreezes"`
+}
+
+// MaintenanceWindowsCustomerInitiatedFreezeRequest defines model for MaintenanceWindowsCustomerInitiatedFreezeRequest.
+type MaintenanceWindowsCustomerInitiatedFreezeRequest struct {
+
+	// Type of changes the change freeze applies to.
+	AppliesTo string `json:"appliesTo"`
+
+	// Date (YYYY/MM/DD) when the change freeze ends.
+	EndDate string `json:"endDate"`
+
+	// Unique identifier (UUID) of the change freeze. This field should be left empty for new change freezes.
+	Id *string `json:"id,omitempty"`
+
+	// Reason for the change freeze.
+	Reason string `json:"reason"`
+
+	// Date (YYYY/MM/DD) when the change freeze starts.
+	StartDate string `json:"startDate"`
+}
+
+// MaintenanceWindowsCustomerInitiatedFreezeResponse defines model for MaintenanceWindowsCustomerInitiatedFreezeResponse.
+type MaintenanceWindowsCustomerInitiatedFreezeResponse struct {
+
+	// Type of changes the change freeze applies to.
+	AppliesTo string `json:"appliesTo"`
+
+	// Time at which the change freeze was created.
+	CreatedTimestamp time.Time `json:"createdTimestamp"`
+
+	// Date (YYYY/MM/DD) when the change freeze ends.
+	EndDate string `json:"endDate"`
+
+	// UUID of the change freeze.
+	Id string `json:"id"`
+
+	// Time at which the change freeze was last modified.
+	LastModifiedTimestamp time.Time `json:"lastModifiedTimestamp"`
+
+	// Reason for the change freeze.
+	Reason string `json:"reason"`
+
+	// Date (YYYY/MM/DD) when the change freeze starts.
+	StartDate string `json:"startDate"`
+
+	// SFDC Tickets associated with the change freeze request.
+	Tickets []string `json:"tickets"`
+}
+
 // MaintenanceWindowsOperation defines model for MaintenanceWindowsOperation.
 type MaintenanceWindowsOperation struct {
+
+	// List of SFDC tickets associated with the operation.
 	SFDCTickets *[]string `json:"SFDCTickets,omitempty"`
 
-	// app name that needs to be upgraded
+	// Name of the app to be upgraded.
 	AppName *string `json:"appName,omitempty"`
 
-	// time at which the operation ended
+	// Time at which the operation ended.
 	EndTime *time.Time `json:"endTime,omitempty"`
 
-	// map containing metadata like target version, target instance, customerAckRequired, customerAckReceived etc.
+	// A map containing metadata about the operation (e.g. targetVersion, lastStatusBeforeCanceled, etc...).
 	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 
-	// notes for splunk customer
+	// Notes for the customer.
 	Notes *[]string `json:"notes,omitempty"`
 
-	// description of the operation
+	// Description of the operation.
 	OperationDescription string `json:"operationDescription"`
 
-	// maintenance window schedule operation status
+	// Status of the operation.
 	OperationStatus string `json:"operationStatus"`
-	OperationType   string `json:"operationType"`
 
-	// time at which the operation started
+	// Type of the operation.
+	OperationType string `json:"operationType"`
+
+	// Time at which the operation started.
 	StartTime *time.Time `json:"startTime,omitempty"`
 
-	// target version after upgrade
+	// Target version after the upgrade.
 	TargetVersion *string `json:"targetVersion,omitempty"`
+
+	// True if the operation will have no impact on the uptime of the stack.
+	ZeroDowntime bool `json:"zeroDowntime"`
+}
+
+// MaintenanceWindowsPreferencesRequest defines model for MaintenanceWindowsPreferencesRequest.
+type MaintenanceWindowsPreferencesRequest struct {
+	ChangeFreezes MaintenanceWindowsChangeFreezeRequest `json:"changeFreezes"`
+
+	// Version of the record.
+	RecordVersion *int `json:"recordVersion,omitempty"`
+}
+
+// MaintenanceWindowsPreferencesResponse defines model for MaintenanceWindowsPreferencesResponse.
+type MaintenanceWindowsPreferencesResponse struct {
+	ChangeFreezes MaintenanceWindowsChangeFreezeResponse `json:"changeFreezes"`
+
+	// Version of the record.
+	RecordVersion int `json:"recordVersion"`
 }
 
 // MaintenanceWindowsResponse defines model for MaintenanceWindowsResponse.
@@ -241,27 +367,80 @@ type MaintenanceWindowsResponse struct {
 // MaintenanceWindowsSchedule defines model for MaintenanceWindowsSchedule.
 type MaintenanceWindowsSchedule struct {
 
-	// duration of maintenance windows in hours
-	Duration              string    `json:"duration"`
+	// The duration of the maintenance window.
+	Duration string `json:"duration"`
+
+	// Time at which the maintenance window was last modified. Format is RFC3339.
 	LastModifiedTimestamp time.Time `json:"lastModifiedTimestamp"`
 
-	// summary or reason for the maintenance
+	// The summary or reason for the maintenance.
 	LastSummary *string `json:"lastSummary,omitempty"`
 
-	// describes the type of upgrade falls under
+	// The type of upgrade performed in the maintenance window.
 	MwType     string                         `json:"mwType"`
 	Operations *[]MaintenanceWindowsOperation `json:"operations,omitempty"`
 
-	// requester of the maintenance, customer or splunk
+	// The entity which requested the maintenance window, either the customer or Splunk.
 	RequestedEntity string `json:"requestedEntity"`
 
-	// user who is requesting the maintenance
-	RequestedUser          *string   `json:"requestedUser,omitempty"`
-	ScheduleId             string    `json:"scheduleId"`
+	// The user who requested the maintenance window.
+	RequestedUser *string `json:"requestedUser,omitempty"`
+
+	// UUID of the maintenance window.
+	ScheduleId string `json:"scheduleId"`
+
+	// Time at which the maintenance window is scheduled to begin. Format is RFC3339.
 	ScheduleStartTimestamp time.Time `json:"scheduleStartTimestamp"`
 
-	// maintenance window schedule status
+	// The status of the maintenance window schedule.
 	Status string `json:"status"`
+
+	// True if the maintenance window will have no impact on the uptime of the stack.
+	ZeroDowntime bool `json:"zeroDowntime"`
+}
+
+// MaintenanceWindowsSplunkInitiatedFreezeResponse defines model for MaintenanceWindowsSplunkInitiatedFreezeResponse.
+type MaintenanceWindowsSplunkInitiatedFreezeResponse struct {
+
+	// Type of changes the change freeze applies to.
+	AppliesTo string `json:"appliesTo"`
+
+	// Category of change freeze.
+	Category string `json:"category"`
+
+	// Time at which the change freeze was created.
+	CreatedTimestamp time.Time `json:"createdTimestamp"`
+
+	// Date (YYYY/MM/DD) when the change freeze ends.
+	EndDate string `json:"endDate"`
+
+	// UUID of the change freeze.
+	Id string `json:"id"`
+
+	// Time at which the change freeze was last modified.
+	LastModifiedTimestamp time.Time `json:"lastModifiedTimestamp"`
+
+	// Reason for the change freeze.
+	Reason string `json:"reason"`
+
+	// Date (YYYY/MM/DD) when the change freeze starts.
+	StartDate string `json:"startDate"`
+
+	// Tickets associated with the change freeze request.
+	Tickets []string `json:"tickets"`
+}
+
+// ManagedGlueResources defines model for ManagedGlueResources.
+type ManagedGlueResources struct {
+	CloudProvider       string              `json:"cloudProvider"`
+	Database            string              `json:"database"`
+	Extra               *Extra              `json:"extra,omitempty"`
+	FieldDelimiter      *string             `json:"fieldDelimiter,omitempty"`
+	FileFormat          string              `json:"fileFormat"`
+	LocationPrefix      string              `json:"locationPrefix"`
+	PartitionProjection PartitionProjection `json:"partitionProjection"`
+	SourceType          string              `json:"sourceType"`
+	Table               string              `json:"table"`
 }
 
 // OutboundResponse defines model for OutboundResponse.
@@ -311,6 +490,26 @@ type PostRolesRequest struct {
 
 // the app package in tgz format
 type PrivateAppBody string
+
+// PrivateConnectivityEndpoints defines model for PrivateConnectivityEndpoints.
+type PrivateConnectivityEndpoints struct {
+	CustomerAccountIds      *[]string `json:"customerAccountIds,omitempty"`
+	Endpoint                *string   `json:"endpoint,omitempty"`
+	Feature                 *string   `json:"feature,omitempty"`
+	Message                 *string   `json:"message,omitempty"`
+	PrivateSearchDNSRecords *[]string `json:"privateSearch-DNSRecords,omitempty"`
+	Reason                  *string   `json:"reason,omitempty"`
+	Status                  *string   `json:"status,omitempty"`
+}
+
+// PrivateConnectivityFeatures defines model for PrivateConnectivityFeatures.
+type PrivateConnectivityFeatures []string
+
+// PythonVersionResponse defines model for PythonVersionResponse.
+type PythonVersionResponse struct {
+	Message       *string `json:"message,omitempty"`
+	PythonVersion *string `json:"pythonVersion,omitempty"`
+}
 
 // RestartResponse defines model for RestartResponse.
 type RestartResponse struct {
@@ -450,9 +649,15 @@ type TokenInfo struct {
 	User       string     `json:"user"`
 }
 
+// UpdateManagedGlueResources defines model for UpdateManagedGlueResources.
+type UpdateManagedGlueResources struct {
+	ManagedGlueResources *[]ManagedGlueResources `json:"managedGlueResources,omitempty"`
+}
+
 // UpdatePrivateConnectivity defines model for UpdatePrivateConnectivity.
 type UpdatePrivateConnectivity struct {
-	PatchedCustomerAccountIds *[]string `json:"patchedCustomerAccountIds,omitempty"`
+	Feature                   *PrivateConnectivityFeatures `json:"feature,omitempty"`
+	PatchedCustomerAccountIds *[]string                    `json:"patchedCustomerAccountIds,omitempty"`
 }
 
 // Splunk user
@@ -473,6 +678,27 @@ type WarningResponse struct {
 	Warnings *[]string `json:"warnings,omitempty"`
 }
 
+// Extra defines model for extra.
+type Extra struct {
+	ColumnIndexes  *[]int  `json:"columnIndexes,omitempty"`
+	OrgID          *string `json:"orgID,omitempty"`
+	PartitionStyle *string `json:"partitionStyle,omitempty"`
+}
+
+// PartitionProjection defines model for partitionProjection.
+type PartitionProjection struct {
+	AccountIDKeyName *string  `json:"accountIDKeyName,omitempty"`
+	AccountIDs       []string `json:"accountIDs"`
+	RegionKeyName    *string  `json:"regionKeyName,omitempty"`
+	Regions          []string `json:"regions"`
+	TimeDayKeyName   *string  `json:"timeDayKeyName,omitempty"`
+	TimeHourKeyName  *string  `json:"timeHourKeyName,omitempty"`
+	TimeKeyName      *string  `json:"timeKeyName,omitempty"`
+	TimeMonthKeyName *string  `json:"timeMonthKeyName,omitempty"`
+	TimeRange        *string  `json:"timeRange,omitempty"`
+	TimeUnit         *string  `json:"timeUnit,omitempty"`
+}
+
 // AppName defines model for app-name.
 type AppName string
 
@@ -485,8 +711,14 @@ type BucketName string
 // BucketPath defines model for bucketPath.
 type BucketPath string
 
+// ConfsOnly defines model for confsOnly.
+type ConfsOnly bool
+
 // Count defines model for count.
 type Count int64
+
+// DefaultDirectory defines model for defaultDirectory.
+type DefaultDirectory bool
 
 // DeploymentID defines model for deploymentID.
 type DeploymentID string
@@ -525,6 +757,9 @@ type Index string
 // Key defines model for key.
 type Key string
 
+// LocalDirectory defines model for localDirectory.
+type LocalDirectory bool
+
 // NextLink defines model for nextLink.
 type NextLink string
 
@@ -558,6 +793,12 @@ type UserName string
 // Username defines model for username.
 type Username string
 
+// UsersDirectory defines model for usersDirectory.
+type UsersDirectory bool
+
+// WorkflowName defines model for workflowName.
+type WorkflowName string
+
 // DefaultError defines model for defaultError.
 type DefaultError Error
 
@@ -568,6 +809,20 @@ type AddOutboundportsJSONBody struct {
 		Subnets *[]string `json:"subnets,omitempty"`
 	} `json:"outboundPorts,omitempty"`
 	Reason *string `json:"reason,omitempty"`
+}
+
+// CreateOutboundPortsV6JSONBody defines parameters for CreateOutboundPortsV6.
+type CreateOutboundPortsV6JSONBody struct {
+	OutboundPorts *[]struct {
+		Port    *int32    `json:"port,omitempty"`
+		Subnets *[]string `json:"subnets,omitempty"`
+	} `json:"outboundPorts,omitempty"`
+	Reason *string `json:"reason,omitempty"`
+}
+
+// DeleteOutboundPortV6JSONBody defines parameters for DeleteOutboundPortV6.
+type DeleteOutboundPortV6JSONBody struct {
+	Subnets *[]string `json:"subnets,omitempty"`
 }
 
 // DeleteOutboundportJSONBody defines parameters for DeleteOutboundport.
@@ -585,13 +840,23 @@ type AddSubnetsJSONBody struct {
 	Subnets *[]string `json:"subnets,omitempty"`
 }
 
+// DeleteAllowlistsV6JSONBody defines parameters for DeleteAllowlistsV6.
+type DeleteAllowlistsV6JSONBody struct {
+	Subnets *[]string `json:"subnets,omitempty"`
+}
+
+// CreateAllowlistV6JSONBody defines parameters for CreateAllowlistV6.
+type CreateAllowlistV6JSONBody struct {
+	Subnets *[]string `json:"subnets,omitempty"`
+}
+
 // ListAppsParams defines parameters for ListApps.
 type ListAppsParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 
 	// filter apps based on splunkbase and non-splunkbase apps
@@ -620,10 +885,10 @@ type InstallAppParams struct {
 // ListAppsVictoriaParams defines parameters for ListAppsVictoria.
 type ListAppsVictoriaParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 
 	// filter apps based on splunkbase and non-splunkbase apps
@@ -647,6 +912,22 @@ type InstallAppVictoriaParams struct {
 
 	// ACS-Licensing-Ack is required for installing splunkbase apps
 	ACSLicensingAck *string `json:"ACS-Licensing-Ack,omitempty"`
+}
+
+// DownloadAppExportVictoriaParams defines parameters for DownloadAppExportVictoria.
+type DownloadAppExportVictoriaParams struct {
+
+	// export the default configs for the app etc/apps/<app_id>/default/*
+	Default *DefaultDirectory `json:"default,omitempty"`
+
+	// export the local configs for the app under etc/apps/<app_id>/local/*
+	Local *LocalDirectory `json:"local,omitempty"`
+
+	// export the configs and data under etc/users/*/<app_id>/* for the users on which the requester has access over
+	Users *UsersDirectory `json:"users,omitempty"`
+
+	// export only the configs as per request parameters and don’t export any app data
+	ConfsOnly *ConfsOnly `json:"confs_only,omitempty"`
 }
 
 // PatchAppVictoriaParams defines parameters for PatchAppVictoria.
@@ -676,18 +957,33 @@ type ListCapabilitiesParams struct {
 	GrantableOnly *GrantableOnly `json:"grantableOnly,omitempty"`
 }
 
+// UpdateManagedGlueResourcesJSONBody defines parameters for UpdateManagedGlueResources.
+type UpdateManagedGlueResourcesJSONBody UpdateManagedGlueResources
+
 // ListSelfStorageLocationsParams defines parameters for ListSelfStorageLocations.
 type ListSelfStorageLocationsParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
 // CreateSelfStorageLocationJSONBody defines parameters for CreateSelfStorageLocation.
 type CreateSelfStorageLocationJSONBody SelfStorageLocationBody
+
+// PutEmekKeyJSONBody defines parameters for PutEmekKey.
+type PutEmekKeyJSONBody struct {
+	KeyARN string `json:"keyARN"`
+}
+
+// GetEmekPolicyParams defines parameters for GetEmekPolicy.
+type GetEmekPolicyParams struct {
+
+	// EMEK-Legal-Ack is required for generating key policy
+	EMEKLegalAck string `json:"EMEK-Legal-Ack"`
+}
 
 // SetAppFeatureEnablementJSONBody defines parameters for SetAppFeatureEnablement.
 type SetAppFeatureEnablementJSONBody AppFeatureEnablement
@@ -695,10 +991,10 @@ type SetAppFeatureEnablementJSONBody AppFeatureEnablement
 // ListIndexesParams defines parameters for ListIndexes.
 type ListIndexesParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
@@ -714,10 +1010,10 @@ type PatchIndexInfoJSONBody PatchIndexInfo
 // ListHECsParams defines parameters for ListHECs.
 type ListHECsParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
@@ -739,44 +1035,75 @@ type AddLimitConfigJSONBody LimitConfigurationInfo
 // ResetLimitConfigJSONBody defines parameters for ResetLimitConfig.
 type ResetLimitConfigJSONBody LimitResetSettingsList
 
+// UpdateMaintenanceWindowsPreferencesJSONBody defines parameters for UpdateMaintenanceWindowsPreferences.
+type UpdateMaintenanceWindowsPreferencesJSONBody MaintenanceWindowsPreferencesRequest
+
 // ListMaintenanceWindowsSchedulesParams defines parameters for ListMaintenanceWindowsSchedules.
 type ListMaintenanceWindowsSchedulesParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// nextLink to the next segment of the result set. A nextLink with the value null indicates there are no more pages. UTC is the default timezone.
+	// The key for the next page of the result set. A nextLink with the value null indicates there are no more pages.
 	NextLink *NextLink `json:"nextLink,omitempty"`
 
-	// the earliest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
+	// The earliest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
 	FromTime *FromTime `json:"fromTime,omitempty"`
 
-	// the latest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
+	// The latest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
 	ToTime *ToTime `json:"toTime,omitempty"`
 }
 
 // AuditMaintenanceWindowsScheduleParams defines parameters for AuditMaintenanceWindowsSchedule.
 type AuditMaintenanceWindowsScheduleParams struct {
 
-	// the earliest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
+	// The earliest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
 	FromTime *FromTime `json:"fromTime,omitempty"`
 
-	// the latest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
+	// The latest time to return results from. Format is expected to be YYYY-MM-DD or in RFC3339. UTC is the default timezone.
 	ToTime *ToTime `json:"toTime,omitempty"`
+}
+
+// EnableRbacOnO11yParams defines parameters for EnableRbacOnO11y.
+type EnableRbacOnO11yParams struct {
+
+	// Observability Admin Access Token
+	O11yAccessToken string `json:"o11y-access-token"`
+}
+
+// PostObservabilityPairingParams defines parameters for PostObservabilityPairing.
+type PostObservabilityPairingParams struct {
+
+	// Observability Admin Access Token
+	O11yAccessToken string `json:"o11y-access-token"`
+}
+
+// GetObservabilityPairingStatusParams defines parameters for GetObservabilityPairingStatus.
+type GetObservabilityPairingStatusParams struct {
+
+	// Observability Admin Access Token
+	O11yAccessToken string `json:"o11y-access-token"`
 }
 
 // ListPermissionsAppsParams defines parameters for ListPermissionsApps.
 type ListPermissionsAppsParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
 // PatchPermissionsAppsJSONBody defines parameters for PatchPermissionsApps.
 type PatchPermissionsAppsJSONBody PatchAppPermsRequest
+
+// DescribePrivateConnectivityParams defines parameters for DescribePrivateConnectivity.
+type DescribePrivateConnectivityParams struct {
+
+	// select which feature endpoint tried to retrieve, supported feature: search, ingest. show all if no feature specified
+	Feature *string `json:"feature,omitempty"`
+}
 
 // UpdatePrivateConnectivityJSONBody defines parameters for UpdatePrivateConnectivity.
 type UpdatePrivateConnectivityJSONBody EnablePrivateConnectivity
@@ -784,13 +1111,16 @@ type UpdatePrivateConnectivityJSONBody EnablePrivateConnectivity
 // EnablePrivateConnectivityJSONBody defines parameters for EnablePrivateConnectivity.
 type EnablePrivateConnectivityJSONBody EnablePrivateConnectivity
 
+// ChangePythonVersionJSONBody defines parameters for ChangePythonVersion.
+type ChangePythonVersionJSONBody ChangePythonVersionRequest
+
 // ListRolesParams defines parameters for ListRoles.
 type ListRolesParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
@@ -817,10 +1147,10 @@ type PatchRoleInfoParams struct {
 // ListTokensParams defines parameters for ListTokens.
 type ListTokensParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 
 	// status of tokens wanted
@@ -836,10 +1166,10 @@ type CreateTokenJSONBody TokenBody
 // ListUsersParams defines parameters for ListUsers.
 type ListUsersParams struct {
 
-	// the count of items to return
+	// The maximum number of results to return.
 	Count *Count `json:"count,omitempty"`
 
-	// the offset to start return items from
+	// The offset to start returning items from.
 	Offset *Offset `json:"offset,omitempty"`
 }
 
@@ -866,6 +1196,12 @@ type PatchUserParams struct {
 // AddOutboundportsJSONRequestBody defines body for AddOutboundports for application/json ContentType.
 type AddOutboundportsJSONRequestBody AddOutboundportsJSONBody
 
+// CreateOutboundPortsV6JSONRequestBody defines body for CreateOutboundPortsV6 for application/json ContentType.
+type CreateOutboundPortsV6JSONRequestBody CreateOutboundPortsV6JSONBody
+
+// DeleteOutboundPortV6JSONRequestBody defines body for DeleteOutboundPortV6 for application/json ContentType.
+type DeleteOutboundPortV6JSONRequestBody DeleteOutboundPortV6JSONBody
+
 // DeleteOutboundportJSONRequestBody defines body for DeleteOutboundport for application/json ContentType.
 type DeleteOutboundportJSONRequestBody DeleteOutboundportJSONBody
 
@@ -875,8 +1211,20 @@ type DeleteSubnetsJSONRequestBody DeleteSubnetsJSONBody
 // AddSubnetsJSONRequestBody defines body for AddSubnets for application/json ContentType.
 type AddSubnetsJSONRequestBody AddSubnetsJSONBody
 
+// DeleteAllowlistsV6JSONRequestBody defines body for DeleteAllowlistsV6 for application/json ContentType.
+type DeleteAllowlistsV6JSONRequestBody DeleteAllowlistsV6JSONBody
+
+// CreateAllowlistV6JSONRequestBody defines body for CreateAllowlistV6 for application/json ContentType.
+type CreateAllowlistV6JSONRequestBody CreateAllowlistV6JSONBody
+
+// UpdateManagedGlueResourcesJSONRequestBody defines body for UpdateManagedGlueResources for application/json ContentType.
+type UpdateManagedGlueResourcesJSONRequestBody UpdateManagedGlueResourcesJSONBody
+
 // CreateSelfStorageLocationJSONRequestBody defines body for CreateSelfStorageLocation for application/json ContentType.
 type CreateSelfStorageLocationJSONRequestBody CreateSelfStorageLocationJSONBody
+
+// PutEmekKeyJSONRequestBody defines body for PutEmekKey for application/json ContentType.
+type PutEmekKeyJSONRequestBody PutEmekKeyJSONBody
 
 // SetAppFeatureEnablementJSONRequestBody defines body for SetAppFeatureEnablement for application/json ContentType.
 type SetAppFeatureEnablementJSONRequestBody SetAppFeatureEnablementJSONBody
@@ -908,6 +1256,9 @@ type AddLimitConfigJSONRequestBody AddLimitConfigJSONBody
 // ResetLimitConfigJSONRequestBody defines body for ResetLimitConfig for application/json ContentType.
 type ResetLimitConfigJSONRequestBody ResetLimitConfigJSONBody
 
+// UpdateMaintenanceWindowsPreferencesJSONRequestBody defines body for UpdateMaintenanceWindowsPreferences for application/json ContentType.
+type UpdateMaintenanceWindowsPreferencesJSONRequestBody UpdateMaintenanceWindowsPreferencesJSONBody
+
 // PatchPermissionsAppsJSONRequestBody defines body for PatchPermissionsApps for application/json ContentType.
 type PatchPermissionsAppsJSONRequestBody PatchPermissionsAppsJSONBody
 
@@ -916,6 +1267,9 @@ type UpdatePrivateConnectivityJSONRequestBody UpdatePrivateConnectivityJSONBody
 
 // EnablePrivateConnectivityJSONRequestBody defines body for EnablePrivateConnectivity for application/json ContentType.
 type EnablePrivateConnectivityJSONRequestBody EnablePrivateConnectivityJSONBody
+
+// ChangePythonVersionJSONRequestBody defines body for ChangePythonVersion for application/json ContentType.
+type ChangePythonVersionJSONRequestBody ChangePythonVersionJSONBody
 
 // CreateRoleJSONRequestBody defines body for CreateRole for application/json ContentType.
 type CreateRoleJSONRequestBody CreateRoleJSONBody
@@ -1013,6 +1367,22 @@ type ClientInterface interface {
 
 	AddOutboundports(ctx context.Context, stack Stack, body AddOutboundportsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListOutboundPortsV6 request
+	ListOutboundPortsV6(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateOutboundPortsV6 request  with any body
+	CreateOutboundPortsV6WithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateOutboundPortsV6(ctx context.Context, stack Stack, body CreateOutboundPortsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteOutboundPortV6 request  with any body
+	DeleteOutboundPortV6WithBody(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteOutboundPortV6(ctx context.Context, stack Stack, port int32, body DeleteOutboundPortV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeOutboundportsV6 request
+	DescribeOutboundportsV6(ctx context.Context, stack Stack, port int32, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteOutboundport request  with any body
 	DeleteOutboundportWithBody(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1034,6 +1404,22 @@ type ClientInterface interface {
 
 	AddSubnets(ctx context.Context, stack Stack, feature Feature, body AddSubnetsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteAllowlistsV6 request  with any body
+	DeleteAllowlistsV6WithBody(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	DeleteAllowlistsV6(ctx context.Context, stack Stack, feature Feature, body DeleteAllowlistsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeAllowlistV6 request
+	DescribeAllowlistV6(ctx context.Context, stack Stack, feature Feature, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CreateAllowlistV6 request  with any body
+	CreateAllowlistV6WithBody(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	CreateAllowlistV6(ctx context.Context, stack Stack, feature Feature, body CreateAllowlistV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteAllowlistV6 request
+	DeleteAllowlistV6(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteSubnet request
 	DeleteSubnet(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1048,6 +1434,9 @@ type ClientInterface interface {
 
 	// InstallAppVictoria request  with any body
 	InstallAppVictoriaWithBody(ctx context.Context, stack Stack, params *InstallAppVictoriaParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DownloadAppExportVictoria request
+	DownloadAppExportVictoria(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UninstallAppVictoria request
 	UninstallAppVictoria(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1069,6 +1458,14 @@ type ClientInterface interface {
 
 	// ListCapabilities request
 	ListCapabilities(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeManagedGlueResources request
+	DescribeManagedGlueResources(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateManagedGlueResources request  with any body
+	UpdateManagedGlueResourcesWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateManagedGlueResources(ctx context.Context, stack Stack, body UpdateManagedGlueResourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListSelfStorageLocations request
 	ListSelfStorageLocations(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1098,6 +1495,17 @@ type ClientInterface interface {
 
 	// DescribeDeployment request
 	DescribeDeployment(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutEmekKey request  with any body
+	PutEmekKeyWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PutEmekKey(ctx context.Context, stack Stack, body PutEmekKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetEmekPolicy request
+	GetEmekPolicy(ctx context.Context, stack Stack, params *GetEmekPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeEmekWaiver request
+	DescribeEmekWaiver(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablement(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1179,6 +1587,14 @@ type ClientInterface interface {
 	// GetKeyLimitConfig request
 	GetKeyLimitConfig(ctx context.Context, stack Stack, stanza Stanza, key Key, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DescribeMaintenanceWindowsPreferences request
+	DescribeMaintenanceWindowsPreferences(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateMaintenanceWindowsPreferences request  with any body
+	UpdateMaintenanceWindowsPreferencesWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateMaintenanceWindowsPreferences(ctx context.Context, stack Stack, body UpdateMaintenanceWindowsPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListMaintenanceWindowsSchedules request
 	ListMaintenanceWindowsSchedules(ctx context.Context, stack Stack, params *ListMaintenanceWindowsSchedulesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1187,6 +1603,18 @@ type ClientInterface interface {
 
 	// AuditMaintenanceWindowsSchedule request
 	AuditMaintenanceWindowsSchedule(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostObservabilityCapabilitiesOnSplunk request
+	PostObservabilityCapabilitiesOnSplunk(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EnableRbacOnO11y request
+	EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostObservabilityPairing request
+	PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetObservabilityPairingStatus request
+	GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListPermissionsApps request
 	ListPermissionsApps(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1203,7 +1631,7 @@ type ClientInterface interface {
 	ValidatePrivateConnectivity(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DescribePrivateConnectivity request
-	DescribePrivateConnectivity(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+	DescribePrivateConnectivity(ctx context.Context, stack Stack, params *DescribePrivateConnectivityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdatePrivateConnectivity request  with any body
 	UpdatePrivateConnectivityWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1214,6 +1642,14 @@ type ClientInterface interface {
 	EnablePrivateConnectivityWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	EnablePrivateConnectivity(ctx context.Context, stack Stack, body EnablePrivateConnectivityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPythonVersion request
+	GetPythonVersion(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ChangePythonVersion request  with any body
+	ChangePythonVersionWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	ChangePythonVersion(ctx context.Context, stack Stack, body ChangePythonVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RestartStack request
 	RestartStack(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1275,6 +1711,9 @@ type ClientInterface interface {
 	PatchUserWithBody(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PatchUser(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DescribeWorkflow request
+	DescribeWorkflow(ctx context.Context, stack Stack, workflowName WorkflowName, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetOutboundports(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1303,6 +1742,78 @@ func (c *Client) AddOutboundportsWithBody(ctx context.Context, stack Stack, cont
 
 func (c *Client) AddOutboundports(ctx context.Context, stack Stack, body AddOutboundportsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAddOutboundportsRequest(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ListOutboundPortsV6(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListOutboundPortsV6Request(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateOutboundPortsV6WithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateOutboundPortsV6RequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateOutboundPortsV6(ctx context.Context, stack Stack, body CreateOutboundPortsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateOutboundPortsV6Request(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteOutboundPortV6WithBody(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteOutboundPortV6RequestWithBody(c.Server, stack, port, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteOutboundPortV6(ctx context.Context, stack Stack, port int32, body DeleteOutboundPortV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteOutboundPortV6Request(c.Server, stack, port, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeOutboundportsV6(ctx context.Context, stack Stack, port int32, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeOutboundportsV6Request(c.Server, stack, port)
 	if err != nil {
 		return nil, err
 	}
@@ -1409,6 +1920,78 @@ func (c *Client) AddSubnets(ctx context.Context, stack Stack, feature Feature, b
 	return c.Client.Do(req)
 }
 
+func (c *Client) DeleteAllowlistsV6WithBody(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAllowlistsV6RequestWithBody(c.Server, stack, feature, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAllowlistsV6(ctx context.Context, stack Stack, feature Feature, body DeleteAllowlistsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAllowlistsV6Request(c.Server, stack, feature, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeAllowlistV6(ctx context.Context, stack Stack, feature Feature, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeAllowlistV6Request(c.Server, stack, feature)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAllowlistV6WithBody(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAllowlistV6RequestWithBody(c.Server, stack, feature, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) CreateAllowlistV6(ctx context.Context, stack Stack, feature Feature, body CreateAllowlistV6JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCreateAllowlistV6Request(c.Server, stack, feature, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteAllowlistV6(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteAllowlistV6Request(c.Server, stack, feature, subnet)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) DeleteSubnet(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDeleteSubnetRequest(c.Server, stack, feature, subnet)
 	if err != nil {
@@ -1459,6 +2042,18 @@ func (c *Client) ListAppsVictoria(ctx context.Context, stack Stack, params *List
 
 func (c *Client) InstallAppVictoriaWithBody(ctx context.Context, stack Stack, params *InstallAppVictoriaParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewInstallAppVictoriaRequestWithBody(c.Server, stack, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DownloadAppExportVictoria(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDownloadAppExportVictoriaRequest(c.Server, stack, app, params)
 	if err != nil {
 		return nil, err
 	}
@@ -1543,6 +2138,42 @@ func (c *Client) PatchAppClassicWithBody(ctx context.Context, stack Stack, app A
 
 func (c *Client) ListCapabilities(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListCapabilitiesRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeManagedGlueResources(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeManagedGlueResourcesRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateManagedGlueResourcesWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateManagedGlueResourcesRequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateManagedGlueResources(ctx context.Context, stack Stack, body UpdateManagedGlueResourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateManagedGlueResourcesRequest(c.Server, stack, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1663,6 +2294,54 @@ func (c *Client) ListDeployment(ctx context.Context, stack Stack, reqEditors ...
 
 func (c *Client) DescribeDeployment(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDescribeDeploymentRequest(c.Server, stack, deploymentID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutEmekKeyWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutEmekKeyRequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PutEmekKey(ctx context.Context, stack Stack, body PutEmekKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutEmekKeyRequest(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetEmekPolicy(ctx context.Context, stack Stack, params *GetEmekPolicyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetEmekPolicyRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DescribeEmekWaiver(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeEmekWaiverRequest(c.Server, stack)
 	if err != nil {
 		return nil, err
 	}
@@ -2033,6 +2712,42 @@ func (c *Client) GetKeyLimitConfig(ctx context.Context, stack Stack, stanza Stan
 	return c.Client.Do(req)
 }
 
+func (c *Client) DescribeMaintenanceWindowsPreferences(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeMaintenanceWindowsPreferencesRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateMaintenanceWindowsPreferencesWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMaintenanceWindowsPreferencesRequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateMaintenanceWindowsPreferences(ctx context.Context, stack Stack, body UpdateMaintenanceWindowsPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateMaintenanceWindowsPreferencesRequest(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) ListMaintenanceWindowsSchedules(ctx context.Context, stack Stack, params *ListMaintenanceWindowsSchedulesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListMaintenanceWindowsSchedulesRequest(c.Server, stack, params)
 	if err != nil {
@@ -2059,6 +2774,54 @@ func (c *Client) DescribeMaintenanceWindowsSchedule(ctx context.Context, stack S
 
 func (c *Client) AuditMaintenanceWindowsSchedule(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewAuditMaintenanceWindowsScheduleRequest(c.Server, stack, scheduleID, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostObservabilityCapabilitiesOnSplunk(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostObservabilityCapabilitiesOnSplunkRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableRbacOnO11yRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostObservabilityPairingRequest(c.Server, stack, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetObservabilityPairingStatusRequest(c.Server, stack, pairingId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2129,8 +2892,8 @@ func (c *Client) ValidatePrivateConnectivity(ctx context.Context, stack Stack, r
 	return c.Client.Do(req)
 }
 
-func (c *Client) DescribePrivateConnectivity(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDescribePrivateConnectivityRequest(c.Server, stack)
+func (c *Client) DescribePrivateConnectivity(ctx context.Context, stack Stack, params *DescribePrivateConnectivityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribePrivateConnectivityRequest(c.Server, stack, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2179,6 +2942,42 @@ func (c *Client) EnablePrivateConnectivityWithBody(ctx context.Context, stack St
 
 func (c *Client) EnablePrivateConnectivity(ctx context.Context, stack Stack, body EnablePrivateConnectivityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewEnablePrivateConnectivityRequest(c.Server, stack, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetPythonVersion(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPythonVersionRequest(c.Server, stack)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangePythonVersionWithBody(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePythonVersionRequestWithBody(c.Server, stack, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) ChangePythonVersion(ctx context.Context, stack Stack, body ChangePythonVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewChangePythonVersionRequest(c.Server, stack, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2453,6 +3252,18 @@ func (c *Client) PatchUser(ctx context.Context, stack Stack, userName UserName, 
 	return c.Client.Do(req)
 }
 
+func (c *Client) DescribeWorkflow(ctx context.Context, stack Stack, workflowName WorkflowName, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDescribeWorkflowRequest(c.Server, stack, workflowName)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // NewGetOutboundportsRequest generates requests for GetOutboundports
 func NewGetOutboundportsRequest(server string, stack Stack) (*http.Request, error) {
 	var err error
@@ -2530,6 +3341,182 @@ func NewAddOutboundportsRequestWithBody(server string, stack Stack, contentType 
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListOutboundPortsV6Request generates requests for ListOutboundPortsV6
+func NewListOutboundPortsV6Request(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/outbound-ports-v6", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateOutboundPortsV6Request calls the generic CreateOutboundPortsV6 builder with application/json body
+func NewCreateOutboundPortsV6Request(server string, stack Stack, body CreateOutboundPortsV6JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateOutboundPortsV6RequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewCreateOutboundPortsV6RequestWithBody generates requests for CreateOutboundPortsV6 with any type of body
+func NewCreateOutboundPortsV6RequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/outbound-ports-v6", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteOutboundPortV6Request calls the generic DeleteOutboundPortV6 builder with application/json body
+func NewDeleteOutboundPortV6Request(server string, stack Stack, port int32, body DeleteOutboundPortV6JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteOutboundPortV6RequestWithBody(server, stack, port, "application/json", bodyReader)
+}
+
+// NewDeleteOutboundPortV6RequestWithBody generates requests for DeleteOutboundPortV6 with any type of body
+func NewDeleteOutboundPortV6RequestWithBody(server string, stack Stack, port int32, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "port", runtime.ParamLocationPath, port)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/outbound-ports-v6/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDescribeOutboundportsV6Request generates requests for DescribeOutboundportsV6
+func NewDescribeOutboundportsV6Request(server string, stack Stack, port int32) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "port", runtime.ParamLocationPath, port)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/outbound-ports-v6/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -2774,6 +3761,203 @@ func NewAddSubnetsRequestWithBody(server string, stack Stack, feature Feature, c
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAllowlistsV6Request calls the generic DeleteAllowlistsV6 builder with application/json body
+func NewDeleteAllowlistsV6Request(server string, stack Stack, feature Feature, body DeleteAllowlistsV6JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewDeleteAllowlistsV6RequestWithBody(server, stack, feature, "application/json", bodyReader)
+}
+
+// NewDeleteAllowlistsV6RequestWithBody generates requests for DeleteAllowlistsV6 with any type of body
+func NewDeleteAllowlistsV6RequestWithBody(server string, stack Stack, feature Feature, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "feature", runtime.ParamLocationPath, feature)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/%s/ipallowlists-v6", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDescribeAllowlistV6Request generates requests for DescribeAllowlistV6
+func NewDescribeAllowlistV6Request(server string, stack Stack, feature Feature) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "feature", runtime.ParamLocationPath, feature)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/%s/ipallowlists-v6", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCreateAllowlistV6Request calls the generic CreateAllowlistV6 builder with application/json body
+func NewCreateAllowlistV6Request(server string, stack Stack, feature Feature, body CreateAllowlistV6JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCreateAllowlistV6RequestWithBody(server, stack, feature, "application/json", bodyReader)
+}
+
+// NewCreateAllowlistV6RequestWithBody generates requests for CreateAllowlistV6 with any type of body
+func NewCreateAllowlistV6RequestWithBody(server string, stack Stack, feature Feature, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "feature", runtime.ParamLocationPath, feature)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/%s/ipallowlists-v6", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteAllowlistV6Request generates requests for DeleteAllowlistV6
+func NewDeleteAllowlistV6Request(server string, stack Stack, feature Feature, subnet string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "feature", runtime.ParamLocationPath, feature)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithLocation("simple", false, "subnet", runtime.ParamLocationPath, subnet)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/access/%s/ipallowlists-v6/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -3196,6 +4380,115 @@ func NewInstallAppVictoriaRequestWithBody(server string, stack Stack, params *In
 	return req, nil
 }
 
+// NewDownloadAppExportVictoriaRequest generates requests for DownloadAppExportVictoria
+func NewDownloadAppExportVictoriaRequest(server string, stack Stack, app AppName, params *DownloadAppExportVictoriaParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "app", runtime.ParamLocationPath, app)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/apps/victoria/export/download/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Default != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "default", runtime.ParamLocationQuery, *params.Default); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Local != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "local", runtime.ParamLocationQuery, *params.Local); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Users != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "users", runtime.ParamLocationQuery, *params.Users); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.ConfsOnly != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "confs_only", runtime.ParamLocationQuery, *params.ConfsOnly); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewUninstallAppVictoriaRequest generates requests for UninstallAppVictoria
 func NewUninstallAppVictoriaRequest(server string, stack Stack, app AppName) (*http.Request, error) {
 	var err error
@@ -3532,6 +4825,87 @@ func NewListCapabilitiesRequest(server string, stack Stack, params *ListCapabili
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewDescribeManagedGlueResourcesRequest generates requests for DescribeManagedGlueResources
+func NewDescribeManagedGlueResourcesRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/managed-glue-resources", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateManagedGlueResourcesRequest calls the generic UpdateManagedGlueResources builder with application/json body
+func NewUpdateManagedGlueResourcesRequest(server string, stack Stack, body UpdateManagedGlueResourcesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateManagedGlueResourcesRequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewUpdateManagedGlueResourcesRequestWithBody generates requests for UpdateManagedGlueResources with any type of body
+func NewUpdateManagedGlueResourcesRequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/cloud-resources/managed-glue-resources", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -3895,6 +5269,130 @@ func NewDescribeDeploymentRequest(server string, stack Stack, deploymentID Deplo
 	}
 
 	operationPath := fmt.Sprintf("/%s/adminconfig/v2/deployment/status/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutEmekKeyRequest calls the generic PutEmekKey builder with application/json body
+func NewPutEmekKeyRequest(server string, stack Stack, body PutEmekKeyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutEmekKeyRequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewPutEmekKeyRequestWithBody generates requests for PutEmekKey with any type of body
+func NewPutEmekKeyRequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/emek/key", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetEmekPolicyRequest generates requests for GetEmekPolicy
+func NewGetEmekPolicyRequest(server string, stack Stack, params *GetEmekPolicyParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/emek/key-policy", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var headerParam0 string
+
+	headerParam0, err = runtime.StyleParamWithLocation("simple", false, "EMEK-Legal-Ack", runtime.ParamLocationHeader, params.EMEKLegalAck)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("EMEK-Legal-Ack", headerParam0)
+
+	return req, nil
+}
+
+// NewDescribeEmekWaiverRequest generates requests for DescribeEmekWaiver
+func NewDescribeEmekWaiverRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/emek/waiver", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = operationPath[1:]
 	}
@@ -4913,6 +6411,87 @@ func NewGetKeyLimitConfigRequest(server string, stack Stack, stanza Stanza, key 
 	return req, nil
 }
 
+// NewDescribeMaintenanceWindowsPreferencesRequest generates requests for DescribeMaintenanceWindowsPreferences
+func NewDescribeMaintenanceWindowsPreferencesRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/maintenance-windows/preferences", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateMaintenanceWindowsPreferencesRequest calls the generic UpdateMaintenanceWindowsPreferences builder with application/json body
+func NewUpdateMaintenanceWindowsPreferencesRequest(server string, stack Stack, body UpdateMaintenanceWindowsPreferencesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateMaintenanceWindowsPreferencesRequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewUpdateMaintenanceWindowsPreferencesRequestWithBody generates requests for UpdateMaintenanceWindowsPreferences with any type of body
+func NewUpdateMaintenanceWindowsPreferencesRequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/maintenance-windows/preferences", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListMaintenanceWindowsSchedulesRequest generates requests for ListMaintenanceWindowsSchedules
 func NewListMaintenanceWindowsSchedulesRequest(server string, stack Stack, params *ListMaintenanceWindowsSchedulesParams) (*http.Request, error) {
 	var err error
@@ -5133,6 +6712,176 @@ func NewAuditMaintenanceWindowsScheduleRequest(server string, stack Stack, sched
 	return req, nil
 }
 
+// NewPostObservabilityCapabilitiesOnSplunkRequest generates requests for PostObservabilityCapabilitiesOnSplunk
+func NewPostObservabilityCapabilitiesOnSplunkRequest(server string, stack string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/observability/capabilities", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewEnableRbacOnO11yRequest generates requests for EnableRbacOnO11y
+func NewEnableRbacOnO11yRequest(server string, stack string, params *EnableRbacOnO11yParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/observability/enable-centralized-rbac", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var headerParam0 string
+
+	headerParam0, err = runtime.StyleParamWithLocation("simple", false, "o11y-access-token", runtime.ParamLocationHeader, params.O11yAccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("o11y-access-token", headerParam0)
+
+	return req, nil
+}
+
+// NewPostObservabilityPairingRequest generates requests for PostObservabilityPairing
+func NewPostObservabilityPairingRequest(server string, stack string, params *PostObservabilityPairingParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/observability/sso-pairing", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var headerParam0 string
+
+	headerParam0, err = runtime.StyleParamWithLocation("simple", false, "o11y-access-token", runtime.ParamLocationHeader, params.O11yAccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("o11y-access-token", headerParam0)
+
+	return req, nil
+}
+
+// NewGetObservabilityPairingStatusRequest generates requests for GetObservabilityPairingStatus
+func NewGetObservabilityPairingStatusRequest(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "pairingId", runtime.ParamLocationPath, pairingId)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/observability/sso-pairing/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var headerParam0 string
+
+	headerParam0, err = runtime.StyleParamWithLocation("simple", false, "o11y-access-token", runtime.ParamLocationHeader, params.O11yAccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("o11y-access-token", headerParam0)
+
+	return req, nil
+}
+
 // NewListPermissionsAppsRequest generates requests for ListPermissionsApps
 func NewListPermissionsAppsRequest(server string, stack Stack, params *ListPermissionsAppsParams) (*http.Request, error) {
 	var err error
@@ -5333,7 +7082,7 @@ func NewValidatePrivateConnectivityRequest(server string, stack Stack) (*http.Re
 }
 
 // NewDescribePrivateConnectivityRequest generates requests for DescribePrivateConnectivity
-func NewDescribePrivateConnectivityRequest(server string, stack Stack) (*http.Request, error) {
+func NewDescribePrivateConnectivityRequest(server string, stack Stack, params *DescribePrivateConnectivityParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5357,6 +7106,26 @@ func NewDescribePrivateConnectivityRequest(server string, stack Stack) (*http.Re
 	}
 
 	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Feature != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "feature", runtime.ParamLocationQuery, *params.Feature); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
@@ -5441,6 +7210,87 @@ func NewEnablePrivateConnectivityRequestWithBody(server string, stack Stack, con
 	}
 
 	operationPath := fmt.Sprintf("/%s/adminconfig/v2/private-connectivity/endpoints", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPythonVersionRequest generates requests for GetPythonVersion
+func NewGetPythonVersionRequest(server string, stack Stack) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/python-runtime", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewChangePythonVersionRequest calls the generic ChangePythonVersion builder with application/json body
+func NewChangePythonVersionRequest(server string, stack Stack, body ChangePythonVersionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewChangePythonVersionRequestWithBody(server, stack, "application/json", bodyReader)
+}
+
+// NewChangePythonVersionRequestWithBody generates requests for ChangePythonVersion with any type of body
+func NewChangePythonVersionRequestWithBody(server string, stack Stack, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/python-runtime", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = operationPath[1:]
 	}
@@ -6343,6 +8193,47 @@ func NewPatchUserRequestWithBody(server string, stack Stack, userName UserName, 
 	return req, nil
 }
 
+// NewDescribeWorkflowRequest generates requests for DescribeWorkflow
+func NewDescribeWorkflowRequest(server string, stack Stack, workflowName WorkflowName) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "stack", runtime.ParamLocationPath, stack)
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithLocation("simple", false, "workflowName", runtime.ParamLocationPath, workflowName)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/%s/adminconfig/v2/workflows/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = operationPath[1:]
+	}
+	operationURL := url.URL{
+		Path: operationPath,
+	}
+
+	queryURL := serverURL.ResolveReference(&operationURL)
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -6394,6 +8285,22 @@ type ClientWithResponsesInterface interface {
 
 	AddOutboundportsWithResponse(ctx context.Context, stack Stack, body AddOutboundportsJSONRequestBody, reqEditors ...RequestEditorFn) (*AddOutboundportsResponse, error)
 
+	// ListOutboundPortsV6 request
+	ListOutboundPortsV6WithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ListOutboundPortsV6Response, error)
+
+	// CreateOutboundPortsV6 request  with any body
+	CreateOutboundPortsV6WithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateOutboundPortsV6Response, error)
+
+	CreateOutboundPortsV6WithResponse(ctx context.Context, stack Stack, body CreateOutboundPortsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*CreateOutboundPortsV6Response, error)
+
+	// DeleteOutboundPortV6 request  with any body
+	DeleteOutboundPortV6WithBodyWithResponse(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteOutboundPortV6Response, error)
+
+	DeleteOutboundPortV6WithResponse(ctx context.Context, stack Stack, port int32, body DeleteOutboundPortV6JSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteOutboundPortV6Response, error)
+
+	// DescribeOutboundportsV6 request
+	DescribeOutboundportsV6WithResponse(ctx context.Context, stack Stack, port int32, reqEditors ...RequestEditorFn) (*DescribeOutboundportsV6Response, error)
+
 	// DeleteOutboundport request  with any body
 	DeleteOutboundportWithBodyWithResponse(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteOutboundportResponse, error)
 
@@ -6415,6 +8322,22 @@ type ClientWithResponsesInterface interface {
 
 	AddSubnetsWithResponse(ctx context.Context, stack Stack, feature Feature, body AddSubnetsJSONRequestBody, reqEditors ...RequestEditorFn) (*AddSubnetsResponse, error)
 
+	// DeleteAllowlistsV6 request  with any body
+	DeleteAllowlistsV6WithBodyWithResponse(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAllowlistsV6Response, error)
+
+	DeleteAllowlistsV6WithResponse(ctx context.Context, stack Stack, feature Feature, body DeleteAllowlistsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAllowlistsV6Response, error)
+
+	// DescribeAllowlistV6 request
+	DescribeAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, reqEditors ...RequestEditorFn) (*DescribeAllowlistV6Response, error)
+
+	// CreateAllowlistV6 request  with any body
+	CreateAllowlistV6WithBodyWithResponse(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAllowlistV6Response, error)
+
+	CreateAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, body CreateAllowlistV6JSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAllowlistV6Response, error)
+
+	// DeleteAllowlistV6 request
+	DeleteAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*DeleteAllowlistV6Response, error)
+
 	// DeleteSubnet request
 	DeleteSubnetWithResponse(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*DeleteSubnetResponse, error)
 
@@ -6429,6 +8352,9 @@ type ClientWithResponsesInterface interface {
 
 	// InstallAppVictoria request  with any body
 	InstallAppVictoriaWithBodyWithResponse(ctx context.Context, stack Stack, params *InstallAppVictoriaParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallAppVictoriaResponse, error)
+
+	// DownloadAppExportVictoria request
+	DownloadAppExportVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*DownloadAppExportVictoriaResponse, error)
 
 	// UninstallAppVictoria request
 	UninstallAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*UninstallAppVictoriaResponse, error)
@@ -6450,6 +8376,14 @@ type ClientWithResponsesInterface interface {
 
 	// ListCapabilities request
 	ListCapabilitiesWithResponse(ctx context.Context, stack Stack, params *ListCapabilitiesParams, reqEditors ...RequestEditorFn) (*ListCapabilitiesResponse, error)
+
+	// DescribeManagedGlueResources request
+	DescribeManagedGlueResourcesWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeManagedGlueResourcesResponse, error)
+
+	// UpdateManagedGlueResources request  with any body
+	UpdateManagedGlueResourcesWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateManagedGlueResourcesResponse, error)
+
+	UpdateManagedGlueResourcesWithResponse(ctx context.Context, stack Stack, body UpdateManagedGlueResourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateManagedGlueResourcesResponse, error)
 
 	// ListSelfStorageLocations request
 	ListSelfStorageLocationsWithResponse(ctx context.Context, stack Stack, params *ListSelfStorageLocationsParams, reqEditors ...RequestEditorFn) (*ListSelfStorageLocationsResponse, error)
@@ -6479,6 +8413,17 @@ type ClientWithResponsesInterface interface {
 
 	// DescribeDeployment request
 	DescribeDeploymentWithResponse(ctx context.Context, stack Stack, deploymentID DeploymentID, reqEditors ...RequestEditorFn) (*DescribeDeploymentResponse, error)
+
+	// PutEmekKey request  with any body
+	PutEmekKeyWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutEmekKeyResponse, error)
+
+	PutEmekKeyWithResponse(ctx context.Context, stack Stack, body PutEmekKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PutEmekKeyResponse, error)
+
+	// GetEmekPolicy request
+	GetEmekPolicyWithResponse(ctx context.Context, stack Stack, params *GetEmekPolicyParams, reqEditors ...RequestEditorFn) (*GetEmekPolicyResponse, error)
+
+	// DescribeEmekWaiver request
+	DescribeEmekWaiverWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeEmekWaiverResponse, error)
 
 	// DescribeAppFeatureEnablement request
 	DescribeAppFeatureEnablementWithResponse(ctx context.Context, stack Stack, appGroup AppGroup, featureName FeatureName, reqEditors ...RequestEditorFn) (*DescribeAppFeatureEnablementResponse, error)
@@ -6560,6 +8505,14 @@ type ClientWithResponsesInterface interface {
 	// GetKeyLimitConfig request
 	GetKeyLimitConfigWithResponse(ctx context.Context, stack Stack, stanza Stanza, key Key, reqEditors ...RequestEditorFn) (*GetKeyLimitConfigResponse, error)
 
+	// DescribeMaintenanceWindowsPreferences request
+	DescribeMaintenanceWindowsPreferencesWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeMaintenanceWindowsPreferencesResponse, error)
+
+	// UpdateMaintenanceWindowsPreferences request  with any body
+	UpdateMaintenanceWindowsPreferencesWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMaintenanceWindowsPreferencesResponse, error)
+
+	UpdateMaintenanceWindowsPreferencesWithResponse(ctx context.Context, stack Stack, body UpdateMaintenanceWindowsPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMaintenanceWindowsPreferencesResponse, error)
+
 	// ListMaintenanceWindowsSchedules request
 	ListMaintenanceWindowsSchedulesWithResponse(ctx context.Context, stack Stack, params *ListMaintenanceWindowsSchedulesParams, reqEditors ...RequestEditorFn) (*ListMaintenanceWindowsSchedulesResponse, error)
 
@@ -6568,6 +8521,18 @@ type ClientWithResponsesInterface interface {
 
 	// AuditMaintenanceWindowsSchedule request
 	AuditMaintenanceWindowsScheduleWithResponse(ctx context.Context, stack Stack, scheduleID ScheduleID, params *AuditMaintenanceWindowsScheduleParams, reqEditors ...RequestEditorFn) (*AuditMaintenanceWindowsScheduleResponse, error)
+
+	// PostObservabilityCapabilitiesOnSplunk request
+	PostObservabilityCapabilitiesOnSplunkWithResponse(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*PostObservabilityCapabilitiesOnSplunkResponse, error)
+
+	// EnableRbacOnO11y request
+	EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error)
+
+	// PostObservabilityPairing request
+	PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error)
+
+	// GetObservabilityPairingStatus request
+	GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
 
 	// ListPermissionsApps request
 	ListPermissionsAppsWithResponse(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*ListPermissionsAppsResponse, error)
@@ -6584,7 +8549,7 @@ type ClientWithResponsesInterface interface {
 	ValidatePrivateConnectivityWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ValidatePrivateConnectivityResponse, error)
 
 	// DescribePrivateConnectivity request
-	DescribePrivateConnectivityWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribePrivateConnectivityResponse, error)
+	DescribePrivateConnectivityWithResponse(ctx context.Context, stack Stack, params *DescribePrivateConnectivityParams, reqEditors ...RequestEditorFn) (*DescribePrivateConnectivityResponse, error)
 
 	// UpdatePrivateConnectivity request  with any body
 	UpdatePrivateConnectivityWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdatePrivateConnectivityResponse, error)
@@ -6595,6 +8560,14 @@ type ClientWithResponsesInterface interface {
 	EnablePrivateConnectivityWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnablePrivateConnectivityResponse, error)
 
 	EnablePrivateConnectivityWithResponse(ctx context.Context, stack Stack, body EnablePrivateConnectivityJSONRequestBody, reqEditors ...RequestEditorFn) (*EnablePrivateConnectivityResponse, error)
+
+	// GetPythonVersion request
+	GetPythonVersionWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetPythonVersionResponse, error)
+
+	// ChangePythonVersion request  with any body
+	ChangePythonVersionWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePythonVersionResponse, error)
+
+	ChangePythonVersionWithResponse(ctx context.Context, stack Stack, body ChangePythonVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePythonVersionResponse, error)
 
 	// RestartStack request
 	RestartStackWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*RestartStackResponse, error)
@@ -6656,17 +8629,16 @@ type ClientWithResponsesInterface interface {
 	PatchUserWithBodyWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
 
 	PatchUserWithResponse(ctx context.Context, stack Stack, userName UserName, params *PatchUserParams, body PatchUserJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchUserResponse, error)
+
+	// DescribeWorkflow request
+	DescribeWorkflowWithResponse(ctx context.Context, stack Stack, workflowName WorkflowName, reqEditors ...RequestEditorFn) (*DescribeWorkflowResponse, error)
 }
 
 type GetOutboundportsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-
-		// the subnets from where the stack feature can access to
-		Outboundports *[]OutboundResponse `json:"outboundports,omitempty"`
-	}
-	JSONDefault *Error
+	JSON200      *[]OutboundResponse
+	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -6708,6 +8680,97 @@ func (r AddOutboundportsResponse) StatusCode() int {
 	return 0
 }
 
+type ListOutboundPortsV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]OutboundResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ListOutboundPortsV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListOutboundPortsV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateOutboundPortsV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *WarningResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateOutboundPortsV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateOutboundPortsV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteOutboundPortV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteOutboundPortV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteOutboundPortV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeOutboundportsV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *[]OutboundResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeOutboundportsV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeOutboundportsV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type DeleteOutboundportResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6733,12 +8796,8 @@ func (r DeleteOutboundportResponse) StatusCode() int {
 type DescribeOutboundportsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *struct {
-
-		// the subnets from where the stack feature can access to
-		Outboundports *[]OutboundResponse `json:"outboundports,omitempty"`
-	}
-	JSONDefault *Error
+	JSON200      *[]OutboundResponse
+	JSONDefault  *Error
 }
 
 // Status returns HTTPResponse.Status
@@ -6824,6 +8883,102 @@ func (r AddSubnetsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AddSubnetsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAllowlistsV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *WarningResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAllowlistsV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAllowlistsV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeAllowlistV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+
+		// the ipv6 subnets from where the stack feature is accessible from
+		Subnets *[]string `json:"subnets,omitempty"`
+	}
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeAllowlistV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeAllowlistV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type CreateAllowlistV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *WarningResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r CreateAllowlistV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CreateAllowlistV6Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteAllowlistV6Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *WarningResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteAllowlistV6Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteAllowlistV6Response) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6944,6 +9099,29 @@ func (r InstallAppVictoriaResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r InstallAppVictoriaResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DownloadAppExportVictoriaResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *App
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DownloadAppExportVictoriaResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DownloadAppExportVictoriaResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7105,6 +9283,52 @@ func (r ListCapabilitiesResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r ListCapabilitiesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeManagedGlueResourcesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *DescribeManagedGlueResources
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeManagedGlueResourcesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeManagedGlueResourcesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateManagedGlueResourcesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *string
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateManagedGlueResourcesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateManagedGlueResourcesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7320,6 +9544,74 @@ func (r DescribeDeploymentResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r DescribeDeploymentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PutEmekKeyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *EmekKeyUploadResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PutEmekKeyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutEmekKeyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetEmekPolicyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *EmekPolicy
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetEmekPolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetEmekPolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DescribeEmekWaiverResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeEmekWaiverResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeEmekWaiverResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7797,6 +10089,51 @@ func (r GetKeyLimitConfigResponse) StatusCode() int {
 	return 0
 }
 
+type DescribeMaintenanceWindowsPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *MaintenanceWindowsPreferencesResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeMaintenanceWindowsPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeMaintenanceWindowsPreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type UpdateMaintenanceWindowsPreferencesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateMaintenanceWindowsPreferencesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateMaintenanceWindowsPreferencesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type ListMaintenanceWindowsSchedulesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7860,6 +10197,97 @@ func (r AuditMaintenanceWindowsScheduleResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r AuditMaintenanceWindowsScheduleResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostObservabilityCapabilitiesOnSplunkResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *EnableObservabilityCapabilitiesResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostObservabilityCapabilitiesOnSplunkResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostObservabilityCapabilitiesOnSplunkResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type EnableRbacOnO11yResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r EnableRbacOnO11yResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EnableRbacOnO11yResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostObservabilityPairingResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON201      *CreateEcSsoPairingResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r PostObservabilityPairingResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostObservabilityPairingResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetObservabilityPairingStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *GetEcSsoPairingStatusResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetObservabilityPairingStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetObservabilityPairingStatusResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8022,6 +10450,52 @@ func (r EnablePrivateConnectivityResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r EnablePrivateConnectivityResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetPythonVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PythonVersionResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPythonVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPythonVersionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type ChangePythonVersionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON202      *PythonVersionResponse
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r ChangePythonVersionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ChangePythonVersionResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8430,6 +10904,29 @@ func (r PatchUserResponse) StatusCode() int {
 	return 0
 }
 
+type DescribeWorkflowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *interface{}
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DescribeWorkflowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DescribeWorkflowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // GetOutboundportsWithResponse request returning *GetOutboundportsResponse
 func (c *ClientWithResponses) GetOutboundportsWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetOutboundportsResponse, error) {
 	rsp, err := c.GetOutboundports(ctx, stack, reqEditors...)
@@ -8454,6 +10951,58 @@ func (c *ClientWithResponses) AddOutboundportsWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseAddOutboundportsResponse(rsp)
+}
+
+// ListOutboundPortsV6WithResponse request returning *ListOutboundPortsV6Response
+func (c *ClientWithResponses) ListOutboundPortsV6WithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*ListOutboundPortsV6Response, error) {
+	rsp, err := c.ListOutboundPortsV6(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListOutboundPortsV6Response(rsp)
+}
+
+// CreateOutboundPortsV6WithBodyWithResponse request with arbitrary body returning *CreateOutboundPortsV6Response
+func (c *ClientWithResponses) CreateOutboundPortsV6WithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateOutboundPortsV6Response, error) {
+	rsp, err := c.CreateOutboundPortsV6WithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateOutboundPortsV6Response(rsp)
+}
+
+func (c *ClientWithResponses) CreateOutboundPortsV6WithResponse(ctx context.Context, stack Stack, body CreateOutboundPortsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*CreateOutboundPortsV6Response, error) {
+	rsp, err := c.CreateOutboundPortsV6(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateOutboundPortsV6Response(rsp)
+}
+
+// DeleteOutboundPortV6WithBodyWithResponse request with arbitrary body returning *DeleteOutboundPortV6Response
+func (c *ClientWithResponses) DeleteOutboundPortV6WithBodyWithResponse(ctx context.Context, stack Stack, port int32, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteOutboundPortV6Response, error) {
+	rsp, err := c.DeleteOutboundPortV6WithBody(ctx, stack, port, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteOutboundPortV6Response(rsp)
+}
+
+func (c *ClientWithResponses) DeleteOutboundPortV6WithResponse(ctx context.Context, stack Stack, port int32, body DeleteOutboundPortV6JSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteOutboundPortV6Response, error) {
+	rsp, err := c.DeleteOutboundPortV6(ctx, stack, port, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteOutboundPortV6Response(rsp)
+}
+
+// DescribeOutboundportsV6WithResponse request returning *DescribeOutboundportsV6Response
+func (c *ClientWithResponses) DescribeOutboundportsV6WithResponse(ctx context.Context, stack Stack, port int32, reqEditors ...RequestEditorFn) (*DescribeOutboundportsV6Response, error) {
+	rsp, err := c.DescribeOutboundportsV6(ctx, stack, port, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeOutboundportsV6Response(rsp)
 }
 
 // DeleteOutboundportWithBodyWithResponse request with arbitrary body returning *DeleteOutboundportResponse
@@ -8525,6 +11074,58 @@ func (c *ClientWithResponses) AddSubnetsWithResponse(ctx context.Context, stack 
 	return ParseAddSubnetsResponse(rsp)
 }
 
+// DeleteAllowlistsV6WithBodyWithResponse request with arbitrary body returning *DeleteAllowlistsV6Response
+func (c *ClientWithResponses) DeleteAllowlistsV6WithBodyWithResponse(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*DeleteAllowlistsV6Response, error) {
+	rsp, err := c.DeleteAllowlistsV6WithBody(ctx, stack, feature, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAllowlistsV6Response(rsp)
+}
+
+func (c *ClientWithResponses) DeleteAllowlistsV6WithResponse(ctx context.Context, stack Stack, feature Feature, body DeleteAllowlistsV6JSONRequestBody, reqEditors ...RequestEditorFn) (*DeleteAllowlistsV6Response, error) {
+	rsp, err := c.DeleteAllowlistsV6(ctx, stack, feature, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAllowlistsV6Response(rsp)
+}
+
+// DescribeAllowlistV6WithResponse request returning *DescribeAllowlistV6Response
+func (c *ClientWithResponses) DescribeAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, reqEditors ...RequestEditorFn) (*DescribeAllowlistV6Response, error) {
+	rsp, err := c.DescribeAllowlistV6(ctx, stack, feature, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeAllowlistV6Response(rsp)
+}
+
+// CreateAllowlistV6WithBodyWithResponse request with arbitrary body returning *CreateAllowlistV6Response
+func (c *ClientWithResponses) CreateAllowlistV6WithBodyWithResponse(ctx context.Context, stack Stack, feature Feature, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAllowlistV6Response, error) {
+	rsp, err := c.CreateAllowlistV6WithBody(ctx, stack, feature, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAllowlistV6Response(rsp)
+}
+
+func (c *ClientWithResponses) CreateAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, body CreateAllowlistV6JSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAllowlistV6Response, error) {
+	rsp, err := c.CreateAllowlistV6(ctx, stack, feature, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCreateAllowlistV6Response(rsp)
+}
+
+// DeleteAllowlistV6WithResponse request returning *DeleteAllowlistV6Response
+func (c *ClientWithResponses) DeleteAllowlistV6WithResponse(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*DeleteAllowlistV6Response, error) {
+	rsp, err := c.DeleteAllowlistV6(ctx, stack, feature, subnet, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteAllowlistV6Response(rsp)
+}
+
 // DeleteSubnetWithResponse request returning *DeleteSubnetResponse
 func (c *ClientWithResponses) DeleteSubnetWithResponse(ctx context.Context, stack Stack, feature Feature, subnet string, reqEditors ...RequestEditorFn) (*DeleteSubnetResponse, error) {
 	rsp, err := c.DeleteSubnet(ctx, stack, feature, subnet, reqEditors...)
@@ -8568,6 +11169,15 @@ func (c *ClientWithResponses) InstallAppVictoriaWithBodyWithResponse(ctx context
 		return nil, err
 	}
 	return ParseInstallAppVictoriaResponse(rsp)
+}
+
+// DownloadAppExportVictoriaWithResponse request returning *DownloadAppExportVictoriaResponse
+func (c *ClientWithResponses) DownloadAppExportVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*DownloadAppExportVictoriaResponse, error) {
+	rsp, err := c.DownloadAppExportVictoria(ctx, stack, app, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDownloadAppExportVictoriaResponse(rsp)
 }
 
 // UninstallAppVictoriaWithResponse request returning *UninstallAppVictoriaResponse
@@ -8631,6 +11241,32 @@ func (c *ClientWithResponses) ListCapabilitiesWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseListCapabilitiesResponse(rsp)
+}
+
+// DescribeManagedGlueResourcesWithResponse request returning *DescribeManagedGlueResourcesResponse
+func (c *ClientWithResponses) DescribeManagedGlueResourcesWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeManagedGlueResourcesResponse, error) {
+	rsp, err := c.DescribeManagedGlueResources(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeManagedGlueResourcesResponse(rsp)
+}
+
+// UpdateManagedGlueResourcesWithBodyWithResponse request with arbitrary body returning *UpdateManagedGlueResourcesResponse
+func (c *ClientWithResponses) UpdateManagedGlueResourcesWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateManagedGlueResourcesResponse, error) {
+	rsp, err := c.UpdateManagedGlueResourcesWithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateManagedGlueResourcesResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateManagedGlueResourcesWithResponse(ctx context.Context, stack Stack, body UpdateManagedGlueResourcesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateManagedGlueResourcesResponse, error) {
+	rsp, err := c.UpdateManagedGlueResources(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateManagedGlueResourcesResponse(rsp)
 }
 
 // ListSelfStorageLocationsWithResponse request returning *ListSelfStorageLocationsResponse
@@ -8720,6 +11356,41 @@ func (c *ClientWithResponses) DescribeDeploymentWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseDescribeDeploymentResponse(rsp)
+}
+
+// PutEmekKeyWithBodyWithResponse request with arbitrary body returning *PutEmekKeyResponse
+func (c *ClientWithResponses) PutEmekKeyWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutEmekKeyResponse, error) {
+	rsp, err := c.PutEmekKeyWithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutEmekKeyResponse(rsp)
+}
+
+func (c *ClientWithResponses) PutEmekKeyWithResponse(ctx context.Context, stack Stack, body PutEmekKeyJSONRequestBody, reqEditors ...RequestEditorFn) (*PutEmekKeyResponse, error) {
+	rsp, err := c.PutEmekKey(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutEmekKeyResponse(rsp)
+}
+
+// GetEmekPolicyWithResponse request returning *GetEmekPolicyResponse
+func (c *ClientWithResponses) GetEmekPolicyWithResponse(ctx context.Context, stack Stack, params *GetEmekPolicyParams, reqEditors ...RequestEditorFn) (*GetEmekPolicyResponse, error) {
+	rsp, err := c.GetEmekPolicy(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetEmekPolicyResponse(rsp)
+}
+
+// DescribeEmekWaiverWithResponse request returning *DescribeEmekWaiverResponse
+func (c *ClientWithResponses) DescribeEmekWaiverWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeEmekWaiverResponse, error) {
+	rsp, err := c.DescribeEmekWaiver(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeEmekWaiverResponse(rsp)
 }
 
 // DescribeAppFeatureEnablementWithResponse request returning *DescribeAppFeatureEnablementResponse
@@ -8982,6 +11653,32 @@ func (c *ClientWithResponses) GetKeyLimitConfigWithResponse(ctx context.Context,
 	return ParseGetKeyLimitConfigResponse(rsp)
 }
 
+// DescribeMaintenanceWindowsPreferencesWithResponse request returning *DescribeMaintenanceWindowsPreferencesResponse
+func (c *ClientWithResponses) DescribeMaintenanceWindowsPreferencesWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribeMaintenanceWindowsPreferencesResponse, error) {
+	rsp, err := c.DescribeMaintenanceWindowsPreferences(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeMaintenanceWindowsPreferencesResponse(rsp)
+}
+
+// UpdateMaintenanceWindowsPreferencesWithBodyWithResponse request with arbitrary body returning *UpdateMaintenanceWindowsPreferencesResponse
+func (c *ClientWithResponses) UpdateMaintenanceWindowsPreferencesWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateMaintenanceWindowsPreferencesResponse, error) {
+	rsp, err := c.UpdateMaintenanceWindowsPreferencesWithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMaintenanceWindowsPreferencesResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateMaintenanceWindowsPreferencesWithResponse(ctx context.Context, stack Stack, body UpdateMaintenanceWindowsPreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateMaintenanceWindowsPreferencesResponse, error) {
+	rsp, err := c.UpdateMaintenanceWindowsPreferences(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateMaintenanceWindowsPreferencesResponse(rsp)
+}
+
 // ListMaintenanceWindowsSchedulesWithResponse request returning *ListMaintenanceWindowsSchedulesResponse
 func (c *ClientWithResponses) ListMaintenanceWindowsSchedulesWithResponse(ctx context.Context, stack Stack, params *ListMaintenanceWindowsSchedulesParams, reqEditors ...RequestEditorFn) (*ListMaintenanceWindowsSchedulesResponse, error) {
 	rsp, err := c.ListMaintenanceWindowsSchedules(ctx, stack, params, reqEditors...)
@@ -9007,6 +11704,42 @@ func (c *ClientWithResponses) AuditMaintenanceWindowsScheduleWithResponse(ctx co
 		return nil, err
 	}
 	return ParseAuditMaintenanceWindowsScheduleResponse(rsp)
+}
+
+// PostObservabilityCapabilitiesOnSplunkWithResponse request returning *PostObservabilityCapabilitiesOnSplunkResponse
+func (c *ClientWithResponses) PostObservabilityCapabilitiesOnSplunkWithResponse(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*PostObservabilityCapabilitiesOnSplunkResponse, error) {
+	rsp, err := c.PostObservabilityCapabilitiesOnSplunk(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostObservabilityCapabilitiesOnSplunkResponse(rsp)
+}
+
+// EnableRbacOnO11yWithResponse request returning *EnableRbacOnO11yResponse
+func (c *ClientWithResponses) EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error) {
+	rsp, err := c.EnableRbacOnO11y(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnableRbacOnO11yResponse(rsp)
+}
+
+// PostObservabilityPairingWithResponse request returning *PostObservabilityPairingResponse
+func (c *ClientWithResponses) PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error) {
+	rsp, err := c.PostObservabilityPairing(ctx, stack, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostObservabilityPairingResponse(rsp)
+}
+
+// GetObservabilityPairingStatusWithResponse request returning *GetObservabilityPairingStatusResponse
+func (c *ClientWithResponses) GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
+	rsp, err := c.GetObservabilityPairingStatus(ctx, stack, pairingId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetObservabilityPairingStatusResponse(rsp)
 }
 
 // ListPermissionsAppsWithResponse request returning *ListPermissionsAppsResponse
@@ -9054,8 +11787,8 @@ func (c *ClientWithResponses) ValidatePrivateConnectivityWithResponse(ctx contex
 }
 
 // DescribePrivateConnectivityWithResponse request returning *DescribePrivateConnectivityResponse
-func (c *ClientWithResponses) DescribePrivateConnectivityWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*DescribePrivateConnectivityResponse, error) {
-	rsp, err := c.DescribePrivateConnectivity(ctx, stack, reqEditors...)
+func (c *ClientWithResponses) DescribePrivateConnectivityWithResponse(ctx context.Context, stack Stack, params *DescribePrivateConnectivityParams, reqEditors ...RequestEditorFn) (*DescribePrivateConnectivityResponse, error) {
+	rsp, err := c.DescribePrivateConnectivity(ctx, stack, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -9094,6 +11827,32 @@ func (c *ClientWithResponses) EnablePrivateConnectivityWithResponse(ctx context.
 		return nil, err
 	}
 	return ParseEnablePrivateConnectivityResponse(rsp)
+}
+
+// GetPythonVersionWithResponse request returning *GetPythonVersionResponse
+func (c *ClientWithResponses) GetPythonVersionWithResponse(ctx context.Context, stack Stack, reqEditors ...RequestEditorFn) (*GetPythonVersionResponse, error) {
+	rsp, err := c.GetPythonVersion(ctx, stack, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPythonVersionResponse(rsp)
+}
+
+// ChangePythonVersionWithBodyWithResponse request with arbitrary body returning *ChangePythonVersionResponse
+func (c *ClientWithResponses) ChangePythonVersionWithBodyWithResponse(ctx context.Context, stack Stack, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ChangePythonVersionResponse, error) {
+	rsp, err := c.ChangePythonVersionWithBody(ctx, stack, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePythonVersionResponse(rsp)
+}
+
+func (c *ClientWithResponses) ChangePythonVersionWithResponse(ctx context.Context, stack Stack, body ChangePythonVersionJSONRequestBody, reqEditors ...RequestEditorFn) (*ChangePythonVersionResponse, error) {
+	rsp, err := c.ChangePythonVersion(ctx, stack, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseChangePythonVersionResponse(rsp)
 }
 
 // RestartStackWithResponse request returning *RestartStackResponse
@@ -9289,6 +12048,15 @@ func (c *ClientWithResponses) PatchUserWithResponse(ctx context.Context, stack S
 	return ParsePatchUserResponse(rsp)
 }
 
+// DescribeWorkflowWithResponse request returning *DescribeWorkflowResponse
+func (c *ClientWithResponses) DescribeWorkflowWithResponse(ctx context.Context, stack Stack, workflowName WorkflowName, reqEditors ...RequestEditorFn) (*DescribeWorkflowResponse, error) {
+	rsp, err := c.DescribeWorkflow(ctx, stack, workflowName, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDescribeWorkflowResponse(rsp)
+}
+
 // ParseGetOutboundportsResponse parses an HTTP response from a GetOutboundportsWithResponse call
 func ParseGetOutboundportsResponse(rsp *http.Response) (*GetOutboundportsResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -9304,11 +12072,7 @@ func ParseGetOutboundportsResponse(rsp *http.Response) (*GetOutboundportsRespons
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-
-			// the subnets from where the stack feature can access to
-			Outboundports *[]OutboundResponse `json:"outboundports,omitempty"`
-		}
+		var dest []OutboundResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -9346,6 +12110,131 @@ func ParseAddOutboundportsResponse(rsp *http.Response) (*AddOutboundportsRespons
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListOutboundPortsV6Response parses an HTTP response from a ListOutboundPortsV6WithResponse call
+func ParseListOutboundPortsV6Response(rsp *http.Response) (*ListOutboundPortsV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListOutboundPortsV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []OutboundResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateOutboundPortsV6Response parses an HTTP response from a CreateOutboundPortsV6WithResponse call
+func ParseCreateOutboundPortsV6Response(rsp *http.Response) (*CreateOutboundPortsV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateOutboundPortsV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest WarningResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteOutboundPortV6Response parses an HTTP response from a DeleteOutboundPortV6WithResponse call
+func ParseDeleteOutboundPortV6Response(rsp *http.Response) (*DeleteOutboundPortV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteOutboundPortV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeOutboundportsV6Response parses an HTTP response from a DescribeOutboundportsV6WithResponse call
+func ParseDescribeOutboundportsV6Response(rsp *http.Response) (*DescribeOutboundportsV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeOutboundportsV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []OutboundResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -9400,11 +12289,7 @@ func ParseDescribeOutboundportsResponse(rsp *http.Response) (*DescribeOutboundpo
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-
-			// the subnets from where the stack feature can access to
-			Outboundports *[]OutboundResponse `json:"outboundports,omitempty"`
-		}
+		var dest []OutboundResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -9501,6 +12386,142 @@ func ParseAddSubnetsResponse(rsp *http.Response) (*AddSubnetsResponse, error) {
 	}
 
 	response := &AddSubnetsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WarningResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAllowlistsV6Response parses an HTTP response from a DeleteAllowlistsV6WithResponse call
+func ParseDeleteAllowlistsV6Response(rsp *http.Response) (*DeleteAllowlistsV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAllowlistsV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WarningResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeAllowlistV6Response parses an HTTP response from a DescribeAllowlistV6WithResponse call
+func ParseDescribeAllowlistV6Response(rsp *http.Response) (*DescribeAllowlistV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeAllowlistV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+
+			// the ipv6 subnets from where the stack feature is accessible from
+			Subnets *[]string `json:"subnets,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCreateAllowlistV6Response parses an HTTP response from a CreateAllowlistV6WithResponse call
+func ParseCreateAllowlistV6Response(rsp *http.Response) (*CreateAllowlistV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CreateAllowlistV6Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest WarningResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteAllowlistV6Response parses an HTTP response from a DeleteAllowlistV6WithResponse call
+func ParseDeleteAllowlistV6Response(rsp *http.Response) (*DeleteAllowlistV6Response, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteAllowlistV6Response{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9688,6 +12709,39 @@ func ParseInstallAppVictoriaResponse(rsp *http.Response) (*InstallAppVictoriaRes
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDownloadAppExportVictoriaResponse parses an HTTP response from a DownloadAppExportVictoriaWithResponse call
+func ParseDownloadAppExportVictoriaResponse(rsp *http.Response) (*DownloadAppExportVictoriaResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DownloadAppExportVictoriaResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest App
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -9919,6 +12973,72 @@ func ParseListCapabilitiesResponse(rsp *http.Response) (*ListCapabilitiesRespons
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeManagedGlueResourcesResponse parses an HTTP response from a DescribeManagedGlueResourcesWithResponse call
+func ParseDescribeManagedGlueResourcesResponse(rsp *http.Response) (*DescribeManagedGlueResourcesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeManagedGlueResourcesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DescribeManagedGlueResources
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateManagedGlueResourcesResponse parses an HTTP response from a UpdateManagedGlueResourcesWithResponse call
+func ParseUpdateManagedGlueResourcesResponse(rsp *http.Response) (*UpdateManagedGlueResourcesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateManagedGlueResourcesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest string
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -10225,6 +13345,98 @@ func ParseDescribeDeploymentResponse(rsp *http.Response) (*DescribeDeploymentRes
 		}
 		response.JSON200 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutEmekKeyResponse parses an HTTP response from a PutEmekKeyWithResponse call
+func ParsePutEmekKeyResponse(rsp *http.Response) (*PutEmekKeyResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutEmekKeyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest EmekKeyUploadResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetEmekPolicyResponse parses an HTTP response from a GetEmekPolicyWithResponse call
+func ParseGetEmekPolicyResponse(rsp *http.Response) (*GetEmekPolicyResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetEmekPolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest EmekPolicy
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeEmekWaiverResponse parses an HTTP response from a DescribeEmekWaiverWithResponse call
+func ParseDescribeEmekWaiverResponse(rsp *http.Response) (*DescribeEmekWaiverResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeEmekWaiverResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -10890,6 +14102,65 @@ func ParseGetKeyLimitConfigResponse(rsp *http.Response) (*GetKeyLimitConfigRespo
 	return response, nil
 }
 
+// ParseDescribeMaintenanceWindowsPreferencesResponse parses an HTTP response from a DescribeMaintenanceWindowsPreferencesWithResponse call
+func ParseDescribeMaintenanceWindowsPreferencesResponse(rsp *http.Response) (*DescribeMaintenanceWindowsPreferencesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeMaintenanceWindowsPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MaintenanceWindowsPreferencesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateMaintenanceWindowsPreferencesResponse parses an HTTP response from a UpdateMaintenanceWindowsPreferencesWithResponse call
+func ParseUpdateMaintenanceWindowsPreferencesResponse(rsp *http.Response) (*UpdateMaintenanceWindowsPreferencesResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateMaintenanceWindowsPreferencesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListMaintenanceWindowsSchedulesResponse parses an HTTP response from a ListMaintenanceWindowsSchedulesWithResponse call
 func ParseListMaintenanceWindowsSchedulesResponse(rsp *http.Response) (*ListMaintenanceWindowsSchedulesResponse, error) {
 	bodyBytes, err := ioutil.ReadAll(rsp.Body)
@@ -10972,6 +14243,131 @@ func ParseAuditMaintenanceWindowsScheduleResponse(rsp *http.Response) (*AuditMai
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostObservabilityCapabilitiesOnSplunkResponse parses an HTTP response from a PostObservabilityCapabilitiesOnSplunkWithResponse call
+func ParsePostObservabilityCapabilitiesOnSplunkResponse(rsp *http.Response) (*PostObservabilityCapabilitiesOnSplunkResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostObservabilityCapabilitiesOnSplunkResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest EnableObservabilityCapabilitiesResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseEnableRbacOnO11yResponse parses an HTTP response from a EnableRbacOnO11yWithResponse call
+func ParseEnableRbacOnO11yResponse(rsp *http.Response) (*EnableRbacOnO11yResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EnableRbacOnO11yResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostObservabilityPairingResponse parses an HTTP response from a PostObservabilityPairingWithResponse call
+func ParsePostObservabilityPairingResponse(rsp *http.Response) (*PostObservabilityPairingResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostObservabilityPairingResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest CreateEcSsoPairingResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetObservabilityPairingStatusResponse parses an HTTP response from a GetObservabilityPairingStatusWithResponse call
+func ParseGetObservabilityPairingStatusResponse(rsp *http.Response) (*GetObservabilityPairingStatusResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetObservabilityPairingStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest GetEcSsoPairingStatusResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -11198,6 +14594,72 @@ func ParseEnablePrivateConnectivityResponse(rsp *http.Response) (*EnablePrivateC
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
 		var dest EnablePrivateConnectivity
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPythonVersionResponse parses an HTTP response from a GetPythonVersionWithResponse call
+func ParseGetPythonVersionResponse(rsp *http.Response) (*GetPythonVersionResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPythonVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PythonVersionResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseChangePythonVersionResponse parses an HTTP response from a ChangePythonVersionWithResponse call
+func ParseChangePythonVersionResponse(rsp *http.Response) (*ChangePythonVersionResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ChangePythonVersionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest PythonVersionResponse
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -11752,6 +15214,39 @@ func ParsePatchUserResponse(rsp *http.Response) (*PatchUserResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest UsersResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDescribeWorkflowResponse parses an HTTP response from a DescribeWorkflowWithResponse call
+func ParseDescribeWorkflowResponse(rsp *http.Response) (*DescribeWorkflowResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer rsp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DescribeWorkflowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest interface{}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
