@@ -370,11 +370,20 @@ type MaintenanceWindowsSchedule struct {
 	// The duration of the maintenance window.
 	Duration string `json:"duration"`
 
+	// Duration of the maintenance window schedule extension.
+	ExtendedDuration *string `json:"extendedDuration,omitempty"`
+
 	// Time at which the maintenance window was last modified. Format is RFC3339.
 	LastModifiedTimestamp time.Time `json:"lastModifiedTimestamp"`
 
 	// The summary or reason for the maintenance.
 	LastSummary *string `json:"lastSummary,omitempty"`
+
+	// Time at which the maintenance window actually ended. This field is populated only after the window ends. Format is RFC3339.
+	MaintenanceEndedAt *time.Time `json:"maintenanceEndedAt,omitempty"`
+
+	// Time at which the maintenance window actually started. This field is populated only after the window begins. Format is RFC3339.
+	MaintenanceStartedAt *time.Time `json:"maintenanceStartedAt,omitempty"`
 
 	// The type of upgrade performed in the maintenance window.
 	MwType     string                         `json:"mwType"`
@@ -385,6 +394,9 @@ type MaintenanceWindowsSchedule struct {
 
 	// The user who requested the maintenance window.
 	RequestedUser *string `json:"requestedUser,omitempty"`
+
+	// Time at which the maintenance window is scheduled to end. Format is RFC3339.
+	ScheduleEndTimestamp *time.Time `json:"scheduleEndTimestamp,omitempty"`
 
 	// UUID of the maintenance window.
 	ScheduleId string `json:"scheduleId"`

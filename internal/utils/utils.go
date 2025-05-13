@@ -42,3 +42,14 @@ func ParseSetValues(values interface{}) []string {
 	}
 	return parsedData
 }
+
+func GetSubnetsFromSet(subnets *schema.Set) []string {
+	result := make([]string, 0)
+	if subnets == nil {
+		return result
+	}
+	for _, subnet := range subnets.List() {
+		result = append(result, subnet.(string))
+	}
+	return result
+}
