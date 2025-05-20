@@ -73,7 +73,7 @@ func resourceIPAllowlistCreate(ctx context.Context, d *schema.ResourceData, m in
 		if errors.IsUnknownFeatureError(err) {
 			tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 		}
-		return diag.Errorf(fmt.Sprintf("Error submitting request for IP allowlist (%s) to be created: %s", feature, err))
+		return diag.Errorf("Error submitting request for IP allowlist (%s) to be created: %s", feature, err)
 	}
 
 	// Set ID of index resource to indicate index has been created
@@ -101,7 +101,7 @@ func resourceIPAllowlistRead(ctx context.Context, d *schema.ResourceData, m inte
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading ip allowlist (%s): %s", feature, err))
+		return diag.Errorf("Error reading ip allowlist (%s): %s", feature, err)
 	}
 
 	if err := d.Set(schemaKeyFeature, d.Id()); err != nil {
@@ -138,13 +138,13 @@ func resourceIPAllowlistUpdate(ctx context.Context, d *schema.ResourceData, m in
 				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
 			}
-			return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
+			return diag.Errorf("Error updating ip allowlist (%s): %s", feature, err)
 		}
 	}
 
 	if len(addSubnets) > 0 {
 		if err := WaitIPAllowlistCreate(ctx, acsClient, stack, v2.Feature(feature), addSubnets); err != nil {
-			return diag.Errorf(fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
+			return diag.Errorf("%s", fmt.Sprintf("Error updating ip allowlist (%s): %s", feature, err))
 		}
 	}
 
@@ -170,7 +170,7 @@ func resourceIPAllowlistDelete(ctx context.Context, d *schema.ResourceData, m in
 				tflog.Info(ctx, fmt.Sprintf("Invalid IP Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
 			}
-			return diag.Errorf(fmt.Sprintf("Error deleting ip allowlist (%s): %s", feature, err))
+			return diag.Errorf("Error deleting ip allowlist (%s): %s", feature, err)
 		}
 	}
 

@@ -59,7 +59,7 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, m interfac
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
+		return diag.Errorf("Error reading index (%s): %s", indexName, err)
 	}
 
 	if err := d.Set("name", index.Name); err != nil {

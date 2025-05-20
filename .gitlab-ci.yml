@@ -1,4 +1,4 @@
-image: docker.repo.splunkdev.net/ci-cd/ci-container/golang-1.19:1.19.0
+image: docker.repo.splunkdev.net/ci-cd/ci-container/golang-1.24:3.11.0
 
 ###
 ### BASE VARIABLES

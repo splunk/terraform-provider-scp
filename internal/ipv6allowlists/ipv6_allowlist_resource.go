@@ -74,7 +74,7 @@ func resourceIPv6AllowlistCreate(ctx context.Context, d *schema.ResourceData, m 
 		if errors.IsUnknownFeatureError(err) {
 			tflog.Info(ctx, fmt.Sprintf("Invalid IPv6 Allowlist feature (%s): %s.", feature, err))
 		}
-		return diag.Errorf(fmt.Sprintf("Error submitting request for IPv6 allowlist (%s) to be created: %s", feature, err))
+		return diag.Errorf("Error submitting request for IPv6 allowlist (%s) to be created: %s", feature, err)
 	}
 
 	// Set ID of index resource to indicate index has been created
@@ -102,7 +102,7 @@ func resourceIPv6AllowlistRead(ctx context.Context, d *schema.ResourceData, m in
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading ipv6 allowlist (%s): %s", feature, err))
+		return diag.Errorf("Error reading ipv6 allowlist (%s): %s", feature, err)
 	}
 
 	if err := d.Set(schemaKeyFeature, d.Id()); err != nil {
@@ -139,13 +139,13 @@ func resourceIPv6AllowlistUpdate(ctx context.Context, d *schema.ResourceData, m 
 				tflog.Info(ctx, fmt.Sprintf("Invalid IPv6 Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
 			}
-			return diag.Errorf(fmt.Sprintf("Error updating ipv6 allowlist (%s): %s", feature, err))
+			return diag.Errorf("Error updating ipv6 allowlist (%s): %s", feature, err)
 		}
 	}
 
 	if len(addSubnets) > 0 {
 		if err := WaitIPv6AllowlistCreate(ctx, acsClient, stack, v2.Feature(feature), addSubnets); err != nil {
-			return diag.Errorf(fmt.Sprintf("Error updating ipv6 allowlist (%s): %s", feature, err))
+			return diag.Errorf("Error updating ipv6 allowlist (%s): %s", feature, err)
 		}
 	}
 
@@ -171,7 +171,7 @@ func resourceIPv6AllowlistDelete(ctx context.Context, d *schema.ResourceData, m 
 				tflog.Info(ctx, fmt.Sprintf("Invalid IPv6 Allowlist feature (%s): %s.", feature, err))
 				return nil //if we return an error here, the set id will not take effect and state will be preserved
 			}
-			return diag.Errorf(fmt.Sprintf("Error deleting ipv6 allowlist (%s): %s", feature, err))
+			return diag.Errorf("Error deleting ipv6 allowlist (%s): %s", feature, err)
 		}
 	}
 

@@ -1,6 +1,6 @@
 module github.com/splunk/terraform-provider-scp
 
-go 1.19
+go 1.24
 
 require (
 	github.com/deepmap/oapi-codegen v1.6.0

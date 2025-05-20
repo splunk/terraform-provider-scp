@@ -177,10 +177,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	err := WaitUserCreate(ctx, acsClient, stack, createParam, createRequest)
 	if err != nil {
 		if errors.IsConflictError(err) {
-			return diag.Errorf(fmt.Sprintf("User (%s) already exists, use a different name to create user or use terraform import to bring current user under terraform management", createRequest.Name))
+			return diag.Errorf("%s", fmt.Sprintf("User (%s) already exists, use a different name to create user or use terraform import to bring current user under terraform management", createRequest.Name))
 		}
 
-		return diag.Errorf(fmt.Sprintf("Error submitting request for user (%s) to be created: %s", createRequest.Name, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error submitting request for user (%s) to be created: %s", createRequest.Name, err))
 	}
 
 	// Set ID of user resource to indicate user has been created
@@ -210,7 +210,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading user (%s): %s", userName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error reading user (%s): %s", userName, err))
 	}
 
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
@@ -273,13 +273,13 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	err := WaitUserUpdate(ctx, acsClient, stack, patchParam, patchRequest, userName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error submitting request for user (%s) to be updated: %s", userName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error submitting request for user (%s) to be updated: %s", userName, err))
 	}
 
 	//Poll until fields have been confirmed updated, good to keep even though resource is sync
 	err = WaitVerifyUserUpdate(ctx, acsClient, stack, patchRequest, userName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for user (%s) to be updated: %s", userName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error waiting for user (%s) to be updated: %s", userName, err))
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("updated hec resource: %s\n", userName))
@@ -296,7 +296,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 	err := WaitUserDelete(ctx, acsClient, stack, userName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error deleting user (%s): %s", userName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error deleting user (%s): %s", userName, err))
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("deleted user resource: %s\n", userName))

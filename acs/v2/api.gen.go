@@ -511,7 +511,9 @@ type PrivateConnectivityEndpoints struct {
 	Message                 *string   `json:"message,omitempty"`
 	PrivateSearchDNSRecords *[]string `json:"privateSearch-DNSRecords,omitempty"`
 	Reason                  *string   `json:"reason,omitempty"`
+	ResourceId              *string   `json:"resourceId,omitempty"`
 	Status                  *string   `json:"status,omitempty"`
+	TargetSubResource       *string   `json:"targetSubResource,omitempty"`
 }
 
 // PrivateConnectivityFeatures defines model for PrivateConnectivityFeatures.
@@ -15275,4 +15277,3 @@ func ParseDescribeWorkflowResponse(rsp *http.Response) (*DescribeWorkflowRespons
 
 	return response, nil
 }
-
