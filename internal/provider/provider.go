@@ -145,7 +145,7 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 
 		token, err = client.GenerateToken(ctx, tmpClient, username.(string), stackName.(string))
 		if err != nil {
-			return nil, diag.Errorf(fmt.Sprintf("error while generating token: %v", err))
+			return nil, diag.Errorf("%s", fmt.Sprintf("error while generating token: %v", err))
 		}
 	}
 

@@ -1,9 +1,6 @@
-version:
-  major: 1
-  minor: 48
-  patch: 0
+version: "2"
 run:
-  go: "1.19"
+  go: "1.24"
 linters:
   enable:
     - gosec

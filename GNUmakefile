@@ -17,7 +17,7 @@ ARCH := $(shell go env GOARCH)
 #
 # If GOLANGCI_LINT_VERSION is changed, the binary will be re-downloaded.
 # This controls the version of tools to install and use.
-GOLANGCI_LINT_VERSION ?= 1.48.0
+GOLANGCI_LINT_VERSION ?= 2.1.6
 GOLANGCI_LINT := golangci-lint/$(GOLANGCI_LINT_VERSION)
 $(GOLANGCI_LINT):
 	@rm -rf golangci-lint

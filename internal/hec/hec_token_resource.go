@@ -130,7 +130,7 @@ func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m inter
 	err := WaitHecCreate(ctx, acsClient, stack, createHecRequest)
 	if err != nil {
 		if errors.IsConflictError(err) {
-			return diag.Errorf(fmt.Sprintf("Hec (%s) %s", hecName, errors.ResourceExistsErr))
+			return diag.Errorf("Hec (%s) %s", hecName, errors.ResourceExistsErr)
 		}
 
 		// If previous deployment task failed, we retry task
@@ -140,23 +140,23 @@ func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m inter
 			// Retry last deployment task
 			err = WaitHecRetryTask(ctx, acsClient, stack)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error retrying previous task, hec (%s) can't be created: %s", hecName, err))
+				return diag.Errorf("Error retrying previous task, hec (%s) can't be created: %s", hecName, err)
 			}
 
 			// Resubmit request for HEC Create
 			err = WaitHecCreate(ctx, acsClient, stack, createHecRequest)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be created after retrying failed task: %s", hecName, err))
+				return diag.Errorf("Error submitting request for hec (%s) to be created after retrying failed task: %s", hecName, err)
 			}
 		}
 
-		return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be created: %s", hecName, err))
+		return diag.Errorf("Error submitting request for hec (%s) to be created: %s", hecName, err)
 	}
 
 	// Poll Hec until GET returns 200 to confirm hec creation
 	err = WaitHecPoll(ctx, acsClient, stack, hecName, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be created: %s", hecName, err))
+		return diag.Errorf("Error waiting for hec (%s) to be created: %s", hecName, err)
 	}
 
 	// Set ID of hec resource to indicate hec has been created
@@ -186,7 +186,7 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading HEC (%s): %s", hecName, err))
+		return diag.Errorf("Error reading HEC (%s): %s", hecName, err)
 	}
 
 	if err := d.Set(NameKey, d.Id()); err != nil {
@@ -245,22 +245,22 @@ func resourceHecTokenUpdate(ctx context.Context, d *schema.ResourceData, m inter
 			// Retry last deployment task
 			err = WaitHecRetryTask(ctx, acsClient, stack)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error retrying previous task, hec (%s) can't be updated: %s", hecName, err))
+				return diag.Errorf("Error retrying previous task, hec (%s) can't be updated: %s", hecName, err)
 			}
 
 			// Resubmit request for HEC Update
 			err = WaitHecUpdate(ctx, acsClient, stack, *patchRequest, hecName)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be updated after retrying failed task: %s", hecName, err))
+				return diag.Errorf("Error submitting request for hec (%s) to be updated after retrying failed task: %s", hecName, err)
 			}
 		}
-		return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be updated: %s", hecName, err))
+		return diag.Errorf("Error submitting request for hec (%s) to be updated: %s", hecName, err)
 	}
 
 	//Poll until fields have been confirmed updated
 	err = WaitVerifyHecUpdate(ctx, acsClient, stack, *patchRequest, hecName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be updated: %s", hecName, err))
+		return diag.Errorf("Error waiting for hec (%s) to be updated: %s", hecName, err)
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("updated hec resource: %s\n", hecName))
@@ -284,22 +284,22 @@ func resourceHecTokenDelete(ctx context.Context, d *schema.ResourceData, m inter
 			// Retry last deployment task
 			err = WaitHecRetryTask(ctx, acsClient, stack)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error retrying previous task, hec (%s) can't be deleted: %s", hecName, err))
+				return diag.Errorf("Error retrying previous task, hec (%s) can't be deleted: %s", hecName, err)
 			}
 
 			// Resubmit request for HEC Update
 			err = WaitHecDelete(ctx, acsClient, stack, hecName)
 			if err != nil {
-				return diag.Errorf(fmt.Sprintf("Error submitting request for hec (%s) to be deleted after retrying failed task: %s", hecName, err))
+				return diag.Errorf("Error submitting request for hec (%s) to be deleted after retrying failed task: %s", hecName, err)
 			}
 		}
-		return diag.Errorf(fmt.Sprintf("Error deleting hec (%s): %s", hecName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error deleting hec (%s): %s", hecName, err))
 	}
 
 	//Poll hec until GET returns 404 Not found - hec has been deleted
 	err = WaitHecPoll(ctx, acsClient, stack, hecName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for hec (%s) to be deleted: %s", hecName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error waiting for hec (%s) to be deleted: %s", hecName, err))
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("deleted hec resource: %s\n", hecName))

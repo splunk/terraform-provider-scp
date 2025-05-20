@@ -192,10 +192,10 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 	err := WaitRoleCreate(ctx, acsClient, stack, createParam, createRequest)
 	if err != nil {
 		if errors.IsConflictError(err) {
-			return diag.Errorf(fmt.Sprintf("Role (%s) already exists, use a different name to create role or use terraform import to bring current role under terraform management", createRequest.Name))
+			return diag.Errorf("Role (%s) already exists, use a different name to create role or use terraform import to bring current role under terraform management", createRequest.Name)
 		}
 
-		return diag.Errorf(fmt.Sprintf("Error submitting request for role (%s) to be created: %s", createRequest.Name, err))
+		return diag.Errorf("Error submitting request for role (%s) to be created: %s", createRequest.Name, err)
 	}
 
 	// Set ID of role resource to indicate role has been created
@@ -225,7 +225,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
 		}
-		return diag.Errorf(fmt.Sprintf("Error reading role (%s): %s", roleName, err))
+		return diag.Errorf("Error reading role (%s): %s", roleName, err)
 	}
 
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
@@ -311,13 +311,13 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 	err := WaitRoleUpdate(ctx, acsClient, stack, patchParam, patchRequestBody, roleName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error submitting request for role (%s) to be updated: %s", roleName, err))
+		return diag.Errorf("Error submitting request for role (%s) to be updated: %s", roleName, err)
 	}
 
 	//Poll until fields have been confirmed updated, good to keep even though resource is sync
 	err = WaitVerifyRoleUpdate(ctx, acsClient, stack, patchRequestBody, roleName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for role (%s) to be updated: %s", roleName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error waiting for role (%s) to be updated: %s", roleName, err))
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("updated role resource: %s\n", roleName))
@@ -334,7 +334,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 	err := WaitRoleDelete(ctx, acsClient, stack, roleName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error deleting role (%s): %s", roleName, err))
+		return diag.Errorf("%s", fmt.Sprintf("Error deleting role (%s): %s", roleName, err))
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("deleted role resource: %s\n", roleName))
