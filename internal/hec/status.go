@@ -72,8 +72,11 @@ func StatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stac
 			}
 		}
 		status := http.StatusText(resp.StatusCode)
-		hecSpec := *hec.HTTPEventCollector.Spec
-		hecSpec.Token = hec.HTTPEventCollector.Token
+		hecSpec := v2.HecSpec{}
+		if hec.HTTPEventCollector != nil && hec.HTTPEventCollector.Spec != nil {
+			hecSpec := *hec.HTTPEventCollector.Spec
+			hecSpec.Token = hec.HTTPEventCollector.Token
+		}
 		return &hecSpec, status, nil
 	}
 }

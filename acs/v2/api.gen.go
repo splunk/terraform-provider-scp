@@ -311,13 +311,10 @@ type MaintenanceWindowsOperation struct {
 	// List of SFDC tickets associated with the operation.
 	SFDCTickets *[]string `json:"SFDCTickets,omitempty"`
 
-	// Name of the app to be upgraded.
-	AppName *string `json:"appName,omitempty"`
-
 	// Time at which the operation ended.
 	EndTime *time.Time `json:"endTime,omitempty"`
 
-	// A map containing metadata about the operation (e.g. targetVersion, lastStatusBeforeCanceled, etc...).
+	// A map containing metadata about the operation being performed (e.g. AppName, TargetVersion, etc...).
 	Metadata *map[string]interface{} `json:"metadata,omitempty"`
 
 	// Notes for the customer.
@@ -329,14 +326,8 @@ type MaintenanceWindowsOperation struct {
 	// Status of the operation.
 	OperationStatus string `json:"operationStatus"`
 
-	// Type of the operation.
-	OperationType string `json:"operationType"`
-
 	// Time at which the operation started.
 	StartTime *time.Time `json:"startTime,omitempty"`
-
-	// Target version after the upgrade.
-	TargetVersion *string `json:"targetVersion,omitempty"`
 
 	// True if the operation will have no impact on the uptime of the stack.
 	ZeroDowntime bool `json:"zeroDowntime"`
@@ -367,17 +358,14 @@ type MaintenanceWindowsResponse struct {
 // MaintenanceWindowsSchedule defines model for MaintenanceWindowsSchedule.
 type MaintenanceWindowsSchedule struct {
 
-	// The duration of the maintenance window.
+	// The duration of the maintenance window. Format is a Go duration string.
 	Duration string `json:"duration"`
 
-	// Duration of the maintenance window schedule extension.
+	// The duration of the maintenance window schedule extension. Format is a Go duration string.
 	ExtendedDuration *string `json:"extendedDuration,omitempty"`
 
 	// Time at which the maintenance window was last modified. Format is RFC3339.
 	LastModifiedTimestamp time.Time `json:"lastModifiedTimestamp"`
-
-	// The summary or reason for the maintenance.
-	LastSummary *string `json:"lastSummary,omitempty"`
 
 	// Time at which the maintenance window actually ended. This field is populated only after the window ends. Format is RFC3339.
 	MaintenanceEndedAt *time.Time `json:"maintenanceEndedAt,omitempty"`
@@ -386,8 +374,10 @@ type MaintenanceWindowsSchedule struct {
 	MaintenanceStartedAt *time.Time `json:"maintenanceStartedAt,omitempty"`
 
 	// The type of upgrade performed in the maintenance window.
-	MwType     string                         `json:"mwType"`
-	Operations *[]MaintenanceWindowsOperation `json:"operations,omitempty"`
+	MwType string `json:"mwType"`
+
+	// List of operations being performed in the maintenance window.
+	Operations []MaintenanceWindowsOperation `json:"operations"`
 
 	// The entity which requested the maintenance window, either the customer or Splunk.
 	RequestedEntity string `json:"requestedEntity"`
@@ -396,7 +386,7 @@ type MaintenanceWindowsSchedule struct {
 	RequestedUser *string `json:"requestedUser,omitempty"`
 
 	// Time at which the maintenance window is scheduled to end. Format is RFC3339.
-	ScheduleEndTimestamp *time.Time `json:"scheduleEndTimestamp,omitempty"`
+	ScheduleEndTimestamp time.Time `json:"scheduleEndTimestamp"`
 
 	// UUID of the maintenance window.
 	ScheduleId string `json:"scheduleId"`
@@ -1078,6 +1068,13 @@ type AuditMaintenanceWindowsScheduleParams struct {
 	ToTime *ToTime `json:"toTime,omitempty"`
 }
 
+// EnableRbacOnO11yJSONBody defines parameters for EnableRbacOnO11y.
+type EnableRbacOnO11yJSONBody struct {
+
+	// The Observability realm
+	O11yRealm *string `json:"o11y-realm,omitempty"`
+}
+
 // EnableRbacOnO11yParams defines parameters for EnableRbacOnO11y.
 type EnableRbacOnO11yParams struct {
 
@@ -1085,11 +1082,25 @@ type EnableRbacOnO11yParams struct {
 	O11yAccessToken string `json:"o11y-access-token"`
 }
 
+// PostObservabilityPairingJSONBody defines parameters for PostObservabilityPairing.
+type PostObservabilityPairingJSONBody struct {
+
+	// The Observability realm
+	O11yRealm *string `json:"o11y-realm,omitempty"`
+}
+
 // PostObservabilityPairingParams defines parameters for PostObservabilityPairing.
 type PostObservabilityPairingParams struct {
 
 	// Observability Admin Access Token
 	O11yAccessToken string `json:"o11y-access-token"`
+}
+
+// GetObservabilityPairingStatusJSONBody defines parameters for GetObservabilityPairingStatus.
+type GetObservabilityPairingStatusJSONBody struct {
+
+	// The Observability realm
+	O11yRealm *string `json:"o11y-realm,omitempty"`
 }
 
 // GetObservabilityPairingStatusParams defines parameters for GetObservabilityPairingStatus.
@@ -1272,6 +1283,15 @@ type ResetLimitConfigJSONRequestBody ResetLimitConfigJSONBody
 
 // UpdateMaintenanceWindowsPreferencesJSONRequestBody defines body for UpdateMaintenanceWindowsPreferences for application/json ContentType.
 type UpdateMaintenanceWindowsPreferencesJSONRequestBody UpdateMaintenanceWindowsPreferencesJSONBody
+
+// EnableRbacOnO11yJSONRequestBody defines body for EnableRbacOnO11y for application/json ContentType.
+type EnableRbacOnO11yJSONRequestBody EnableRbacOnO11yJSONBody
+
+// PostObservabilityPairingJSONRequestBody defines body for PostObservabilityPairing for application/json ContentType.
+type PostObservabilityPairingJSONRequestBody PostObservabilityPairingJSONBody
+
+// GetObservabilityPairingStatusJSONRequestBody defines body for GetObservabilityPairingStatus for application/json ContentType.
+type GetObservabilityPairingStatusJSONRequestBody GetObservabilityPairingStatusJSONBody
 
 // PatchPermissionsAppsJSONRequestBody defines body for PatchPermissionsApps for application/json ContentType.
 type PatchPermissionsAppsJSONRequestBody PatchPermissionsAppsJSONBody
@@ -1621,14 +1641,20 @@ type ClientInterface interface {
 	// PostObservabilityCapabilitiesOnSplunk request
 	PostObservabilityCapabilitiesOnSplunk(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// EnableRbacOnO11y request
-	EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// EnableRbacOnO11y request  with any body
+	EnableRbacOnO11yWithBody(ctx context.Context, stack string, params *EnableRbacOnO11yParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostObservabilityPairing request
-	PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, body EnableRbacOnO11yJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetObservabilityPairingStatus request
-	GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostObservabilityPairing request  with any body
+	PostObservabilityPairingWithBody(ctx context.Context, stack string, params *PostObservabilityPairingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetObservabilityPairingStatus request  with any body
+	GetObservabilityPairingStatusWithBody(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListPermissionsApps request
 	ListPermissionsApps(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2810,8 +2836,8 @@ func (c *Client) PostObservabilityCapabilitiesOnSplunk(ctx context.Context, stac
 	return c.Client.Do(req)
 }
 
-func (c *Client) EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewEnableRbacOnO11yRequest(c.Server, stack, params)
+func (c *Client) EnableRbacOnO11yWithBody(ctx context.Context, stack string, params *EnableRbacOnO11yParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableRbacOnO11yRequestWithBody(c.Server, stack, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2822,8 +2848,8 @@ func (c *Client) EnableRbacOnO11y(ctx context.Context, stack string, params *Ena
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostObservabilityPairingRequest(c.Server, stack, params)
+func (c *Client) EnableRbacOnO11y(ctx context.Context, stack string, params *EnableRbacOnO11yParams, body EnableRbacOnO11yJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEnableRbacOnO11yRequest(c.Server, stack, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2834,8 +2860,44 @@ func (c *Client) PostObservabilityPairing(ctx context.Context, stack string, par
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetObservabilityPairingStatusRequest(c.Server, stack, pairingId, params)
+func (c *Client) PostObservabilityPairingWithBody(ctx context.Context, stack string, params *PostObservabilityPairingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostObservabilityPairingRequestWithBody(c.Server, stack, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostObservabilityPairingRequest(c.Server, stack, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetObservabilityPairingStatusWithBody(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetObservabilityPairingStatusRequestWithBody(c.Server, stack, pairingId, params, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetObservabilityPairingStatusRequest(c.Server, stack, pairingId, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6760,8 +6822,19 @@ func NewPostObservabilityCapabilitiesOnSplunkRequest(server string, stack string
 	return req, nil
 }
 
-// NewEnableRbacOnO11yRequest generates requests for EnableRbacOnO11y
-func NewEnableRbacOnO11yRequest(server string, stack string, params *EnableRbacOnO11yParams) (*http.Request, error) {
+// NewEnableRbacOnO11yRequest calls the generic EnableRbacOnO11y builder with application/json body
+func NewEnableRbacOnO11yRequest(server string, stack string, params *EnableRbacOnO11yParams, body EnableRbacOnO11yJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewEnableRbacOnO11yRequestWithBody(server, stack, params, "application/json", bodyReader)
+}
+
+// NewEnableRbacOnO11yRequestWithBody generates requests for EnableRbacOnO11y with any type of body
+func NewEnableRbacOnO11yRequestWithBody(server string, stack string, params *EnableRbacOnO11yParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6786,10 +6859,12 @@ func NewEnableRbacOnO11yRequest(server string, stack string, params *EnableRbacO
 
 	queryURL := serverURL.ResolveReference(&operationURL)
 
-	req, err := http.NewRequest("PUT", queryURL.String(), nil)
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	var headerParam0 string
 
@@ -6803,8 +6878,19 @@ func NewEnableRbacOnO11yRequest(server string, stack string, params *EnableRbacO
 	return req, nil
 }
 
-// NewPostObservabilityPairingRequest generates requests for PostObservabilityPairing
-func NewPostObservabilityPairingRequest(server string, stack string, params *PostObservabilityPairingParams) (*http.Request, error) {
+// NewPostObservabilityPairingRequest calls the generic PostObservabilityPairing builder with application/json body
+func NewPostObservabilityPairingRequest(server string, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostObservabilityPairingRequestWithBody(server, stack, params, "application/json", bodyReader)
+}
+
+// NewPostObservabilityPairingRequestWithBody generates requests for PostObservabilityPairing with any type of body
+func NewPostObservabilityPairingRequestWithBody(server string, stack string, params *PostObservabilityPairingParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6829,10 +6915,12 @@ func NewPostObservabilityPairingRequest(server string, stack string, params *Pos
 
 	queryURL := serverURL.ResolveReference(&operationURL)
 
-	req, err := http.NewRequest("POST", queryURL.String(), nil)
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	var headerParam0 string
 
@@ -6846,8 +6934,19 @@ func NewPostObservabilityPairingRequest(server string, stack string, params *Pos
 	return req, nil
 }
 
-// NewGetObservabilityPairingStatusRequest generates requests for GetObservabilityPairingStatus
-func NewGetObservabilityPairingStatusRequest(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams) (*http.Request, error) {
+// NewGetObservabilityPairingStatusRequest calls the generic GetObservabilityPairingStatus builder with application/json body
+func NewGetObservabilityPairingStatusRequest(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewGetObservabilityPairingStatusRequestWithBody(server, stack, pairingId, params, "application/json", bodyReader)
+}
+
+// NewGetObservabilityPairingStatusRequestWithBody generates requests for GetObservabilityPairingStatus with any type of body
+func NewGetObservabilityPairingStatusRequestWithBody(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6879,10 +6978,12 @@ func NewGetObservabilityPairingStatusRequest(server string, stack string, pairin
 
 	queryURL := serverURL.ResolveReference(&operationURL)
 
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	req, err := http.NewRequest("GET", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	var headerParam0 string
 
@@ -8539,14 +8640,20 @@ type ClientWithResponsesInterface interface {
 	// PostObservabilityCapabilitiesOnSplunk request
 	PostObservabilityCapabilitiesOnSplunkWithResponse(ctx context.Context, stack string, reqEditors ...RequestEditorFn) (*PostObservabilityCapabilitiesOnSplunkResponse, error)
 
-	// EnableRbacOnO11y request
-	EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error)
+	// EnableRbacOnO11y request  with any body
+	EnableRbacOnO11yWithBodyWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error)
 
-	// PostObservabilityPairing request
-	PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error)
+	EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, body EnableRbacOnO11yJSONRequestBody, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error)
 
-	// GetObservabilityPairingStatus request
-	GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
+	// PostObservabilityPairing request  with any body
+	PostObservabilityPairingWithBodyWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error)
+
+	PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error)
+
+	// GetObservabilityPairingStatus request  with any body
+	GetObservabilityPairingStatusWithBodyWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
+
+	GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
 
 	// ListPermissionsApps request
 	ListPermissionsAppsWithResponse(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*ListPermissionsAppsResponse, error)
@@ -11729,27 +11836,51 @@ func (c *ClientWithResponses) PostObservabilityCapabilitiesOnSplunkWithResponse(
 	return ParsePostObservabilityCapabilitiesOnSplunkResponse(rsp)
 }
 
-// EnableRbacOnO11yWithResponse request returning *EnableRbacOnO11yResponse
-func (c *ClientWithResponses) EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error) {
-	rsp, err := c.EnableRbacOnO11y(ctx, stack, params, reqEditors...)
+// EnableRbacOnO11yWithBodyWithResponse request with arbitrary body returning *EnableRbacOnO11yResponse
+func (c *ClientWithResponses) EnableRbacOnO11yWithBodyWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error) {
+	rsp, err := c.EnableRbacOnO11yWithBody(ctx, stack, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParseEnableRbacOnO11yResponse(rsp)
 }
 
-// PostObservabilityPairingWithResponse request returning *PostObservabilityPairingResponse
-func (c *ClientWithResponses) PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error) {
-	rsp, err := c.PostObservabilityPairing(ctx, stack, params, reqEditors...)
+func (c *ClientWithResponses) EnableRbacOnO11yWithResponse(ctx context.Context, stack string, params *EnableRbacOnO11yParams, body EnableRbacOnO11yJSONRequestBody, reqEditors ...RequestEditorFn) (*EnableRbacOnO11yResponse, error) {
+	rsp, err := c.EnableRbacOnO11y(ctx, stack, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEnableRbacOnO11yResponse(rsp)
+}
+
+// PostObservabilityPairingWithBodyWithResponse request with arbitrary body returning *PostObservabilityPairingResponse
+func (c *ClientWithResponses) PostObservabilityPairingWithBodyWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error) {
+	rsp, err := c.PostObservabilityPairingWithBody(ctx, stack, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
 	return ParsePostObservabilityPairingResponse(rsp)
 }
 
-// GetObservabilityPairingStatusWithResponse request returning *GetObservabilityPairingStatusResponse
-func (c *ClientWithResponses) GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
-	rsp, err := c.GetObservabilityPairingStatus(ctx, stack, pairingId, params, reqEditors...)
+func (c *ClientWithResponses) PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error) {
+	rsp, err := c.PostObservabilityPairing(ctx, stack, params, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostObservabilityPairingResponse(rsp)
+}
+
+// GetObservabilityPairingStatusWithBodyWithResponse request with arbitrary body returning *GetObservabilityPairingStatusResponse
+func (c *ClientWithResponses) GetObservabilityPairingStatusWithBodyWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
+	rsp, err := c.GetObservabilityPairingStatusWithBody(ctx, stack, pairingId, params, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetObservabilityPairingStatusResponse(rsp)
+}
+
+func (c *ClientWithResponses) GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
+	rsp, err := c.GetObservabilityPairingStatus(ctx, stack, pairingId, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
