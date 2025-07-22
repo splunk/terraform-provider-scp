@@ -2756,14 +2756,14 @@ func (_m *ClientInterface) GetLimitsConfigDefaults(ctx context.Context, stack v2
 	return r0, r1
 }
 
-// GetObservabilityPairingStatus provides a mock function with given fields: ctx, stack, pairingId, params, body, reqEditors
-func (_m *ClientInterface) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *v2.GetObservabilityPairingStatusParams, body v2.GetObservabilityPairingStatusJSONRequestBody, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+// GetObservabilityPairingStatus provides a mock function with given fields: ctx, stack, pairingId, params, reqEditors
+func (_m *ClientInterface) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *v2.GetObservabilityPairingStatusParams, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
 	for _i := range reqEditors {
 		_va[_i] = reqEditors[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, stack, pairingId, params, body)
+	_ca = append(_ca, ctx, stack, pairingId, params)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -2773,56 +2773,19 @@ func (_m *ClientInterface) GetObservabilityPairingStatus(ctx context.Context, st
 
 	var r0 *http.Response
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, v2.GetObservabilityPairingStatusJSONRequestBody, ...v2.RequestEditorFn) (*http.Response, error)); ok {
-		return rf(ctx, stack, pairingId, params, body, reqEditors...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, ...v2.RequestEditorFn) (*http.Response, error)); ok {
+		return rf(ctx, stack, pairingId, params, reqEditors...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, v2.GetObservabilityPairingStatusJSONRequestBody, ...v2.RequestEditorFn) *http.Response); ok {
-		r0 = rf(ctx, stack, pairingId, params, body, reqEditors...)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, pairingId, params, reqEditors...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*http.Response)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, v2.GetObservabilityPairingStatusJSONRequestBody, ...v2.RequestEditorFn) error); ok {
-		r1 = rf(ctx, stack, pairingId, params, body, reqEditors...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetObservabilityPairingStatusWithBody provides a mock function with given fields: ctx, stack, pairingId, params, contentType, body, reqEditors
-func (_m *ClientInterface) GetObservabilityPairingStatusWithBody(ctx context.Context, stack string, pairingId string, params *v2.GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
-	_va := make([]interface{}, len(reqEditors))
-	for _i := range reqEditors {
-		_va[_i] = reqEditors[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, stack, pairingId, params, contentType, body)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetObservabilityPairingStatusWithBody")
-	}
-
-	var r0 *http.Response
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, string, io.Reader, ...v2.RequestEditorFn) (*http.Response, error)); ok {
-		return rf(ctx, stack, pairingId, params, contentType, body, reqEditors...)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, string, io.Reader, ...v2.RequestEditorFn) *http.Response); ok {
-		r0 = rf(ctx, stack, pairingId, params, contentType, body, reqEditors...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*http.Response)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, string, io.Reader, ...v2.RequestEditorFn) error); ok {
-		r1 = rf(ctx, stack, pairingId, params, contentType, body, reqEditors...)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, *v2.GetObservabilityPairingStatusParams, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, pairingId, params, reqEditors...)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -4532,14 +4495,14 @@ func (_m *ClientInterface) UninstallApp(ctx context.Context, stack v2.Stack, app
 	return r0, r1
 }
 
-// UninstallAppVictoria provides a mock function with given fields: ctx, stack, app, reqEditors
-func (_m *ClientInterface) UninstallAppVictoria(ctx context.Context, stack v2.Stack, app v2.AppName, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
+// UninstallAppVictoria provides a mock function with given fields: ctx, stack, app, params, reqEditors
+func (_m *ClientInterface) UninstallAppVictoria(ctx context.Context, stack v2.Stack, app v2.AppName, params *v2.UninstallAppVictoriaParams, reqEditors ...v2.RequestEditorFn) (*http.Response, error) {
 	_va := make([]interface{}, len(reqEditors))
 	for _i := range reqEditors {
 		_va[_i] = reqEditors[_i]
 	}
 	var _ca []interface{}
-	_ca = append(_ca, ctx, stack, app)
+	_ca = append(_ca, ctx, stack, app, params)
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
@@ -4549,19 +4512,19 @@ func (_m *ClientInterface) UninstallAppVictoria(ctx context.Context, stack v2.St
 
 	var r0 *http.Response
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, ...v2.RequestEditorFn) (*http.Response, error)); ok {
-		return rf(ctx, stack, app, reqEditors...)
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, *v2.UninstallAppVictoriaParams, ...v2.RequestEditorFn) (*http.Response, error)); ok {
+		return rf(ctx, stack, app, params, reqEditors...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, ...v2.RequestEditorFn) *http.Response); ok {
-		r0 = rf(ctx, stack, app, reqEditors...)
+	if rf, ok := ret.Get(0).(func(context.Context, v2.Stack, v2.AppName, *v2.UninstallAppVictoriaParams, ...v2.RequestEditorFn) *http.Response); ok {
+		r0 = rf(ctx, stack, app, params, reqEditors...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*http.Response)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.AppName, ...v2.RequestEditorFn) error); ok {
-		r1 = rf(ctx, stack, app, reqEditors...)
+	if rf, ok := ret.Get(1).(func(context.Context, v2.Stack, v2.AppName, *v2.UninstallAppVictoriaParams, ...v2.RequestEditorFn) error); ok {
+		r1 = rf(ctx, stack, app, params, reqEditors...)
 	} else {
 		r1 = ret.Error(1)
 	}
