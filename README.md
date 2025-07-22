@@ -6,6 +6,7 @@ At this point in time, this provider supports the following resources for Splunk
 - IP Allowlist 
 - Users
 - Roles
+- IPv6 Allowlist
 
 ```
 Copyright 2023 Splunk Inc. 

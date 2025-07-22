@@ -19,4 +19,9 @@
 
 ## Version v1.2.1
 * Fixes bug found in Roles resource in which `srch_indexes_default` was set to value of `srch_indexes_allowed`
-* Introduces workaround to allow zero value to be set for Roles resource fields where valid. See [Roles Documentation](https://registry.terraform.io/providers/splunk/scp/latest/docs/resources/roles). 
+* Introduces workaround to allow zero value to be set for Roles resource fields where valid. See [Roles Documentation](https://registry.terraform.io/providers/splunk/scp/latest/docs/resources/roles).
+
+## Version v1.2.2
+* Adds Support For IPv6 Allowlist Resource
+* Go updated to 1.24
+* Bugs and Vulnerability Fixes
