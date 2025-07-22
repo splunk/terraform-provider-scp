@@ -905,6 +905,9 @@ type InstallAppVictoriaParams struct {
 	// is the app available in splunkbase
 	Splunkbase *bool `json:"splunkbase,omitempty"`
 
+	// set scope to local to install app on a targeted search head group
+	Scope *string `json:"scope,omitempty"`
+
 	// Splunkbase sessionID
 	XSplunkbaseAuthorization *string `json:"X-Splunkbase-Authorization,omitempty"`
 
@@ -932,6 +935,13 @@ type DownloadAppExportVictoriaParams struct {
 
 	// export only the configs as per request parameters and don’t export any app data
 	ConfsOnly *ConfsOnly `json:"confs_only,omitempty"`
+}
+
+// UninstallAppVictoriaParams defines parameters for UninstallAppVictoria.
+type UninstallAppVictoriaParams struct {
+
+	// set scope to local to delete app on a targeted search head group
+	Scope *string `json:"scope,omitempty"`
 }
 
 // PatchAppVictoriaParams defines parameters for PatchAppVictoria.
@@ -1096,15 +1106,11 @@ type PostObservabilityPairingParams struct {
 	O11yAccessToken string `json:"o11y-access-token"`
 }
 
-// GetObservabilityPairingStatusJSONBody defines parameters for GetObservabilityPairingStatus.
-type GetObservabilityPairingStatusJSONBody struct {
+// GetObservabilityPairingStatusParams defines parameters for GetObservabilityPairingStatus.
+type GetObservabilityPairingStatusParams struct {
 
 	// The Observability realm
 	O11yRealm *string `json:"o11y-realm,omitempty"`
-}
-
-// GetObservabilityPairingStatusParams defines parameters for GetObservabilityPairingStatus.
-type GetObservabilityPairingStatusParams struct {
 
 	// Observability Admin Access Token
 	O11yAccessToken string `json:"o11y-access-token"`
@@ -1290,9 +1296,6 @@ type EnableRbacOnO11yJSONRequestBody EnableRbacOnO11yJSONBody
 // PostObservabilityPairingJSONRequestBody defines body for PostObservabilityPairing for application/json ContentType.
 type PostObservabilityPairingJSONRequestBody PostObservabilityPairingJSONBody
 
-// GetObservabilityPairingStatusJSONRequestBody defines body for GetObservabilityPairingStatus for application/json ContentType.
-type GetObservabilityPairingStatusJSONRequestBody GetObservabilityPairingStatusJSONBody
-
 // PatchPermissionsAppsJSONRequestBody defines body for PatchPermissionsApps for application/json ContentType.
 type PatchPermissionsAppsJSONRequestBody PatchPermissionsAppsJSONBody
 
@@ -1473,7 +1476,7 @@ type ClientInterface interface {
 	DownloadAppExportVictoria(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UninstallAppVictoria request
-	UninstallAppVictoria(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error)
+	UninstallAppVictoria(ctx context.Context, stack Stack, app AppName, params *UninstallAppVictoriaParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DescribeAppVictoria request
 	DescribeAppVictoria(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1651,10 +1654,8 @@ type ClientInterface interface {
 
 	PostObservabilityPairing(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetObservabilityPairingStatus request  with any body
-	GetObservabilityPairingStatusWithBody(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetObservabilityPairingStatus request
+	GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListPermissionsApps request
 	ListPermissionsApps(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2104,8 +2105,8 @@ func (c *Client) DownloadAppExportVictoria(ctx context.Context, stack Stack, app
 	return c.Client.Do(req)
 }
 
-func (c *Client) UninstallAppVictoria(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUninstallAppVictoriaRequest(c.Server, stack, app)
+func (c *Client) UninstallAppVictoria(ctx context.Context, stack Stack, app AppName, params *UninstallAppVictoriaParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUninstallAppVictoriaRequest(c.Server, stack, app, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2884,20 +2885,8 @@ func (c *Client) PostObservabilityPairing(ctx context.Context, stack string, par
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetObservabilityPairingStatusWithBody(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetObservabilityPairingStatusRequestWithBody(c.Server, stack, pairingId, params, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetObservabilityPairingStatusRequest(c.Server, stack, pairingId, params, body)
+func (c *Client) GetObservabilityPairingStatus(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetObservabilityPairingStatusRequest(c.Server, stack, pairingId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -4400,6 +4389,22 @@ func NewInstallAppVictoriaRequestWithBody(server string, stack Stack, params *In
 
 	}
 
+	if params.Scope != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scope", runtime.ParamLocationQuery, *params.Scope); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
 	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("POST", queryURL.String(), body)
@@ -4566,7 +4571,7 @@ func NewDownloadAppExportVictoriaRequest(server string, stack Stack, app AppName
 }
 
 // NewUninstallAppVictoriaRequest generates requests for UninstallAppVictoria
-func NewUninstallAppVictoriaRequest(server string, stack Stack, app AppName) (*http.Request, error) {
+func NewUninstallAppVictoriaRequest(server string, stack Stack, app AppName, params *UninstallAppVictoriaParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4597,6 +4602,26 @@ func NewUninstallAppVictoriaRequest(server string, stack Stack, app AppName) (*h
 	}
 
 	queryURL := serverURL.ResolveReference(&operationURL)
+
+	queryValues := queryURL.Query()
+
+	if params.Scope != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "scope", runtime.ParamLocationQuery, *params.Scope); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
 
 	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
 	if err != nil {
@@ -6934,19 +6959,8 @@ func NewPostObservabilityPairingRequestWithBody(server string, stack string, par
 	return req, nil
 }
 
-// NewGetObservabilityPairingStatusRequest calls the generic GetObservabilityPairingStatus builder with application/json body
-func NewGetObservabilityPairingStatusRequest(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewGetObservabilityPairingStatusRequestWithBody(server, stack, pairingId, params, "application/json", bodyReader)
-}
-
-// NewGetObservabilityPairingStatusRequestWithBody generates requests for GetObservabilityPairingStatus with any type of body
-func NewGetObservabilityPairingStatusRequestWithBody(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader) (*http.Request, error) {
+// NewGetObservabilityPairingStatusRequest generates requests for GetObservabilityPairingStatus
+func NewGetObservabilityPairingStatusRequest(server string, stack string, pairingId string, params *GetObservabilityPairingStatusParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6978,12 +6992,30 @@ func NewGetObservabilityPairingStatusRequestWithBody(server string, stack string
 
 	queryURL := serverURL.ResolveReference(&operationURL)
 
-	req, err := http.NewRequest("GET", queryURL.String(), body)
+	queryValues := queryURL.Query()
+
+	if params.O11yRealm != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "o11y-realm", runtime.ParamLocationQuery, *params.O11yRealm); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	var headerParam0 string
 
@@ -8472,7 +8504,7 @@ type ClientWithResponsesInterface interface {
 	DownloadAppExportVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, params *DownloadAppExportVictoriaParams, reqEditors ...RequestEditorFn) (*DownloadAppExportVictoriaResponse, error)
 
 	// UninstallAppVictoria request
-	UninstallAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*UninstallAppVictoriaResponse, error)
+	UninstallAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, params *UninstallAppVictoriaParams, reqEditors ...RequestEditorFn) (*UninstallAppVictoriaResponse, error)
 
 	// DescribeAppVictoria request
 	DescribeAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*DescribeAppVictoriaResponse, error)
@@ -8650,10 +8682,8 @@ type ClientWithResponsesInterface interface {
 
 	PostObservabilityPairingWithResponse(ctx context.Context, stack string, params *PostObservabilityPairingParams, body PostObservabilityPairingJSONRequestBody, reqEditors ...RequestEditorFn) (*PostObservabilityPairingResponse, error)
 
-	// GetObservabilityPairingStatus request  with any body
-	GetObservabilityPairingStatusWithBodyWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
-
-	GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
+	// GetObservabilityPairingStatus request
+	GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error)
 
 	// ListPermissionsApps request
 	ListPermissionsAppsWithResponse(ctx context.Context, stack Stack, params *ListPermissionsAppsParams, reqEditors ...RequestEditorFn) (*ListPermissionsAppsResponse, error)
@@ -11302,8 +11332,8 @@ func (c *ClientWithResponses) DownloadAppExportVictoriaWithResponse(ctx context.
 }
 
 // UninstallAppVictoriaWithResponse request returning *UninstallAppVictoriaResponse
-func (c *ClientWithResponses) UninstallAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, reqEditors ...RequestEditorFn) (*UninstallAppVictoriaResponse, error) {
-	rsp, err := c.UninstallAppVictoria(ctx, stack, app, reqEditors...)
+func (c *ClientWithResponses) UninstallAppVictoriaWithResponse(ctx context.Context, stack Stack, app AppName, params *UninstallAppVictoriaParams, reqEditors ...RequestEditorFn) (*UninstallAppVictoriaResponse, error) {
+	rsp, err := c.UninstallAppVictoria(ctx, stack, app, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -11870,17 +11900,9 @@ func (c *ClientWithResponses) PostObservabilityPairingWithResponse(ctx context.C
 	return ParsePostObservabilityPairingResponse(rsp)
 }
 
-// GetObservabilityPairingStatusWithBodyWithResponse request with arbitrary body returning *GetObservabilityPairingStatusResponse
-func (c *ClientWithResponses) GetObservabilityPairingStatusWithBodyWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
-	rsp, err := c.GetObservabilityPairingStatusWithBody(ctx, stack, pairingId, params, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetObservabilityPairingStatusResponse(rsp)
-}
-
-func (c *ClientWithResponses) GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, body GetObservabilityPairingStatusJSONRequestBody, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
-	rsp, err := c.GetObservabilityPairingStatus(ctx, stack, pairingId, params, body, reqEditors...)
+// GetObservabilityPairingStatusWithResponse request returning *GetObservabilityPairingStatusResponse
+func (c *ClientWithResponses) GetObservabilityPairingStatusWithResponse(ctx context.Context, stack string, pairingId string, params *GetObservabilityPairingStatusParams, reqEditors ...RequestEditorFn) (*GetObservabilityPairingStatusResponse, error) {
+	rsp, err := c.GetObservabilityPairingStatus(ctx, stack, pairingId, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
