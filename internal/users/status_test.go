@@ -2,10 +2,11 @@ package users_test
 
 import (
 	"fmt"
+	"testing"
+
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/users"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var (
@@ -182,7 +183,7 @@ func Test_VerifyUserUpdate(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := users.VerifyUserUpdate(*test.patchRequest, *test.userInfo)
 			assert.Equal(test.expectedResult, result)
 		})

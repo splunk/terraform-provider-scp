@@ -2,10 +2,11 @@ package utils_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func Test_TestIsSliceEqual(t *testing.T) {
@@ -49,7 +50,7 @@ func Test_TestIsSliceEqual(t *testing.T) {
 	}
 	for i, test := range cases {
 		test := test // Capture
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("case %d", i), func(_ *testing.T) {
 			result := utils.IsSliceEqual(test.first, test.second)
 			assert.Equal(result, test.expectedResult)
 		})

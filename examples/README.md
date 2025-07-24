@@ -9,3 +9,4 @@ This directory contains examples that are mostly used for documentation, but can
 * **resources/ip_allowlists.tf** example file for the IP allowlist resource 
 * **resources/users.tf** example file for the user resource 
 * **resources/roles.tf** example file for the role resource 
+* **resources/ipv6_allowlists.tf** example file for the role IPv6 allowlist resource 

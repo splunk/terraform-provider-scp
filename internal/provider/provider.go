@@ -3,17 +3,18 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/splunk/terraform-provider-scp/internal/hec"
-	"github.com/splunk/terraform-provider-scp/internal/roles"
-	"github.com/splunk/terraform-provider-scp/internal/users"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/hec"
 	"github.com/splunk/terraform-provider-scp/internal/indexes"
 	"github.com/splunk/terraform-provider-scp/internal/ipallowlists"
+	"github.com/splunk/terraform-provider-scp/internal/ipv6allowlists"
+	"github.com/splunk/terraform-provider-scp/internal/roles"
+	"github.com/splunk/terraform-provider-scp/internal/users"
 )
 
 func init() {
@@ -51,11 +52,12 @@ func New(version string) func() *schema.Provider {
 // Returns a map of splunk resources for configuration
 func providerResources() map[string]*schema.Resource {
 	return map[string]*schema.Resource{
-		indexes.ResourceKey:      indexes.ResourceIndex(),
-		hec.ResourceKey:          hec.ResourceHecToken(),
-		ipallowlists.ResourceKey: ipallowlists.ResourceIPAllowlist(),
-		roles.ResourceKey:        roles.ResourceRole(),
-		users.ResourceKey:        users.ResourceUser(),
+		indexes.ResourceKey:        indexes.ResourceIndex(),
+		hec.ResourceKey:            hec.ResourceHecToken(),
+		ipallowlists.ResourceKey:   ipallowlists.ResourceIPAllowlist(),
+		ipv6allowlists.ResourceKey: ipv6allowlists.ResourceIPv6Allowlist(),
+		roles.ResourceKey:          roles.ResourceRole(),
+		users.ResourceKey:          users.ResourceUser(),
 	}
 }
 
@@ -143,7 +145,7 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 
 		token, err = client.GenerateToken(ctx, tmpClient, username.(string), stackName.(string))
 		if err != nil {
-			return nil, diag.Errorf(fmt.Sprintf("error while generating token: %v", err))
+			return nil, diag.Errorf("%s", fmt.Sprintf("error while generating token: %v", err))
 		}
 	}
 

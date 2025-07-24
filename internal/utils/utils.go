@@ -1,18 +1,19 @@
 package utils
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"sort"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // IsSliceEqual function compares two lists ignoring the element order
-func IsSliceEqual(in_a *[]string, in_b *[]string) bool {
+func IsSliceEqual(inA *[]string, inB *[]string) bool {
 	var a, b []string
-	if in_a != nil {
-		a = *in_a
+	if inA != nil {
+		a = *inA
 	}
-	if in_b != nil {
-		b = *in_b
+	if inB != nil {
+		b = *inB
 	}
 
 	if len(a) != len(b) {
@@ -40,4 +41,15 @@ func ParseSetValues(values interface{}) []string {
 		parsedData = append(parsedData, elementValue.(string))
 	}
 	return parsedData
+}
+
+func GetSubnetsFromSet(subnets *schema.Set) []string {
+	result := make([]string, 0)
+	if subnets == nil {
+		return result
+	}
+	for _, subnet := range subnets.List() {
+		result = append(result, subnet.(string))
+	}
+	return result
 }

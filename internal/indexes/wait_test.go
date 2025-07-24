@@ -6,15 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"testing"
+
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/acs/v2/mocks"
 	idx "github.com/splunk/terraform-provider-scp/internal/indexes"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"io"
-	"net/http"
-	"testing"
 )
 
 const (
@@ -40,7 +41,7 @@ func Test_WaitIndexCreate(t *testing.T) {
 		SearchableDays: &mockSearchableDays,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("CreateIndex", mock.Anything, v2.Stack(mockStack), mockCreateBody).Return(nil, errors.New("some error")).Once()
 		err := idx.WaitIndexCreate(context.TODO(), client, mockStack, mockCreateBody)
 		assert.Error(t, err)
@@ -73,7 +74,7 @@ func Test_WaitIndexCreate(t *testing.T) {
 func Test_WaitIndexPoll(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(nil, errors.New("some error")).Once()
 		err := idx.WaitIndexPoll(context.TODO(), client, mockStack, mockIndexName, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 		assert.Error(t, err)
@@ -131,7 +132,7 @@ func Test_WaitIndexPoll(t *testing.T) {
 func Test_WaitIndexRead(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(nil, errors.New("some error")).Once()
 		index, err := idx.WaitIndexRead(context.TODO(), client, mockStack, mockIndexName)
 		assert.Error(t, err)
@@ -166,7 +167,7 @@ func Test_WaitIndexUpdate(t *testing.T) {
 		SearchableDays: &mockSearchableDays,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("PatchIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName), mockUpdateBody).Return(nil, errors.New("some error")).Once()
 		err := idx.WaitIndexUpdate(context.TODO(), client, mockStack, mockUpdateBody, mockIndexName)
 		assert.Error(t, err)
@@ -199,7 +200,7 @@ func Test_WaitVerifyIndexUpdate(t *testing.T) {
 		SplunkArchivalRetentionDays: nil,
 	}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("GetIndexInfo", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName)).Return(nil, errors.New("some error")).Once()
 		err := idx.WaitVerifyIndexUpdate(context.TODO(), client, mockStack, mockUpdateBody, mockIndexName)
 		assert.Error(t, err)
@@ -211,12 +212,13 @@ func Test_WaitVerifyIndexUpdate(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	var tmpMockSearchableDays int64
-	tmpMockSearchableDays = 50
+	tmpMockSearchableDays := int64(50)
 	mockIndexNotUpdated, _ := json.Marshal(v2.IndexResponse{
-		Datatype:                    mockDatatype,
-		MaxDataSizeMB:               uint64(mockMaxDataSizeMB),
-		Name:                        mockIndexName,
+		Datatype: mockDatatype,
+		// nolint
+		MaxDataSizeMB: uint64(mockMaxDataSizeMB),
+		Name:          mockIndexName,
+		// nolint
 		SearchableDays:              uint64(tmpMockSearchableDays),
 		SelfStorageBucketPath:       &mockSelfStorageBucketPath,
 		SplunkArchivalRetentionDays: nil,
@@ -251,7 +253,7 @@ func Test_WaitVerifyIndexUpdate(t *testing.T) {
 func Test_WaitIndexDelete(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
-	t.Run("with some client interface error", func(t *testing.T) {
+	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("DeleteIndex", mock.Anything, v2.Stack(mockStack), v2.Index(mockIndexName), v2.DeleteIndexJSONRequestBody{}).Return(nil, errors.New("some error")).Once()
 		err := idx.WaitIndexDelete(context.TODO(), client, mockStack, mockIndexName)
 		assert.Error(t, err)

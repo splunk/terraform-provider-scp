@@ -3,8 +3,6 @@ package indexes
 import (
 	"context"
 	"fmt"
-	"github.com/splunk/terraform-provider-scp/internal/status"
-	"github.com/splunk/terraform-provider-scp/internal/wait"
 	"net/http"
 	"strings"
 
@@ -14,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/client"
+	"github.com/splunk/terraform-provider-scp/internal/status"
+	"github.com/splunk/terraform-provider-scp/internal/wait"
 )
 
 const (
@@ -109,16 +109,16 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, m interfac
 	err := WaitIndexCreate(ctx, acsClient, stack, createIndexRequest)
 	if err != nil {
 		if stateErr := err.(*resource.UnexpectedStateError); stateErr.State == http.StatusText(http.StatusConflict) {
-			return diag.Errorf(fmt.Sprintf("Index (%s) already exists, use a different name to create index or use terraform import to bring current index under terraform management", indexRequest.Name))
+			return diag.Errorf("Index (%s) already exists, use a different name to create index or use terraform import to bring current index under terraform management", indexRequest.Name)
 		}
 
-		return diag.Errorf(fmt.Sprintf("Error submitting request for index (%s) to be created: %s", indexRequest.Name, err))
+		return diag.Errorf("Error submitting request for index (%s) to be created: %s", indexRequest.Name, err)
 	}
 
 	// Poll Index until GET returns 200 to confirm index creation
 	err = WaitIndexPoll(ctx, acsClient, stack, indexRequest.Name, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be created: %s", indexRequest.Name, err))
+		return diag.Errorf("Error waiting for index (%s) to be created: %s", indexRequest.Name, err)
 	}
 
 	// Set ID of index resource to indicate index has been created
@@ -146,9 +146,8 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, m interface{
 			tflog.Info(ctx, fmt.Sprintf("Removing index from state. Not Found error while reading index (%s): %s.", indexName, err))
 			d.SetId("")
 			return nil //if we return an error here, the set id will not take effect and state will be preserved
-		} else {
-			return diag.Errorf(fmt.Sprintf("Error reading index (%s): %s", indexName, err))
 		}
+		return diag.Errorf("Error reading index (%s): %s", indexName, err)
 	}
 
 	if err := d.Set("name", d.Id()); err != nil {
@@ -197,13 +196,13 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, m interfac
 
 	err := WaitIndexUpdate(ctx, acsClient, stack, patchRequest, indexName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error submitting request for index (%s) to be updated: %s", indexName, err))
+		return diag.Errorf("Error submitting request for index (%s) to be updated: %s", indexName, err)
 	}
 
 	//Poll until fields have been confirmed updated
 	err = WaitVerifyIndexUpdate(ctx, acsClient, stack, patchRequest, indexName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be updated: %s", indexName, err))
+		return diag.Errorf("Error waiting for index (%s) to be updated: %s", indexName, err)
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("updated index resource: %s\n", indexName))
@@ -220,13 +219,13 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, m interfac
 
 	err := WaitIndexDelete(ctx, acsClient, stack, indexName)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error deleting index (%s): %s", indexName, err))
+		return diag.Errorf("Error deleting index (%s): %s", indexName, err)
 	}
 
 	//Poll Index until GET returns 404 Not found - index has been deleted
 	err = WaitIndexPoll(ctx, acsClient, stack, indexName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 	if err != nil {
-		return diag.Errorf(fmt.Sprintf("Error waiting for index (%s) to be deleted: %s", indexName, err))
+		return diag.Errorf("Error waiting for index (%s) to be deleted: %s", indexName, err)
 	}
 
 	tflog.Info(ctx, fmt.Sprintf("deleted index resource: %s\n", indexName))

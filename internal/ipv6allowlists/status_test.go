@@ -1,4 +1,4 @@
-package ipallowlists_test
+package ipv6allowlists_test
 
 import (
 	"bytes"
@@ -45,7 +45,7 @@ func Test_ProcessResponse(t *testing.T) {
 	})
 
 	/* test nil resp returns error */
-	t.Run("verify returns correct output on success resource change", func(_ *testing.T) {
+	t.Run("verify returns correct output on successful resource change", func(_ *testing.T) {
 		resp, statusText, err := ipallowlists.ProcessResponse(nil, ipallowlists.TargetStatusResourceChange, ipallowlists.PendingStatusCRUD)
 		assert.Nil(resp)
 		assert.Error(err)

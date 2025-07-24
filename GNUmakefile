@@ -1,6 +1,7 @@
 SHELL = /bin/bash
 
 OPENAPI_JSON_URL=https://admin.splunk.com/service/info/specs/v2/openapi.json
+GO_LINT_TIMEOUT="600s"
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -9,12 +10,23 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
-OS=$(shell uname | tr A-Z a-z)
+OS := $(shell go env GOOS)
+ARCH := $(shell go env GOARCH)
 
-ARCH=$(shell uname -m)
-ifeq ($(ARCH), x86_64)
-ARCH=amd64
-endif
+# GOLANGCI_LINT points to the marker file for the installed version.
+#
+# If GOLANGCI_LINT_VERSION is changed, the binary will be re-downloaded.
+# This controls the version of tools to install and use.
+GOLANGCI_LINT_VERSION ?= 2.1.6
+GOLANGCI_LINT := golangci-lint/$(GOLANGCI_LINT_VERSION)
+$(GOLANGCI_LINT):
+	@rm -rf golangci-lint
+	@mkdir -p golangci-lint
+	curl -sSL https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_LINT_VERSION)/golangci-lint-$(GOLANGCI_LINT_VERSION)-$(OS)-$(ARCH).tar.gz \
+	| tar -xz -C golangci-lint --strip-components=1
+	@rm -rf $(dir $(GOLANGCI_LINT))
+	@mkdir -p $(dir $(GOLANGCI_LINT))
+	@touch $(GOLANGCI_LINT)
 
 ####################################
 #	Building binary
@@ -50,6 +62,11 @@ test: go-junit-report
 #run acceptance tests
 testacc:
 	TF_ACC=1 go test -run "^TestAcc" ./... -v
+
+#run linting
+lint: $(GOLANGCI_LINT)
+	@golangci-lint version
+	golangci-lint --timeout=${GO_LINT_TIMEOUT} --build-tags "integration"  run ./...
 
 ###################################
 #	Install dependency

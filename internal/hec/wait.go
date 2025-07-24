@@ -2,13 +2,13 @@ package hec
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/splunk/terraform-provider-scp/acs/v2"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
-	"net/http"
 )
 
 var (
@@ -19,12 +19,12 @@ var (
 )
 
 const (
-	DeploymentTaskFailedErr = "Retry of deployment task %s resulted in failed status upon completion"
+	DeploymentTaskFailedErr = "retry of deployment task %s resulted in failed status upon completion"
 )
 
 // WaitHecCreate Handles retry logic for POST requests for create lifecycle function
 func WaitHecCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, createHecRequest v2.CreateHECJSONRequestBody) error {
-	waitHecCreateAccepted := wait.GenerateWriteStateChangeConf(HecStatusCreate(ctx, acsClient, stack, createHecRequest))
+	waitHecCreateAccepted := wait.GenerateWriteStateChangeConf(StatusCreate(ctx, acsClient, stack, createHecRequest))
 
 	rawResp, err := waitHecCreateAccepted.WaitForStateContext(ctx)
 	if err != nil {
@@ -43,7 +43,7 @@ func WaitHecCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 
 // WaitHecPoll Handles retry logic for polling after POST and DELETE requests for create/delete lifecycle functions
 func WaitHecPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string, targetStatus []string, pendingStatus []string) error {
-	waitHecState := wait.GenerateReadStateChangeConf(pendingStatus, targetStatus, HecStatusPoll(ctx, acsClient, stack, hecName, targetStatus, pendingStatus))
+	waitHecState := wait.GenerateReadStateChangeConf(pendingStatus, targetStatus, StatusPoll(ctx, acsClient, stack, hecName, targetStatus, pendingStatus))
 
 	_, err := waitHecState.WaitForStateContext(ctx)
 	return err
@@ -51,7 +51,7 @@ func WaitHecPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 
 // WaitHecRead Handles retry logic for GET requests for the read lifecycle function
 func WaitHecRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) (*v2.HecSpec, error) {
-	waitHecRead := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, wait.TargetStatusResourceExists, HecStatusRead(ctx, acsClient, stack, hecName))
+	waitHecRead := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, wait.TargetStatusResourceExists, StatusRead(ctx, acsClient, stack, hecName))
 
 	output, err := waitHecRead.WaitForStateContext(ctx)
 
@@ -66,7 +66,7 @@ func WaitHecRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 
 // WaitHecUpdate Handles retry logic for PATCH requests for the update lifecycle function
 func WaitHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) error {
-	waitHecUpdateAccepted := wait.GenerateWriteStateChangeConf(HecStatusUpdate(ctx, acsClient, stack, patchRequest, hecName))
+	waitHecUpdateAccepted := wait.GenerateWriteStateChangeConf(StatusUpdate(ctx, acsClient, stack, patchRequest, hecName))
 
 	rawResp, err := waitHecUpdateAccepted.WaitForStateContext(ctx)
 	if err != nil {
@@ -86,7 +86,7 @@ func WaitHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 // WaitVerifyHecUpdate Handles retry logic for GET request for the update lifecycle function to verify that the fields in the
 // Hec response match those of the patch request
 func WaitVerifyHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, patchRequest v2.PatchHECJSONRequestBody, hecName string) error {
-	waitHecUpdateComplete := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, []string{status.UpdatedStatus}, HecStatusVerifyUpdate(ctx, acsClient, stack, patchRequest, hecName))
+	waitHecUpdateComplete := wait.GenerateReadStateChangeConf(wait.PendingStatusCRUD, []string{status.UpdatedStatus}, StatusVerifyUpdate(ctx, acsClient, stack, patchRequest, hecName))
 
 	_, err := waitHecUpdateComplete.WaitForStateContext(ctx)
 	if err != nil {
@@ -99,7 +99,7 @@ func WaitVerifyHecUpdate(ctx context.Context, acsClient v2.ClientInterface, stac
 
 // WaitHecDelete Handles retry logic for DELETE requests for the delete lifecycle function
 func WaitHecDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, hecName string) error {
-	WaitHecDeleteAccepted := wait.GenerateWriteStateChangeConf(HecStatusDelete(ctx, acsClient, stack, hecName))
+	WaitHecDeleteAccepted := wait.GenerateWriteStateChangeConf(StatusDelete(ctx, acsClient, stack, hecName))
 
 	rawResp, err := WaitHecDeleteAccepted.WaitForStateContext(ctx)
 	if err != nil {
@@ -116,22 +116,22 @@ func WaitHecDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 }
 
 // WaitHecRetryTaskComplete Handles retry logic for GET requests to check status of deployment task until completion
-func WaitHecRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentId string) error {
-	pendingState := []string{http.StatusText(429), taskStatusRunning, taskStatusNew}
+func WaitHecRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, deploymentID string) error {
+	pendingState := []string{http.StatusText(http.StatusTooManyRequests), taskStatusRunning, taskStatusNew}
 	targetState := []string{taskStatusFailed, taskStatusSucceeded}
-	WaitRetryTaskComplete := wait.GenerateReadStateChangeConf(pendingState, targetState, HecStatusRetryTaskComplete(ctx, acsClient, stack, deploymentId))
+	WaitRetryTaskComplete := wait.GenerateReadStateChangeConf(pendingState, targetState, StatusRetryTaskComplete(ctx, acsClient, stack, deploymentID))
 
 	output, err := WaitRetryTaskComplete.WaitForStateContext(ctx)
 	if err != nil {
-		tflog.Error(ctx, fmt.Sprintf("Error checking status of deployment (%s): %s", deploymentId, err))
+		tflog.Error(ctx, fmt.Sprintf("Error checking status of deployment (%s): %s", deploymentID, err))
 		return err
 	}
 
 	deploymentInfo := output.(*v2.DeploymentInfo)
 
 	if *deploymentInfo.Status == taskStatusFailed {
-		tflog.Error(ctx, fmt.Sprintf("Retry of deployment task %s failed", deploymentId))
-		return errors.New(fmt.Sprintf(DeploymentTaskFailedErr, deploymentId))
+		tflog.Error(ctx, fmt.Sprintf("retry of deployment task %s failed", deploymentID))
+		return fmt.Errorf(DeploymentTaskFailedErr, deploymentID)
 	}
 	return nil
 }
@@ -139,7 +139,7 @@ func WaitHecRetryTaskComplete(ctx context.Context, acsClient v2.ClientInterface,
 // WaitHecRetryTask Handles retry logic for retrying a previously failed deployment task.
 func WaitHecRetryTask(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack) error {
 	// Retry last deployment task
-	waitRetryTaskAccepted := wait.GenerateWriteStateChangeConf(HecStatusRetryTask(ctx, acsClient, stack))
+	waitRetryTaskAccepted := wait.GenerateWriteStateChangeConf(StatusRetryTask(ctx, acsClient, stack))
 	output, err := waitRetryTaskAccepted.WaitForStateContext(ctx)
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("Error retrying previous task: %s \n", err))

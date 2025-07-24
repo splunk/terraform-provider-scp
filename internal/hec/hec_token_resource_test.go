@@ -59,8 +59,8 @@ func TestAcc_SplunkCloudHEC_Create(t *testing.T) {
 	}
 
 	//Generate configs
-	basicConfig := testAccInstanceConfig_Basic(hecCreateBasicResource)
-	testCreateResourceExists := testAccInstanceConfig_Basic(hecCreateBasicResource) + testAccInstanceConfig_TestCreateResourceExists(hecCreateBasicResource)
+	basicConfig := testAccInstanceConfigBasic(hecCreateBasicResource)
+	testCreateResourceExists := testAccInstanceConfigBasic(hecCreateBasicResource) + testAccInstanceConfigTestCreateResourceExists(hecCreateBasicResource)
 
 	nameResourceTest := []resource.TestStep{
 		// Create default hec resource
@@ -75,7 +75,7 @@ func TestAcc_SplunkCloudHEC_Create(t *testing.T) {
 		},
 		// Create New resource with all fields
 		{
-			Config: testAccInstanceConfig_TestValidCreate(hecCreateNewResource),
+			Config: testAccInstanceConfigTestValidCreate(hecCreateNewResource),
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr(newResourceName, "name", hecCreateNewResource),
 				resource.TestCheckResourceAttr(newResourceName, hec.DefaultIndexKey, defaultIndex),
@@ -97,12 +97,12 @@ func TestAcc_SplunkCloudHEC_Create(t *testing.T) {
 		},
 		// Expect Error from ACS API
 		{
-			Config:      testAccInstanceConfig_TestAcsErr(hecCreateInvalidResource),
+			Config:      testAccInstanceConfigTestAcsErr(hecCreateInvalidResource),
 			ExpectError: acsErr,
 		},
 		// Expect Error from TF is default index is empty string
 		{
-			Config:      testAccInstanceConfig_TestEmptyDefaultIndex(hecCreateEmptyDefaultIndex),
+			Config:      testAccInstanceConfigTestEmptyDefaultIndex(hecCreateEmptyDefaultIndex),
 			ExpectError: emptyDefaultIndexErr,
 		},
 	}
@@ -129,12 +129,12 @@ func TestAcc_SplunkCloudHEC_Update(t *testing.T) {
 	nameResourceTest := []resource.TestStep{
 		// Create default index resource
 		{
-			Config: testAccInstanceConfig_Basic(hecTestUpdateResource),
+			Config: testAccInstanceConfigBasic(hecTestUpdateResource),
 			Check:  resource.TestCheckResourceAttr(resourceName, "name", hecTestUpdateResource),
 		},
 		// Update all fields (excluding token and defaultSource)
 		{
-			Config: testAccInstanceConfig_TestValidUpdate(hecTestUpdateResource),
+			Config: testAccInstanceConfigTestValidUpdate(hecTestUpdateResource),
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr(resourceName, "name", hecTestUpdateResource),
 				resource.TestCheckResourceAttr(resourceName, hec.DefaultIndexKey, defaultIndex),
@@ -147,7 +147,7 @@ func TestAcc_SplunkCloudHEC_Update(t *testing.T) {
 		},
 		// Expect Error from ACS API
 		{
-			Config:      testAccInstanceConfig_TestAcsErr(hecTestUpdateResource),
+			Config:      testAccInstanceConfigTestAcsErr(hecTestUpdateResource),
 			ExpectError: acsErr,
 		},
 	}
@@ -192,11 +192,11 @@ func testAccCheckHecDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccInstanceConfig_Basic(name string) string {
+func testAccInstanceConfigBasic(name string) string {
 	return fmt.Sprintf("resource \"scp_hec_tokens\" %[1]q {name = %[1]q}", name)
 }
 
-func testAccInstanceConfig_TestValidCreate(name string) string {
+func testAccInstanceConfigTestValidCreate(name string) string {
 	allowedIndexesJSON, _ := json.Marshal(allowedIndexes)
 	return fmt.Sprintf(`
 		resource "scp_hec_tokens" %[1]q {
@@ -211,7 +211,7 @@ func testAccInstanceConfig_TestValidCreate(name string) string {
 }
 
 // Test error on user attempts to create resource that already exists
-func testAccInstanceConfig_TestCreateResourceExists(name string) string {
+func testAccInstanceConfigTestCreateResourceExists(name string) string {
 	return fmt.Sprintf(`
 		resource "scp_hec_tokens" "hec-2" {
 			name = %[1]q
@@ -220,7 +220,7 @@ func testAccInstanceConfig_TestCreateResourceExists(name string) string {
 }
 
 // Test error returned from ACS API
-func testAccInstanceConfig_TestAcsErr(name string) string {
+func testAccInstanceConfigTestAcsErr(name string) string {
 	allowedIndexesJSON, _ := json.Marshal(allowedIndexes)
 	return fmt.Sprintf(`
 		resource "scp_hec_tokens" %[1]q {
@@ -235,7 +235,7 @@ func testAccInstanceConfig_TestAcsErr(name string) string {
 }
 
 // Test error when users does not specify default indexes when allowed indexes is set
-func testAccInstanceConfig_TestEmptyDefaultIndex(hecName string) string {
+func testAccInstanceConfigTestEmptyDefaultIndex(hecName string) string {
 	allowedIndexesJSON, _ := json.Marshal(allowedIndexes)
 	return fmt.Sprintf(`
 	resource "scp_hec_tokens" %[1]q {
@@ -249,7 +249,7 @@ func testAccInstanceConfig_TestEmptyDefaultIndex(hecName string) string {
 }
 
 // Updates all fields except token, default_source, and default_host
-func testAccInstanceConfig_TestValidUpdate(name string) string {
+func testAccInstanceConfigTestValidUpdate(name string) string {
 	allowedIndexesJSON, _ := json.Marshal(allowedIndexes)
 	return fmt.Sprintf(`
 		resource "scp_hec_tokens" %[1]q {
@@ -264,7 +264,8 @@ func testAccInstanceConfig_TestValidUpdate(name string) string {
 }
 
 // Test error on user attempts to update Token attribute
-func testAccInstanceConfig_TestInvalidTokenUpdate(name string) string {
+// nolint
+func testAccInstanceConfigTestInvalidTokenUpdate(name string) string {
 	return fmt.Sprintf(`
 		resource "scp_hec_tokens" %[1]q {
 		name = %[1]q

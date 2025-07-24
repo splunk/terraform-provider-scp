@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
+	"net/http"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/utils"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
-	"io"
-	"net/http"
 )
 
 var GeneralRetryableStatusCodes = map[int]string{
-	http.StatusTooManyRequests: http.StatusText(429),
+	http.StatusTooManyRequests: http.StatusText(http.StatusTooManyRequests),
 }
 
 // RoleStatusCreate returns StateRefreshFunc that makes POST request and checks if response is accepted
@@ -112,10 +113,9 @@ func RoleStatusVerifyUpdate(ctx context.Context, acsClient v2.ClientInterface, s
 		if updateComplete {
 			statusText = status.UpdatedStatus
 			return &roleResponse, statusText, nil
-		} else {
-			statusText = http.StatusText(resp.StatusCode)
-			return nil, statusText, nil
 		}
+		statusText = http.StatusText(resp.StatusCode)
+		return nil, statusText, nil
 	}
 }
 

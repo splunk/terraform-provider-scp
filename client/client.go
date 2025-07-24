@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/splunk/terraform-provider-scp/acs/v2"
 	"io"
 	"net/http"
+
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 )
 
 const TokenType = "ephemeral"
@@ -19,8 +20,9 @@ type ACSProvider struct {
 }
 
 type LoginResult struct {
-	User      string `json:"user"`
-	Audience  string `json:"audience"`
+	User     string `json:"user"`
+	Audience string `json:"audience"`
+	// nolint
 	Id        string `json:"id"`
 	Token     string `json:"token"`
 	Status    string `json:"status"`
@@ -47,14 +49,14 @@ func GetClient(server string, token string, version string) (v2.ClientInterface,
 }
 
 func CommonRequestEditors(token string, version string) []v2.RequestEditorFn {
-	addUserAgent := func(ctx context.Context, req *http.Request) error {
+	addUserAgent := func(_ context.Context, req *http.Request) error {
 		return AddUserAgent(req, version)
 	}
 	return []v2.RequestEditorFn{AddBearerAuth(token), addUserAgent}
 }
 
 func AddBearerAuth(token string) v2.RequestEditorFn {
-	return func(ctx context.Context, req *http.Request) error {
+	return func(_ context.Context, req *http.Request) error {
 		if token == "" {
 			return &errInvalidAuth{field: "token"}
 		}
@@ -80,14 +82,14 @@ func GetClientBasicAuth(server string, username string, password string, version
 }
 
 func CommonRequestEditorsBasicAuth(username string, password string, version string) []v2.RequestEditorFn {
-	addUserAgent := func(ctx context.Context, req *http.Request) error {
+	addUserAgent := func(_ context.Context, req *http.Request) error {
 		return AddUserAgent(req, version)
 	}
 	return []v2.RequestEditorFn{AddBasicAuth(username, password), addUserAgent}
 }
 
 func AddBasicAuth(username string, password string) v2.RequestEditorFn {
-	return func(ctx context.Context, req *http.Request) error {
+	return func(_ context.Context, req *http.Request) error {
 		if username == "" {
 			return &errInvalidAuth{field: "username"}
 		}

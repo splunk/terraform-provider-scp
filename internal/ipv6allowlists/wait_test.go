@@ -1,4 +1,4 @@
-package ipallowlists_test
+package ipv6allowlists_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/acs/v2/mocks"
-	"github.com/splunk/terraform-provider-scp/internal/ipallowlists"
+	"github.com/splunk/terraform-provider-scp/internal/ipv6allowlists"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -16,7 +16,7 @@ import (
 var (
 	mockStack   = "mock-stack"
 	mockFeature = "s2s"
-	mockSubnets = []string{"1.1.1.1/32", "1.1.1.2/32"}
+	mockSubnets = []string{"2001:db8::1/64", "2001:db8::3/64"}
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 	serverErrorCodes = []int{501, 500, 503}
 )
 
-func Test_WaitIPAllowlistCreate(t *testing.T) {
+func Test_WaitIPv6AllowlistCreate(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	mockCreateBody := v2.AddSubnetsJSONRequestBody{
@@ -32,29 +32,29 @@ func Test_WaitIPAllowlistCreate(t *testing.T) {
 	}
 
 	t.Run("with some client interface error", func(_ *testing.T) {
-		client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(nil, errors.New("some error")).Once()
-		err := ipallowlists.WaitIPAllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		client.On("CreateAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(nil, errors.New("some error")).Once()
+		err := ipv6allowlists.WaitIPv6AllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.Error(t, err)
 	})
 
 	t.Run("with http response 200", func(t *testing.T) {
-		client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(successRespOk, nil).Once()
-		err := ipallowlists.WaitIPAllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		client.On("CreateAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(successRespOk, nil).Once()
+		err := ipv6allowlists.WaitIPv6AllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.NoError(t, err)
 	})
 
 	t.Run("with retryable response 429", func(t *testing.T) {
-		client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(rateLimitResp, nil).Once()
-		client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(successRespOk, nil).Once()
-		err := ipallowlists.WaitIPAllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		client.On("CreateAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(rateLimitResp, nil).Once()
+		client.On("CreateAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(successRespOk, nil).Once()
+		err := ipv6allowlists.WaitIPv6AllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.NoError(t, err)
 	})
 
 	t.Run("with unexpected http responses", func(t *testing.T) {
 		for _, statusCode := range append(clientErrorCodes, serverErrorCodes...) {
 			t.Run(fmt.Sprintf("with unexpected status %v", statusCode), func(t *testing.T) {
-				client.On("AddSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(getIPAllowlistResponse(statusCode), nil).Once()
-				err := ipallowlists.WaitIPAllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+				client.On("CreateAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockCreateBody).Return(getIPAllowlistResponse(statusCode), nil).Once()
+				err := ipv6allowlists.WaitIPv6AllowlistCreate(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 				assert.Error(t, err)
 			})
 		}
@@ -65,15 +65,15 @@ func Test_WaitIPAllowlistRead(t *testing.T) {
 	client := &mocks.ClientInterface{}
 
 	t.Run("with some client interface error", func(t *testing.T) {
-		client.On("DescribeAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(nil, errors.New("some error")).Once()
-		subnets, err := ipallowlists.WaitIPAllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
+		client.On("ReadAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(nil, errors.New("some error")).Once()
+		subnets, err := ipv6allowlists.WaitIPv6AllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
 		assert.Error(t, err)
 		assert.Nil(t, subnets)
 	})
 
 	t.Run("with http 200 response", func(t *testing.T) {
-		client.On("DescribeAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(getIPAllowlistResponse(200), nil).Once()
-		subnets, err := ipallowlists.WaitIPAllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
+		client.On("ReadAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(getIPAllowlistResponse(200), nil).Once()
+		subnets, err := ipv6allowlists.WaitIPv6AllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
 		assert.NoError(t, err)
 		assert.NotNil(t, subnets)
 		assert.ElementsMatch(t, mockSubnets, subnets)
@@ -82,8 +82,8 @@ func Test_WaitIPAllowlistRead(t *testing.T) {
 	t.Run("with unexpected response", func(t *testing.T) {
 		for _, statusCode := range append(clientErrorCodes, serverErrorCodes...) {
 			t.Run(fmt.Sprintf("with unexpected response %v", statusCode), func(t *testing.T) {
-				client.On("DescribeAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(getIPAllowlistResponse(statusCode), nil).Once()
-				subnets, err := ipallowlists.WaitIPAllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
+				client.On("ReadAllowlist", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature)).Return(getIPAllowlistResponse(statusCode), nil).Once()
+				subnets, err := ipv6allowlists.WaitIPv6AllowlistRead(context.TODO(), client, v2.Stack(mockStack), mockFeature)
 				assert.Error(t, err)
 				assert.Nil(t, subnets)
 			})
@@ -100,20 +100,20 @@ func Test_WaitIPAllowlistDelete(t *testing.T) {
 
 	t.Run("with some client interface error", func(_ *testing.T) {
 		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(nil, errors.New("some error")).Once()
-		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		err := ipv6allowlists.WaitIPv6AllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.Error(t, err)
 	})
 
 	t.Run("with http response 200", func(t *testing.T) {
 		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(successRespOk, nil).Once()
-		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		err := ipv6allowlists.WaitIPv6AllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.NoError(t, err)
 	})
 
 	t.Run("with retryable response 429", func(t *testing.T) {
 		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(rateLimitResp, nil).Once()
 		client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(successRespOk, nil).Once()
-		err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+		err := ipv6allowlists.WaitIPv6AllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 		assert.NoError(t, err)
 	})
 
@@ -121,7 +121,7 @@ func Test_WaitIPAllowlistDelete(t *testing.T) {
 		for _, statusCode := range append(clientErrorCodes, serverErrorCodes...) {
 			t.Run(fmt.Sprintf("with unexpected status %v", statusCode), func(t *testing.T) {
 				client.On("DeleteSubnets", mock.Anything, v2.Stack(mockStack), v2.Feature(mockFeature), mockDeleteBody).Return(getIPAllowlistResponse(statusCode), nil).Once()
-				err := ipallowlists.WaitIPAllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
+				err := ipv6allowlists.WaitIPv6AllowlistDelete(context.TODO(), client, v2.Stack(mockStack), v2.Feature(mockFeature), mockSubnets)
 				assert.Error(t, err)
 			})
 		}
