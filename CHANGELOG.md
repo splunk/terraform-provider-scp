@@ -25,3 +25,6 @@
 * Adds Support For IPv6 Allowlist Resource
 * Go updated to 1.24
 * Bugs and Vulnerability Fixes
+
+## Version v1.2.3
+* Updates goreleaser flags
