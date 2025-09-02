@@ -1,0 +1,26 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: terraform-provider-scp
+    title: Terraform Provider for SCP
+    functionalDomain:
+        - Cloud Control Plane
+    description: Terraform Provider for Splunk Cloud Platform
+    annotations:
+        backstage.io/source-location: url:https://cd.splunkdev.com/saas/terraform-provider-scp
+        backstage.io/view-url: https://cd.splunkdev.com/saas/terraform-provider-scp/-/blob/main/.service-manifests/terraform-provider-scp-component.yaml
+        backstage.io/edit-url: https://cd.splunkdev.com/saas/terraform-provider-scp/-/edit/main/.service-manifests/terraform-provider-scp-component.yaml
+        splunk.com/slack-url: http://go/replace/me
+        splunk.com/issue-tracker-url: https://splunk.atlassian.net/jira/software/c/projects/ACS
+    links:
+        - title: This is a template title
+          url: http://example.com
+        - title: PRD
+          url: https://docs.google.com/document/d/1ypS-1sGTBTZ5_pGqXQbSJiNHBq1wT6-BXja4Ds5vKPA/edit
+        - title: ERD
+          url: https://docs.google.com/document/d/1oJEnkTee9ySah1S4ZZBPZfkLKbKDagD_y0OoT7VNzKY/edit
+
+spec:
+    lifecycle: production
+    type: product
+    owner: group:sg-pfm-admin-config-service
