@@ -1,0 +1,24 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+    name: terraform-provider-scp
+    title: terraform-provider-scp
+    functionalDomain: []
+    description: 'Splunk Terraform Provider to manage config resources for Splunk Cloud Platform '
+    annotations:
+        backstage.io/source-location: url:https://cd.splunkdev.com/saas/terraform-provider-scp
+        splunk.com/issue-tracker-url: http://go/replace/me
+        splunk.com/slack-url: http://go/replace/me
+        backstage.io/view-url: https://cd.splunkdev.com/saas/terraform-provider-scp/-/blob/main/.service-manifests/terraform-provider-scp-component.yaml
+        backstage.io/edit-url: https://cd.splunkdev.com/saas/terraform-provider-scp/-/edit/main/.service-manifests/terraform-provider-scp-component.yaml
+    links:
+        - title: Overview
+          url: http://go/replace/me
+        - title: ERD/RFC
+          url: http://go/replace/me
+        - title: Ops Runbook
+          url: http://go/replace/me
+spec:
+    lifecycle: production
+    type: product
+    owner: group:EO-NEEDS-OWNER
