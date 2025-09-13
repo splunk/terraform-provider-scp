@@ -16,7 +16,7 @@ const (
 
 var (
 	PendingStatusCRUD          = []string{http.StatusText(http.StatusTooManyRequests), http.StatusText(http.StatusFailedDependency)}
-	PendingStatusVerifyCreated = []string{http.StatusText(http.StatusFailedDependency), http.StatusText(http.StatusTooManyRequests)}
+	PendingStatusVerifyCreated = []string{http.StatusText(http.StatusFailedDependency), http.StatusText(http.StatusTooManyRequests), http.StatusText(http.StatusNotFound)}
 	PendingStatusVerifyDeleted = []string{http.StatusText(200), http.StatusText(http.StatusTooManyRequests)}
 
 	TargetStatusResourceChange  = []string{http.StatusText(http.StatusAccepted)}
