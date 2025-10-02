@@ -28,3 +28,6 @@
 
 ## Version v1.2.3
 * Updates goreleaser flags
+
+## Version v1.2.4
+* Hec tokens bug fix to prevent unintended over-writes
