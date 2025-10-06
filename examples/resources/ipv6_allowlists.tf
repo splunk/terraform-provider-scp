@@ -1,6 +1,6 @@
 resource "scp_ip_allowlists" "hec" {
   feature = "hec"
-  subnets = ["fe84:1ee:fe23:4637::/64", "2001:db8::ff00:42:8329/128"
+  subnets = ["fe84:1ee:fe23:4637::/64", "2001:db8::ff00:42:8329/128"]
 }
 
 resource "scp_ipallowlists" "search-api" {
