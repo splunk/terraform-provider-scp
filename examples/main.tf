@@ -24,6 +24,8 @@ provider "scp" {
 
 resource "scp_hec_tokens" "example-hec-token" {
   name        = "example-hec-token"
+  allowed_indexes = ["main"]
+  default_index = ["main"]
 }
 
 # resource "scp_indexes" "index-1" {
