@@ -7,7 +7,7 @@ terraform {
 }
 
 provider "scp" {
-  stack = "example-stack"
+  stack = "prd-p-bkcfs"
   server = "https://admin.splunk.com"
   /*****
   To auth to stack use:
