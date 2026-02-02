@@ -22,38 +22,42 @@ provider "scp" {
    *****/
 }
 
-resource "scp_indexes" "index-1" {
-  name = "index-1"
+resource "scp_hec_tokens" "example-hec-token" {
+  name        = "example-hec-token"
 }
 
-resource "scp_indexes" "index-2" {
-  name = "index-2"
-  searchable_days = 90
-}
+# resource "scp_indexes" "index-1" {
+#   name = "index-1"
+# }
 
-resource "scp_indexes" "index-3" {
-  name             = "index-3"
-  searchable_days  = 90
-  max_data_size_mb = 512
-}
+# resource "scp_indexes" "index-2" {
+#   name = "index-2"
+#   searchable_days = 90
+# }
 
-resource "scp_indexes" "index-4" {
-  name             = "index-4"
-  searchable_days  = 90
-  max_data_size_mb = 512
-}
+# resource "scp_indexes" "index-3" {
+#   name             = "index-3"
+#   searchable_days  = 90
+#   max_data_size_mb = 512
+# }
 
-data "scp_indexes" "main" {
-  name = "main"
-}
+# resource "scp_indexes" "index-4" {
+#   name             = "index-4"
+#   searchable_days  = 90
+#   max_data_size_mb = 512
+# }
 
-data "scp_indexes" "history" {
-  name = "history"
-}
+# data "scp_indexes" "main" {
+#   name = "main"
+# }
 
-resource "scp_private_app" "test_0" {
-  name = "test_0"
-  filename  = "../examples/test_app.tar.gz"
-  acs_legal_ack = "Y"
-  pre_vetted = true
-}
+# data "scp_indexes" "history" {
+#   name = "history"
+# }
+
+# resource "scp_private_app" "test_0" {
+#   name = "test_0"
+#   filename  = "../examples/test_app.tar.gz"
+#   acs_legal_ack = "Y"
+#   pre_vetted = true
+# }
