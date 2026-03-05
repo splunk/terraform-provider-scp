@@ -7,6 +7,10 @@ At this point in time, this provider supports the following resources for Splunk
 - Users
 - Roles
 - IPv6 Allowlist
+- Private App*
+- Splunkbase App*
+
+Resources marked with * are beta resources for now.
 
 ```
 Copyright 2023 Splunk Inc. 
