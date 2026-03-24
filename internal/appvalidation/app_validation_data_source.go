@@ -44,6 +44,9 @@ func DataSourcePrivateAppValidation() *schema.Resource {
 
 func dataSourcePrivateAppValidationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	acsProvider := m.(client.ACSProvider)
+	if acsProvider.AppInspectClient == nil {
+		return diag.Errorf("splunk_username and splunk_password must be configured in the provider to use app validation")
+	}
 	appInspectClient := *acsProvider.AppInspectClient
 
 	requestID := d.Get("request_id").(string)

@@ -49,6 +49,20 @@ https://www.mozilla.org/en-US/MPL/2.0/
 - Run ```terraform apply``` to apply configurations
 - NOTE: running `terraform init` with `dev_overrides` is not necessary and may result in unexpected errors. 
 
+## Provider Authentication
+
+### Stack Authentication (required)
+All resources require authentication to the Splunk Cloud Platform via ACS. Provide one of:
+- `auth_token` (or `STACK_TOKEN` env var) — a JWT for your stack
+- `username` / `password` (or `STACK_USERNAME` / `STACK_PASSWORD` env vars) — stack deployment credentials (an ephemeral token will be generated)
+
+### Splunkbase / AppInspect Authentication (optional)
+The `splunk_username` and `splunk_password` parameters (or `SPLUNK_USERNAME` / `SPLUNK_PASSWORD` env vars) are your **splunk.com account** credentials. They are only needed when:
+- Installing or managing **Splunkbase apps** (`scp_splunkbase_app`)
+- Installing **private apps** with pre-vetting (`scp_private_app`)
+
+These credentials authenticate against `splunkbase.splunk.com` (Splunkbase session) and `api.splunk.com` (AppInspect login token). If you are only managing indexes, HEC tokens, IP allowlists, users, or roles, you do not need to set these parameters.
+
 ## Examples/Documentation 
 
 Refer to the `/examples` directory for example .tf files for each resource and provider configuration. 

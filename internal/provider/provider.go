@@ -116,7 +116,9 @@ func providerSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Optional:    true,
 			DefaultFunc: schema.EnvDefaultFunc("SPLUNK_USERNAME", nil),
-			Description: "Splunk username, will be used to log in to splunkbase. May also be provided via SPLUNK_USERNAME environment variable.",
+			Description: "Splunk.com account username. Required only when managing Splunkbase apps, private apps with " +
+				"pre-vetting (AppInspect), or the `scp_app_validation` data source. Used to authenticate with " +
+				"splunkbase.splunk.com and api.splunk.com. May also be provided via SPLUNK_USERNAME environment variable.",
 		},
 		"splunk_password": {
 			Type:         schema.TypeString,
@@ -124,7 +126,9 @@ func providerSchema() map[string]*schema.Schema {
 			Sensitive:    true,
 			RequiredWith: []string{"splunk_username"},
 			DefaultFunc:  schema.EnvDefaultFunc("SPLUNK_PASSWORD", nil),
-			Description:  "Splunk user password, will be used to log in to splunkbase. May also be provided via SPLUNK_PASSWORD environment variable.",
+			Description: "Splunk.com account password. Required when `splunk_username` is set. Used to authenticate with " +
+				"splunkbase.splunk.com and api.splunk.com for Splunkbase app installs and AppInspect validation. " +
+				"May also be provided via SPLUNK_PASSWORD environment variable.",
 		},
 	}
 }
@@ -171,6 +175,7 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 	splunkbasePassword, splunkPasswordOk := d.GetOk("splunk_password")
 
 	var splunkbaseSession string
+	var splunkLoginToken string
 	var err error
 
 	if splunkUsernameOk && splunkPasswordOk {
@@ -178,18 +183,20 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
+
+		splunkLoginToken, err = client.GetSplunkLoginToken(splunkbaseUsername.(string), splunkbasePassword.(string))
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		appInspectClient := appinspect.GetAppInspectClient(splunkLoginToken)
+		provider.AppInspectClient = &appInspectClient
 	}
-	splunkLoginToken, err := client.GetSplunkLoginToken(splunkbaseUsername.(string), splunkbasePassword.(string))
-	if err != nil {
-		return nil, diag.FromErr(err)
-	}
+
 	acsClient, err := client.GetClient(server.(string), token.(string), version, splunkbaseSession, splunkLoginToken)
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
-
-	appInspectClient := appinspect.GetAppInspectClient(splunkLoginToken)
-	provider.AppInspectClient = &appInspectClient
 
 	provider.Client = &acsClient
 	return provider, nil
