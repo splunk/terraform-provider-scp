@@ -134,7 +134,7 @@ func providerSchema() map[string]*schema.Schema {
 }
 
 func configure(ctx context.Context, d *schema.ResourceData, version string) (interface{}, diag.Diagnostics) {
-	provider := client.ACSProvider{}
+	provider := &client.ACSProvider{}
 	stackName, ok := d.GetOk("stack")
 	if !ok || stackName == "" {
 		return nil, diag.Errorf("missing Splunk Deployment stack name")
@@ -146,26 +146,32 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 		return nil, diag.Errorf("missing server url")
 	}
 
+	var stackUsername string
+	var stackPassword string
+	if stackUsernameVal, ok := d.GetOk("username"); ok && stackUsernameVal != "" {
+		stackUsername = stackUsernameVal.(string)
+	}
+	if stackPasswordVal, ok := d.GetOk("password"); ok && stackPasswordVal != "" {
+		stackPassword = stackPasswordVal.(string)
+	}
+
 	token, ok := d.GetOk("auth_token")
 	if !ok || token == "" {
 		tflog.Info(ctx, "No token provided, using stack credentials to generate ephemeral token.")
 
-		username, ok := d.GetOk("username")
-		if !ok || username == "" {
+		if stackUsername == "" {
 			return nil, diag.Errorf("missing Splunk Deployment username, must provide token or stack username/password")
 		}
-
-		password, ok := d.GetOk("password")
-		if !ok || password == "" {
+		if stackPassword == "" {
 			return nil, diag.Errorf("missing Splunk Deployment password")
 		}
 
-		tmpClient, err := client.GetClientBasicAuth(server.(string), username.(string), password.(string), version)
+		tmpClient, err := client.GetClientBasicAuth(server.(string), stackUsername, stackPassword, version)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 
-		token, err = client.GenerateToken(ctx, tmpClient, username.(string), stackName.(string))
+		token, err = client.GenerateToken(ctx, tmpClient, stackUsername, stackName.(string))
 		if err != nil {
 			return nil, diag.Errorf("%s", fmt.Sprintf("error while generating token: %v", err))
 		}
@@ -197,6 +203,8 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}
+
+	provider.Configure(server.(string), version, stackUsername, stackPassword, token.(string), splunkbaseSession, splunkLoginToken)
 
 	provider.Client = &acsClient
 	return provider, nil

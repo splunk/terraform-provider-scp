@@ -148,7 +148,7 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -195,7 +195,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	tflog.Info(ctx, "resourceUserRead invoked")
 	// use the meta value to retrieve your client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -249,7 +249,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -288,7 +288,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 

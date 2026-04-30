@@ -81,9 +81,9 @@ func describeAppResource(id string) (*http.Response, error) {
 		return nil, fmt.Errorf("%+v", diags)
 	}
 
-	acsProvider := providerNew.Meta().(client.ACSProvider).Client
+	acsProvider := providerNew.Meta().(*client.ACSProvider).Client
 	acsClient := *acsProvider
-	stack := providerNew.Meta().(client.ACSProvider).Stack
+	stack := providerNew.Meta().(*client.ACSProvider).Stack
 
 	resp, err := acsClient.DescribeAppVictoria(context.TODO(), stack, v2.AppName(id))
 	if err != nil {

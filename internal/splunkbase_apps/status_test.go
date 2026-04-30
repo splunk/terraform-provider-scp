@@ -84,7 +84,7 @@ func TestHandlesSuccessfulAppDeletionResponse(t *testing.T) {
 
 	client.On("UninstallAppVictoria", ctx, stack, appName, &v2.UninstallAppVictoriaParams{}).Return(generateResponse(http.StatusNotFound), nil).Once()
 
-	state, status, err := AppStatusDelete(ctx, client, stack, appName)()
+	state, status, err := AppStatusDelete(ctx, client, stack, appName, v2.UninstallAppVictoriaParams{})()
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusText(http.StatusNotFound), status)
 	assert.NotNil(t, state)
@@ -97,7 +97,7 @@ func TestHandlesFailedAppDeletionResponse(t *testing.T) {
 	appName := v2.AppName("mock-app")
 
 	client.On("UninstallAppVictoria", ctx, stack, appName, &v2.UninstallAppVictoriaParams{}).Return(generateResponse(http.StatusInternalServerError), errors.New("server error")).Once()
-	state, status, err := AppStatusDelete(ctx, client, stack, appName)()
+	state, status, err := AppStatusDelete(ctx, client, stack, appName, v2.UninstallAppVictoriaParams{})()
 	assert.Error(t, err)
 	assert.Equal(t, http.StatusText(http.StatusInternalServerError), status)
 	assert.Nil(t, state)

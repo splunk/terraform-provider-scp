@@ -112,7 +112,7 @@ func ResourceHecToken() *schema.Resource {
 
 func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -179,7 +179,7 @@ func resourceHecTokenCreate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -238,7 +238,7 @@ func resourceHecTokenRead(ctx context.Context, d *schema.ResourceData, m interfa
 
 func resourceHecTokenUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -281,7 +281,7 @@ func resourceHecTokenUpdate(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceHecTokenDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 

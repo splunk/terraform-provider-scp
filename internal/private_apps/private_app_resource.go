@@ -72,7 +72,7 @@ func ResourcePrivateApp() *schema.Resource {
 func resourcePrivateAppCreate(ctx context.Context, resourceData *schema.ResourceData, m interface{}) diag.Diagnostics {
 	tflog.Info(ctx, "[BETA] Private Apps: This feature is in beta release.")
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 	splunkbase := false
@@ -155,7 +155,7 @@ func resourcePrivateAppCreate(ctx context.Context, resourceData *schema.Resource
 }
 
 func resourcePrivateAppRead(ctx context.Context, resourceData *schema.ResourceData, m interface{}) diag.Diagnostics {
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -174,7 +174,7 @@ func resourcePrivateAppRead(ctx context.Context, resourceData *schema.ResourceDa
 
 func resourcePrivateAppDelete(ctx context.Context, resourceData *schema.ResourceData, m interface{}) diag.Diagnostics {
 	tflog.Info(ctx, "[BETA] Private Apps: This feature is in beta release.")
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 

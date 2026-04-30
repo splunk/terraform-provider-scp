@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 )
 
 // IsSliceEqual function compares two lists ignoring the element order
@@ -52,4 +55,12 @@ func GetSubnetsFromSet(subnets *schema.Set) []string {
 		result = append(result, subnet.(string))
 	}
 	return result
+}
+
+func TargetStackName(target string, stack v2.Stack) (v2.Stack, error) {
+	trimmed := strings.TrimSpace(target)
+	if trimmed == "" {
+		return "", fmt.Errorf("target must not be empty")
+	}
+	return v2.Stack(fmt.Sprintf("%s.%s", trimmed, string(stack))), nil
 }
