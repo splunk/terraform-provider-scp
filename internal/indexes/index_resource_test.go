@@ -94,6 +94,29 @@ func TestAcc_SplunkCloudIndex_DatasizeField(t *testing.T) {
 	})
 }
 
+func TestAcc_SplunkCloudIndex_DatasizeFieldResetToZero(t *testing.T) {
+	// Test creating an Index resource with max_data_size_mb set and then resetting it to 0.
+	datasizeFieldResource := resource.UniqueId()
+
+	datasizeFieldTest := []resource.TestStep{
+		{
+			Config: testAccInstanceConfigMaxDataSize(datasizeFieldResource, "1000"),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(datasizeFieldResource), "max_data_size_mb", "1000"),
+		},
+		{
+			Config: testAccInstanceConfigMaxDataSize(datasizeFieldResource, "0"),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(datasizeFieldResource), "max_data_size_mb", "0"),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckIndexDestroy,
+		Steps:             datasizeFieldTest,
+	})
+}
+
 func TestAcc_SplunkCloudIndex_ArchivalField(t *testing.T) {
 	// Test creating an Index resource and then updating splunk_archival_retention_days field
 	archivalFieldResource := resource.UniqueId()
@@ -147,6 +170,10 @@ func TestAcc_SplunkCloudIndex_ArchivalField(t *testing.T) {
 
 func testAccInstanceConfigBasic(name string) string {
 	return fmt.Sprintf("resource \"scp_indexes\" %[1]q {name = %[1]q}", name)
+}
+
+func testAccInstanceConfigMaxDataSize(name, maxDataSizeMb string) string {
+	return fmt.Sprintf("resource \"scp_indexes\" %[1]q {\nname = %[1]q \nmax_data_size_mb = %[2]q \n}", name, maxDataSizeMb)
 }
 
 func testAccInstanceConfigAllFields(name, searchableDays, maxDataSizeMb, retentionDays, datatype string) string {
