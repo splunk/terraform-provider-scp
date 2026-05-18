@@ -99,7 +99,7 @@ resource "scp_splunkbase_app" "targeted_example" {
 
 ## Timeouts
 Defaults are currently set to:
-- `create` -  20m
-- `read` -  20m
-- `update` -  20m
-- `delete` -  40m
+- `create` -  30m
+- `read` -  30m
+- `update` -  30m
+- `delete` -  60m

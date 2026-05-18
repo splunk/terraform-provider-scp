@@ -30,8 +30,8 @@ func splunkbaseAppSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
 			Description: "The name of the Splunkbase app",
+			Required:    true,
 		},
 		splunkbaseID: {
 			Type:        schema.TypeString,
@@ -59,11 +59,6 @@ func splunkbaseAppSchema() map[string]*schema.Schema {
 	}
 }
 
-type targetFields struct {
-	client v2.ClientInterface
-	stack  v2.Stack
-}
-
 func ResourceSplunkbaseApp() *schema.Resource {
 	return &schema.Resource{
 		// This description is used by the documentation generator and the language server.
@@ -81,6 +76,7 @@ func ResourceSplunkbaseApp() *schema.Resource {
 
 func resourceSplunkbaseAppCreate(ctx context.Context, resourceData *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
+	tflog.Info(ctx, "[BETA] Splunkbase Apps: This feature is in beta release.")
 	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
@@ -115,58 +111,31 @@ func resourceSplunkbaseAppCreate(ctx context.Context, resourceData *schema.Resou
 	}
 
 	data.Set("splunkbaseID", splunkbaseIDParam.(string))
-
 	encoded := data.Encode()
-	targetsRaw, targetsOk := resourceData.GetOk("targets")
 
-	targetInstalls := []targetFields{}
+	targetsRaw, targetsOk := resourceData.GetOk("targets")
+	targetInstalls := []client.TargetFields{}
 	if targetsOk && len(targetsRaw.(*schema.Set).List()) > 0 {
 		targets := targetsRaw.(*schema.Set).List()
 
 		for _, targetRaw := range targets {
-			targetStack, err := utils.TargetStackName(targetRaw.(string), stack)
+			targetInstall, err := client.GetTargetInstall(ctx, targetRaw.(string), stack, acsProvider)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-
-			targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			targetInstalls = append(targetInstalls, targetFields{
-				client: targetClient,
-				stack:  targetStack,
-			})
+			targetInstalls = append(targetInstalls, targetInstall)
 		}
 		localScope := "local"
 		installParams.Scope = &localScope
 	} else {
-		targetInstalls = append(targetInstalls, targetFields{
-			client: acsClient,
-			stack:  stack,
+		targetInstalls = append(targetInstalls, client.TargetFields{
+			Client: acsClient,
+			Stack:  stack,
 		})
 	}
 
 	for _, targetInstall := range targetInstalls {
-		body := strings.NewReader(encoded)
-		err := resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-			err := WaitAppCreate(ctx, targetInstall.client, targetInstall.stack, installParams, body)
-			if err != nil {
-				if errors.IsConflictError(err.Err) {
-					return resource.NonRetryableError(err.Err)
-				}
-				if strings.Contains(err.Err.Error(), "503") {
-					return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %v", err.Err))
-				}
-				if err.Retryable {
-					return resource.RetryableError(fmt.Errorf("retryable error occurred: %v", err.Err))
-				}
-				return resource.NonRetryableError(err.Err)
-			}
-			return nil
-		})
-
+		err := installApp(ctx, targetInstall, resourceData.Get("name").(string), ACSLicensingAck, encoded, installParams.Scope)
 		if err != nil {
 			if errors.IsConflictError(err) {
 				tflog.Info(ctx, "App (%s) already exists, if you want to update it, change app's version")
@@ -174,24 +143,6 @@ func resourceSplunkbaseAppCreate(ctx context.Context, resourceData *schema.Resou
 			} else {
 				return diag.Errorf("Error submitting request for app to be created. %v", err)
 			}
-		}
-
-		err = resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-			tflog.Info(ctx, "[BETA] Splunkbase Apps: This feature is in beta release.")
-			err := WaitAppPoll(ctx, targetInstall.client, targetInstall.stack, resourceData.Get("name").(string), wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
-			if err != nil {
-				if strings.Contains(err.Error(), "503") {
-					return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
-				}
-				if strings.Contains(err.Error(), "404") {
-					return resource.RetryableError(fmt.Errorf("received 404 error, retrying: %w", err))
-				}
-				return resource.NonRetryableError(fmt.Errorf("error waiting for app (%s) to be created: %s", resourceData.Get("name").(string), err))
-			}
-			return nil
-		})
-		if err != nil {
-			return diag.Errorf("Error waiting for app (%s) to be created: %s", resourceData.Get("name").(string), err)
 		}
 	}
 	resourceData.SetId(resourceData.Get("name").(string))
@@ -203,38 +154,28 @@ func resourceSplunkbaseAppRead(ctx context.Context, resourceData *schema.Resourc
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
-	appName := resourceData.Id()
-
+	targetReads := []client.TargetFields{}
 	targetsRaw, targetsOk := resourceData.GetOk("targets")
-	targetReads := []targetFields{}
 	if targetsOk && len(targetsRaw.(*schema.Set).List()) > 0 {
 		targets := targetsRaw.(*schema.Set).List()
 		for _, targetRaw := range targets {
-			targetStack, err := utils.TargetStackName(targetRaw.(string), stack)
+			targetRead, err := client.GetTargetInstall(ctx, targetRaw.(string), stack, acsProvider)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-
-			targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			targetReads = append(targetReads, targetFields{
-				client: targetClient,
-				stack:  targetStack,
-			})
+			targetReads = append(targetReads, targetRead)
 		}
 	} else {
-		targetReads = append(targetReads, targetFields{
-			client: acsClient,
-			stack:  stack,
+		targetReads = append(targetReads, client.TargetFields{
+			Client: acsClient,
+			Stack:  stack,
 		})
 	}
 
+	appName := resourceData.Id()
 	for _, targetRead := range targetReads {
 		err := resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-			_, err := WaitAppRead(ctx, targetRead.client, targetRead.stack, appName)
+			_, err := WaitAppRead(ctx, targetRead.Client, targetRead.Stack, appName)
 			if err != nil {
 				if stateErr, ok := err.(*resource.UnexpectedStateError); ok && strings.Contains(stateErr.LastError.Error(), "404-app-not-found") {
 					return resource.NonRetryableError(err)
@@ -265,6 +206,8 @@ func resourceSplunkbaseAppRead(ctx context.Context, resourceData *schema.Resourc
 }
 
 func resourceSplunkbaseAppDelete(ctx context.Context, resourceData *schema.ResourceData, m interface{}) diag.Diagnostics {
+	tflog.Info(ctx, "[BETA] Splunkbase Apps: This feature is in beta release.")
+
 	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
@@ -274,41 +217,31 @@ func resourceSplunkbaseAppDelete(ctx context.Context, resourceData *schema.Resou
 	unlock := lockManager.LockAppOperation(ctx, stack, "delete")
 	defer unlock()
 
-	appName := resourceData.Id()
 	uninstallParams := v2.UninstallAppVictoriaParams{}
-
 	targetsRaw, targetsOk := resourceData.GetOk("targets")
-	targetDeletes := []targetFields{}
+	targetDeletes := []client.TargetFields{}
 	if targetsOk && len(targetsRaw.(*schema.Set).List()) > 0 {
 		targets := targetsRaw.(*schema.Set).List()
 		for _, targetRaw := range targets {
-			targetStack, err := utils.TargetStackName(targetRaw.(string), stack)
+			targetDelete, err := client.GetTargetInstall(ctx, targetRaw.(string), stack, acsProvider)
 			if err != nil {
 				return diag.FromErr(err)
 			}
-
-			targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			targetDeletes = append(targetDeletes, targetFields{
-				client: targetClient,
-				stack:  targetStack,
-			})
+			targetDeletes = append(targetDeletes, targetDelete)
 		}
 		localScope := "local"
 		uninstallParams.Scope = &localScope
 	} else {
-		targetDeletes = append(targetDeletes, targetFields{
-			client: acsClient,
-			stack:  stack,
+		targetDeletes = append(targetDeletes, client.TargetFields{
+			Client: acsClient,
+			Stack:  stack,
 		})
 	}
 
+	appName := resourceData.Id()
 	for _, targetDelete := range targetDeletes {
 		retryErr := resource.RetryContext(ctx, 2*RetryTimeout, func() *resource.RetryError {
-			err := WaitAppDelete(ctx, targetDelete.client, targetDelete.stack, appName, uninstallParams)
+			err := WaitAppDelete(ctx, targetDelete.Client, targetDelete.Stack, appName, uninstallParams)
 			if err != nil {
 				if strings.Contains(err.Error(), "503") {
 					return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
@@ -322,8 +255,7 @@ func resourceSplunkbaseAppDelete(ctx context.Context, resourceData *schema.Resou
 		}
 
 		retryErr = resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-			tflog.Info(ctx, "[BETA] Splunkbase Apps: This feature is in beta release.")
-			err := WaitAppPoll(ctx, targetDelete.client, targetDelete.stack, appName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
+			err := WaitAppPoll(ctx, targetDelete.Client, targetDelete.Stack, appName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
 			if err != nil {
 				if strings.Contains(err.Error(), "503") {
 					return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
@@ -367,8 +299,8 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 	encoded := data.Encode()
 
 	oldTargetsRaw, newTargetsRaw := resourceData.GetChange("targets")
-	oldTargets := setToStrings(oldTargetsRaw)
-	newTargets := setToStrings(newTargetsRaw)
+	oldTargets := utils.SetToStrings(oldTargetsRaw)
+	newTargets := utils.SetToStrings(newTargetsRaw)
 	oldHasTargets := len(oldTargets) > 0
 	newHasTargets := len(newTargets) > 0
 	targetsChanged := resourceData.HasChange("targets")
@@ -378,7 +310,7 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 		// No targets -> targets: install on selected targets
 		tflog.Warn(ctx, "Targets were not previously tracked. Only installs will be performed. To remove from specific targets, migrate the resource with targets.")
 		for target := range newTargets {
-			targetInstall, err := getTargetInstall(ctx, target, stack, acsProvider)
+			targetInstall, err := client.GetTargetInstall(ctx, target, stack, acsProvider)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -386,41 +318,33 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 				return diag.Errorf("Error submitting request for app to be created. %v", err)
 			}
 		}
-		return nil
 	case targetsChanged && oldHasTargets && !newHasTargets:
 		// Targets -> no targets: install the app everywhere
-		body := strings.NewReader(encoded)
-		isSplunkbase := true
-		retryErr := resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-			err := WaitAppCreate(ctx, acsClient, stack, v2.InstallAppVictoriaParams{
-				Splunkbase:      &isSplunkbase,
-				ACSLicensingAck: &ACSLicensingAck,
-			}, body)
-			if err != nil {
-				if errors.IsConflictError(err.Err) {
-					return resource.NonRetryableError(err.Err)
-				}
-				if strings.Contains(err.Err.Error(), "503") {
-					return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %v", err.Err))
-				}
-				if err.Retryable {
-					return resource.RetryableError(fmt.Errorf("retryable error occurred: %v", err.Err))
-				}
-				return resource.NonRetryableError(err.Err)
-			}
-			return nil
-		})
-		if retryErr != nil {
-			return diag.Errorf("Error submitting request for app to be created. %v", retryErr)
+		if err := installApp(ctx, client.TargetFields{
+			Client: acsClient,
+			Stack:  stack,
+		}, appName, ACSLicensingAck, encoded, nil); err != nil {
+			return diag.Errorf("Error submitting request for app to be created. %v", err)
 		}
-		return nil
 	case targetsChanged && oldHasTargets && newHasTargets:
 		// Targets -> targets: remove deleted, add new
+		for target := range newTargets {
+			if _, ok := oldTargets[target]; ok {
+				continue
+			}
+			targetInstall, err := client.GetTargetInstall(ctx, target, stack, acsProvider)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			if err := installOnTarget(ctx, targetInstall, appName, ACSLicensingAck, encoded); err != nil {
+				return diag.Errorf("Error submitting request for app to be created. %v", err)
+			}
+		}
 		for target := range oldTargets {
 			if _, ok := newTargets[target]; ok {
 				continue
 			}
-			targetInstall, err := getTargetInstall(ctx, target, stack, acsProvider)
+			targetInstall, err := client.GetTargetInstall(ctx, target, stack, acsProvider)
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -428,18 +352,11 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 				return diag.Errorf("Error deleting app (%s): %s", appName, err)
 			}
 		}
-		for target := range newTargets {
-			if _, ok := oldTargets[target]; ok {
-				continue
-			}
-			targetInstall, err := getTargetInstall(ctx, target, stack, acsProvider)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if err := installOnTarget(ctx, targetInstall, appName, ACSLicensingAck, encoded); err != nil {
-				return diag.Errorf("Error submitting request for app to be created. %v", err)
-			}
-		}
+	}
+
+	versionChanged := resourceData.HasChange("version")
+	licensingChanged := resourceData.HasChange(AcsLicensingAck)
+	if !versionChanged && !licensingChanged {
 		return nil
 	}
 
@@ -451,16 +368,70 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 		if firstTarget == "" {
 			return diag.Errorf("targets must not contain empty entries")
 		}
-		targetInstall, err := getTargetInstall(ctx, firstTarget, stack, acsProvider)
+		targetInstall, err := client.GetTargetInstall(ctx, firstTarget, stack, acsProvider)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		updateClient = targetInstall.client
-		updateStack = targetInstall.stack
+		updateClient = targetInstall.Client
+		updateStack = targetInstall.Stack
 	}
 
-	body := strings.NewReader(encoded)
+	if err := updateApp(ctx, updateClient, updateStack, appName, installParams, encoded, resourceData.Get("version").(string), versionChanged); err != nil {
+		return diag.Errorf("Error updating app (%s): %s", appName, err)
+	}
+
+	return nil
+}
+
+func installApp(ctx context.Context, targetInstall client.TargetFields, appName string, ACSLicensingAck string, encoded string, scope *string) error {
+	isSplunkbase := true
+	createParams := v2.InstallAppVictoriaParams{
+		Splunkbase:      &isSplunkbase,
+		ACSLicensingAck: &ACSLicensingAck,
+		Scope:           scope,
+	}
+
 	retryErr := resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
+		body := strings.NewReader(encoded)
+		err := WaitAppCreate(ctx, targetInstall.Client, targetInstall.Stack, createParams, body)
+		if err != nil {
+			if errors.IsConflictError(err.Err) {
+				tflog.Info(ctx, "App already installed on target; skipping install and keeping Terraform state in sync",
+					map[string]any{"stack": string(targetInstall.Stack), "app": appName})
+				return nil
+			}
+			if strings.Contains(err.Err.Error(), "503") {
+				return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %v", err.Err))
+			}
+			if err.Retryable {
+				return resource.RetryableError(fmt.Errorf("retryable error occurred: %v", err.Err))
+			}
+			return resource.NonRetryableError(err.Err)
+		}
+		return nil
+	})
+	if retryErr != nil {
+		return retryErr
+	}
+
+	return resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
+		err := WaitAppPoll(ctx, targetInstall.Client, targetInstall.Stack, appName, wait.TargetStatusResourceExists, wait.PendingStatusVerifyCreated)
+		if err != nil {
+			if strings.Contains(err.Error(), "503") {
+				return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
+			}
+			if strings.Contains(err.Error(), "404") {
+				return resource.RetryableError(fmt.Errorf("received 404 error, retrying: %w", err))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error waiting for app (%s) to be created: %s", appName, err))
+		}
+		return nil
+	})
+}
+
+func updateApp(ctx context.Context, updateClient v2.ClientInterface, updateStack v2.Stack, appName string, installParams v2.PatchAppVictoriaParams, encoded string, expectedVersion string, verifyVersion bool) error {
+	retryErr := resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
+		body := strings.NewReader(encoded)
 		err := WaitAppUpdate(ctx, updateClient, updateStack, appName, installParams, body)
 		if err != nil {
 			if strings.Contains(err.Error(), "503") {
@@ -474,10 +445,14 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 		return nil
 	})
 	if retryErr != nil {
-		return diag.Errorf("Error updating app (%s): %s", appName, retryErr)
+		return retryErr
 	}
 
-	retryErr = resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
+	if !verifyVersion {
+		return nil
+	}
+
+	return resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
 		app, err := WaitAppRead(ctx, updateClient, updateStack, appName)
 		if err != nil {
 			if strings.Contains(err.Error(), "503") {
@@ -485,95 +460,48 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 			}
 			return resource.NonRetryableError(fmt.Errorf("error reading app (%s) after update: %s", appName, err))
 		}
-		if *app.Version != resourceData.Get("version").(string) {
-			return resource.RetryableError(fmt.Errorf("app version (%s) does not match the expected version (%s), retrying", *app.Version, resourceData.Get("version").(string)))
+		if app.Version == nil || *app.Version != expectedVersion {
+			actualVersion := "<nil>"
+			if app.Version != nil {
+				actualVersion = *app.Version
+			}
+			return resource.RetryableError(fmt.Errorf("app version (%s) does not match the expected version (%s), retrying", actualVersion, expectedVersion))
 		}
 		return nil
 	})
-	if retryErr != nil {
-		return diag.Errorf("Error verifying app (%s) after update: %s", appName, retryErr)
-	}
-
-	return nil
 }
 
-func setToStrings(raw interface{}) map[string]struct{} {
-	result := map[string]struct{}{}
-	if raw == nil {
-		return result
-	}
-	set, ok := raw.(*schema.Set)
-	if !ok {
-		return result
-	}
-	for _, value := range set.List() {
-		trimmed := strings.TrimSpace(value.(string))
-		if trimmed != "" {
-			result[trimmed] = struct{}{}
-		}
-	}
-	return result
-}
-
-func getTargetInstall(ctx context.Context, target string, stack v2.Stack, acsProvider *client.ACSProvider) (targetFields, error) {
-	targetStack, err := utils.TargetStackName(target, stack)
-	if err != nil {
-		return targetFields{}, err
-	}
-
-	targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
-	if err != nil {
-		return targetFields{}, err
-	}
-
-	return targetFields{
-		client: targetClient,
-		stack:  targetStack,
-	}, nil
-}
-
-func installOnTarget(ctx context.Context, targetInstall targetFields, appName string, ACSLicensingAck string, encoded string) error {
+func installOnTarget(ctx context.Context, targetInstall client.TargetFields, appName string, ACSLicensingAck string, encoded string) error {
 	localScope := "local"
-	isSplunkbase := true
-
-	createParams := v2.InstallAppVictoriaParams{
-		Splunkbase:      &isSplunkbase,
-		ACSLicensingAck: &ACSLicensingAck,
-		Scope:           &localScope,
-	}
-	body := strings.NewReader(encoded)
-	return resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
-		err := WaitAppCreate(ctx, targetInstall.client, targetInstall.stack, createParams, body)
-		if err != nil {
-			if errors.IsConflictError(err.Err) {
-				tflog.Info(ctx, "App already installed on target; skipping install and keeping Terraform state in sync",
-					map[string]any{"stack": string(targetInstall.stack), "app": appName})
-				return nil
-			}
-			if strings.Contains(err.Err.Error(), "503") {
-				return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %v", err.Err))
-			}
-			if err.Retryable {
-				return resource.RetryableError(fmt.Errorf("retryable error occurred: %v", err.Err))
-			}
-			return resource.NonRetryableError(err.Err)
-		}
-		return nil
-	})
+	return installApp(ctx, targetInstall, appName, ACSLicensingAck, encoded, &localScope)
 }
 
-func deleteOnTarget(ctx context.Context, targetInstall targetFields, appName string) error {
+func deleteOnTarget(ctx context.Context, targetInstall client.TargetFields, appName string) error {
 	localScope := "local"
 	deleteParams := v2.UninstallAppVictoriaParams{
 		Scope: &localScope,
 	}
-	return resource.RetryContext(ctx, 2*RetryTimeout, func() *resource.RetryError {
-		err := WaitAppDelete(ctx, targetInstall.client, targetInstall.stack, appName, deleteParams)
+	retryErr := resource.RetryContext(ctx, 2*RetryTimeout, func() *resource.RetryError {
+		err := WaitAppDelete(ctx, targetInstall.Client, targetInstall.Stack, appName, deleteParams)
 		if err != nil {
 			if strings.Contains(err.Error(), "503") {
 				return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
 			}
 			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if retryErr != nil {
+		return retryErr
+	}
+
+	return resource.RetryContext(ctx, RetryTimeout, func() *resource.RetryError {
+		err := WaitAppPoll(ctx, targetInstall.Client, targetInstall.Stack, appName, wait.TargetStatusResourceDeleted, wait.PendingStatusVerifyDeleted)
+		if err != nil {
+			if strings.Contains(err.Error(), "503") {
+				return resource.RetryableError(fmt.Errorf("received 503 error, retrying: %w", err))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error waiting for app (%s) to be deleted: %s", appName, err))
 		}
 		return nil
 	})

@@ -69,10 +69,11 @@ func TestHandlesSuccessfulAppDeletion(t *testing.T) {
 	ctx := context.TODO()
 	stack := v2.Stack("mock-stack")
 	appName := v2.AppName("mock-app")
+	params := v2.UninstallAppVictoriaParams{}
 
-	client.On("UninstallAppVictoria", ctx, stack, appName, &v2.UninstallAppVictoriaParams{}).Return(generateResponse(http.StatusNotFound), nil).Once()
+	client.On("UninstallAppVictoria", ctx, stack, appName, &params).Return(generateResponse(http.StatusNotFound), nil).Once()
 
-	state, status, err := privateapps.AppStatusDelete(ctx, client, stack, appName)()
+	state, status, err := privateapps.AppStatusDelete(ctx, client, stack, appName, params)()
 	assert.NoError(t, err)
 	assert.Equal(t, "Not Found", status)
 	assert.NotNil(t, state)

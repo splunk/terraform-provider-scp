@@ -57,6 +57,24 @@ func GetSubnetsFromSet(subnets *schema.Set) []string {
 	return result
 }
 
+func SetToStrings(raw interface{}) map[string]struct{} {
+	result := map[string]struct{}{}
+	if raw == nil {
+		return result
+	}
+	set, ok := raw.(*schema.Set)
+	if !ok {
+		return result
+	}
+	for _, value := range set.List() {
+		trimmed := strings.TrimSpace(value.(string))
+		if trimmed != "" {
+			result[trimmed] = struct{}{}
+		}
+	}
+	return result
+}
+
 func TargetStackName(target string, stack v2.Stack) (v2.Stack, error) {
 	trimmed := strings.TrimSpace(target)
 	if trimmed == "" {

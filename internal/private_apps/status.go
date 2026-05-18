@@ -88,9 +88,9 @@ func AppStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	}
 }
 
-func AppStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, appName v2.AppName) resource.StateRefreshFunc {
+func AppStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, appName v2.AppName, params v2.UninstallAppVictoriaParams) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := acsClient.UninstallAppVictoria(ctx, stack, appName, &v2.UninstallAppVictoriaParams{})
+		resp, err := acsClient.UninstallAppVictoria(ctx, stack, appName, &params)
 		if err != nil {
 			return nil, "", &resource.UnexpectedStateError{LastError: err}
 		}

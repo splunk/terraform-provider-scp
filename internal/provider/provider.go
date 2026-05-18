@@ -154,7 +154,6 @@ func configure(ctx context.Context, d *schema.ResourceData, version string) (int
 	if stackPasswordVal, ok := d.GetOk("password"); ok && stackPasswordVal != "" {
 		stackPassword = stackPasswordVal.(string)
 	}
-
 	token, ok := d.GetOk("auth_token")
 	if !ok || token == "" {
 		tflog.Info(ctx, "No token provided, using stack credentials to generate ephemeral token.")

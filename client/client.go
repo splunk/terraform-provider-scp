@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/appinspect"
+	"github.com/splunk/terraform-provider-scp/internal/utils"
 )
 
 const TokenType = "ephemeral"
@@ -46,6 +47,11 @@ type LoginResult struct {
 	Status    string `json:"status"`
 	ExpiresOn string `json:"expiresOn"`
 	NotBefore string `json:"notBefore"`
+}
+
+type TargetFields struct {
+	Client v2.ClientInterface
+	Stack  v2.Stack
 }
 
 type errInvalidAuth struct {
@@ -115,6 +121,23 @@ func (p *ACSProvider) ClientForTarget(ctx context.Context, stack v2.Stack) (v2.C
 	p.mu.Unlock()
 
 	return client, err
+}
+
+func GetTargetInstall(ctx context.Context, target string, stack v2.Stack, acsProvider *ACSProvider) (TargetFields, error) {
+	targetStack, err := utils.TargetStackName(target, stack)
+	if err != nil {
+		return TargetFields{}, err
+	}
+
+	targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
+	if err != nil {
+		return TargetFields{}, err
+	}
+
+	return TargetFields{
+		Client: targetClient,
+		Stack:  targetStack,
+	}, nil
 }
 
 func CommonRequestEditors(token string, version string, splunkbaseSession string, splunkLoginToken string) []v2.RequestEditorFn {
