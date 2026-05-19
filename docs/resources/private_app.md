@@ -90,7 +90,7 @@ resource "scp_private_app" "targeted_example" {
 - `name` (`String`): The name of the private app.
 - `filename` (`String`): The path to the private app file. The file must be a valid tar.gz archive.
 - `acs_legal_ack` (`String`): When you install a private app, you must specify this parameter to acknowledge acceptance of the Splunk legal disclaimer for app installation. See [Set up the ACS API](https://docs.splunk.com/Documentation/SplunkCloud/latest/Config/ACSusage#Set_up_the_ACS_API).
-- `pre_vetted` (`Boolean`): Whether the app has been pre-vetted by app inspect.
+- `pre_vetted` (`Boolean`): Whether the app has been pre-vetted by app inspect. This may be set directly if vetting is managed outside Terraform, or supplied from [`scp_app_validation`](../data-sources/app_validation.md).
 
 ### Optional
 

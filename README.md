@@ -61,7 +61,7 @@ The `splunk_username` and `splunk_password` parameters (or `SPLUNK_USERNAME` / `
 - Installing or managing **Splunkbase apps** (`scp_splunkbase_app`)
 - Installing **private apps** with pre-vetting (`scp_private_app`)
 
-These credentials authenticate against `splunkbase.splunk.com` (Splunkbase session) and `api.splunk.com` (AppInspect login token). If you are only managing indexes, HEC tokens, IP allowlists, users, or roles, you do not need to set these parameters.
+These credentials authenticate against `splunkbase.splunk.com` (Splunkbase session) and `api.splunk.com` (AppInspect login token). They are needed for Splunkbase app installs, private app pre-vetting workflows, and the `scp_app_validation` data source. If you are only managing indexes, HEC tokens, IP allowlists, users, or roles, you do not need to set these parameters.
 
 ## Examples/Documentation 
 
@@ -81,7 +81,6 @@ Currently, we are not accepting contributions, however, please use the
 
 - If using stack deployment credentials to authenticate, you may run into a rate limit error which prevents the token creation request 
   needed to authenticate. You will need to wait around 5 mins until the request is allowed or use the auth (stack) token to avoid this issue. 
-
 
 
 

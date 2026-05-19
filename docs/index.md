@@ -41,7 +41,7 @@ The following attributes must be set for the provider to work.
 - Either `auth_token` or `username`/`password` NOTE: IL2 environment will not be able to use `username`/`password` for authentication.
 
 ### Optional Attributes (Splunkbase / AppInspect)
-The following attributes are only required when managing Splunkbase apps (`scp_splunkbase_app`) or private apps with pre-vetting. They are **not** needed for managing indexes, HEC tokens, IP allowlists, users, roles, or other non-app resources.
+The following attributes are only required when managing Splunkbase apps (`scp_splunkbase_app`), private apps with pre-vetting (`scp_private_app`), or the app validation data source (`scp_app_validation`). They are **not** needed for managing indexes, HEC tokens, IP allowlists, users, roles, or other non-app resources.
 
 - `splunk_username` / `splunk_password`
 
@@ -54,7 +54,7 @@ These credentials authenticate against `splunkbase.splunk.com` (to obtain a Splu
 - `auth_token` (String, Sensitive) Authentication tokens, also known as JSON Web Tokens (JWT), are a method for authenticating Splunk platform users into the Splunk platform. May also be provided via STACK_TOKEN environment variable.
 - `username` (String) Splunk Cloud Platform deployment username. May also be provided via STACK_USERNAME environment variable.
 - `password` (String, Sensitive) Splunk Cloud Platform deployment password. May also be provided via STACK_PASSWORD environment variable.
-- `splunk_username` (String) Splunk.com account username. Required only when managing Splunkbase apps or private apps with pre-vetting (AppInspect). May also be provided via SPLUNK_USERNAME environment variable.
+- `splunk_username` (String) Splunk.com account username. Required only when managing Splunkbase apps, private apps with pre-vetting (AppInspect), or the `scp_app_validation` data source. May also be provided via SPLUNK_USERNAME environment variable.
 - `splunk_password` (String, Sensitive) Splunk.com account password. Required when `splunk_username` is set. May also be provided via SPLUNK_PASSWORD environment variable.
 
 ## Configuring Stack Deployment: Special Cases 
@@ -170,5 +170,3 @@ for general troubleshooting tips."}
 
 ### Logs
 Please see the following for more information on viewing logs for terraform provider. https://developer.hashicorp.com/terraform/plugin/log/managing
-
-

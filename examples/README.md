@@ -12,3 +12,4 @@ This directory contains examples that are mostly used for documentation, but can
 * **resources/ipv6_allowlists.tf** example file for the role IPv6 allowlist resource 
 * **resources/splunkbase_apps.tf** example file for the splunkbase app resource
 * **resources/private_apps.tf** example file for the private app resource
+* **resources/app_validation.tf** example file for the app validation data source
