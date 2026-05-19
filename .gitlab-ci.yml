@@ -77,6 +77,8 @@ test-acc:
     STACK_TOKEN: ${STG_STACK_TOKEN}
     STACK_USERNAME: ${STG_STACK_USERNAME}
     STACK_PASSWORD: ${STG_STACK_PASSWORD}
+    TAI_TARGET_1: "sh1"
+    TAI_TARGET_2: "sh2"
   script:
     - make testacc
   allow_failure: true

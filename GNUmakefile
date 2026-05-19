@@ -61,7 +61,7 @@ test: go-junit-report
 
 #run acceptance tests
 testacc:
-	TF_ACC=1 go test -run "^TestAcc" ./... -v
+	TF_ACC=1 go test -run "^TestAcc" ./... -v -timeout 25m
 
 #run linting
 lint: $(GOLANGCI_LINT)
