@@ -26,6 +26,8 @@ const (
 	RetryTimeout    = 30 * time.Minute
 )
 
+const missingSplunkbaseAppCredentialsMessage = "splunk_username and splunk_password must be configured in the provider to install Splunkbase apps. Configure provider attributes splunk_username and splunk_password, or set SPLUNK_USERNAME and SPLUNK_PASSWORD, so the provider can create the Splunkbase session required by ACS."
+
 func splunkbaseAppSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
@@ -78,6 +80,9 @@ func resourceSplunkbaseAppCreate(ctx context.Context, resourceData *schema.Resou
 	// use the meta value to retrieve client and stack from the provider configure method
 	tflog.Info(ctx, "[BETA] Splunkbase Apps: This feature is in beta release.")
 	acsProvider := m.(*client.ACSProvider)
+	if acsProvider.AppInspectClient == nil {
+		return diag.Errorf(missingSplunkbaseAppCredentialsMessage)
+	}
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 	splunkbase := true
@@ -308,6 +313,9 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 	switch {
 	case targetsChanged && !oldHasTargets && newHasTargets:
 		// No targets -> targets: install on selected targets
+		if acsProvider.AppInspectClient == nil {
+			return diag.Errorf(missingSplunkbaseAppCredentialsMessage)
+		}
 		tflog.Warn(ctx, "Targets were not previously tracked. Only installs will be performed. To remove from specific targets, migrate the resource with targets.")
 		for target := range newTargets {
 			targetInstall, err := client.GetTargetInstall(ctx, target, stack, acsProvider)
@@ -320,6 +328,9 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 		}
 	case targetsChanged && oldHasTargets && !newHasTargets:
 		// Targets -> no targets: install the app everywhere
+		if acsProvider.AppInspectClient == nil {
+			return diag.Errorf(missingSplunkbaseAppCredentialsMessage)
+		}
 		if err := installApp(ctx, client.TargetFields{
 			Client: acsClient,
 			Stack:  stack,
@@ -331,6 +342,9 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 		for target := range newTargets {
 			if _, ok := oldTargets[target]; ok {
 				continue
+			}
+			if acsProvider.AppInspectClient == nil {
+				return diag.Errorf(missingSplunkbaseAppCredentialsMessage)
 			}
 			targetInstall, err := client.GetTargetInstall(ctx, target, stack, acsProvider)
 			if err != nil {
@@ -358,6 +372,9 @@ func resourceSplunkbaseAppUpdate(ctx context.Context, resourceData *schema.Resou
 	licensingChanged := resourceData.HasChange(AcsLicensingAck)
 	if !versionChanged && !licensingChanged {
 		return nil
+	}
+	if acsProvider.AppInspectClient == nil {
+		return diag.Errorf(missingSplunkbaseAppCredentialsMessage)
 	}
 
 	updateClient := acsClient

@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	DataSourceKey = "scp_app_validation"
+	DataSourceKey                          = "scp_app_validation"
+	missingAppValidationCredentialsMessage = "splunk_username and splunk_password must be configured in the provider to use app validation. Configure provider attributes splunk_username and splunk_password, or set SPLUNK_USERNAME and SPLUNK_PASSWORD, so the provider can create the AppInspect login token required by the AppInspect API."
 )
 
 func privateAppValidationSchema() map[string]*schema.Schema {
@@ -45,7 +46,7 @@ func DataSourcePrivateAppValidation() *schema.Resource {
 func dataSourcePrivateAppValidationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	acsProvider := m.(*client.ACSProvider)
 	if acsProvider.AppInspectClient == nil {
-		return diag.Errorf("splunk_username and splunk_password must be configured in the provider to use app validation")
+		return diag.Errorf(missingAppValidationCredentialsMessage)
 	}
 	appInspectClient := *acsProvider.AppInspectClient
 

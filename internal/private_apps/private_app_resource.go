@@ -26,6 +26,8 @@ const (
 	RetryTimeout = 30 * time.Minute
 )
 
+const missingPrivateAppCredentialsMessage = "splunk_username and splunk_password must be configured in the provider to install private apps. Configure provider attributes splunk_username and splunk_password, or set SPLUNK_USERNAME and SPLUNK_PASSWORD, so the provider can create the Splunkbase session and AppInspect login token required by ACS."
+
 func privateAppSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
@@ -82,6 +84,12 @@ func resourcePrivateAppCreate(ctx context.Context, resourceData *schema.Resource
 	// use the meta value to retrieve client and stack from the provider configure method
 	tflog.Info(ctx, "[BETA] Private Apps: This feature is in beta release.")
 	acsProvider := m.(*client.ACSProvider)
+	if !resourceData.Get("pre_vetted").(bool) {
+		return diag.Errorf("App must be pre-vetted before it can be installed. Set 'pre_vetted' to true manually after vetting the app or use scp_app_validation data source to automate the process.")
+	}
+	if acsProvider.AppInspectClient == nil {
+		return diag.Errorf(missingPrivateAppCredentialsMessage)
+	}
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 	splunkbase := false
@@ -95,10 +103,6 @@ func resourcePrivateAppCreate(ctx context.Context, resourceData *schema.Resource
 	installParams := v2.InstallAppVictoriaParams{
 		Splunkbase:  &splunkbase,
 		ACSLegalAck: &ACSLegalAck,
-	}
-
-	if !resourceData.Get("pre_vetted").(bool) {
-		return diag.Errorf("App must be pre-vetted before it can be installed. Set 'pre_vetted' to true manually after vetting the app or use scp_app_validation data source to automate the process.")
 	}
 
 	targetsRaw, targetsOk := resourceData.GetOk("targets")
@@ -294,6 +298,9 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 	tflog.Info(ctx, "[BETA] Private Apps: This feature is in beta release.")
 	// use the meta value to retrieve client and stack from the provider configure method
 	acsProvider := m.(*client.ACSProvider)
+	if !resourceData.Get("pre_vetted").(bool) {
+		return diag.Errorf("App must be pre-vetted before it can be installed. Set 'pre_vetted' to true manually after vetting the app or use scp_app_validation data source to automate the process.")
+	}
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -301,10 +308,6 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 	lockManager := locks.GetAppLockManager()
 	unlock := lockManager.LockAppOperation(ctx, stack, "update")
 	defer unlock()
-
-	if !resourceData.Get("pre_vetted").(bool) {
-		return diag.Errorf("App must be pre-vetted before it can be installed. Set 'pre_vetted' to true manually after vetting the app or use scp_app_validation data source to automate the process.")
-	}
 
 	fileData, err := os.ReadFile(resourceData.Get("filename").(string))
 	if err != nil {
@@ -325,6 +328,9 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 	switch {
 	case targetsChanged && !oldHasTargets && newHasTargets:
 		// No targets -> targets: install on selected targets
+		if acsProvider.AppInspectClient == nil {
+			return diag.Errorf(missingPrivateAppCredentialsMessage)
+		}
 		tflog.Warn(ctx, "Targets were not previously tracked. Only installs will be performed. To remove from specific targets, migrate the resource with targets.")
 		for target := range newTargets {
 			targetInstall, targetErr := client.GetTargetInstall(ctx, target, stack, acsProvider)
@@ -343,6 +349,9 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 		}
 	case targetsChanged && oldHasTargets && !newHasTargets:
 		// Targets -> no targets: install the app everywhere
+		if acsProvider.AppInspectClient == nil {
+			return diag.Errorf(missingPrivateAppCredentialsMessage)
+		}
 		_, createErr := createPrivateApp(ctx, client.TargetFields{
 			Client: acsClient,
 			Stack:  stack,
@@ -358,6 +367,9 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 		for target := range newTargets {
 			if _, ok := oldTargets[target]; ok {
 				continue
+			}
+			if acsProvider.AppInspectClient == nil {
+				return diag.Errorf(missingPrivateAppCredentialsMessage)
 			}
 			targetInstall, targetErr := client.GetTargetInstall(ctx, target, stack, acsProvider)
 			if targetErr != nil {
@@ -389,6 +401,9 @@ func resourcePrivateAppUpdate(ctx context.Context, resourceData *schema.Resource
 
 	if updateVersion := resourceData.HasChange("filename"); !updateVersion {
 		return nil
+	}
+	if acsProvider.AppInspectClient == nil {
+		return diag.Errorf(missingPrivateAppCredentialsMessage)
 	}
 
 	updateTargetsRaw, updateTargetsOk := resourceData.GetOk("targets")
