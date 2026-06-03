@@ -22,7 +22,10 @@ func AppStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 		resp, err := acsClient.InstallAppVictoriaWithBody(ctx, stack, &params, contentType, body)
 
 		if err != nil {
-			return nil, "", &resource.UnexpectedStateError{LastError: err}
+			return nil, responseStatus(resp), &resource.UnexpectedStateError{LastError: err}
+		}
+		if err := validateResponse(resp); err != nil {
+			return nil, "", err
 		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
@@ -55,11 +58,30 @@ var GeneralRetryableStatusCodes = map[int]string{
 	http.StatusTooManyRequests: http.StatusText(http.StatusTooManyRequests),
 }
 
+func responseStatus(resp *http.Response) string {
+	if resp == nil {
+		return ""
+	}
+
+	return resp.Status
+}
+
+func validateResponse(resp *http.Response) error {
+	if resp == nil {
+		return &resource.UnexpectedStateError{LastError: errors.New("nil response")}
+	}
+
+	return nil
+}
+
 func AppStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, appName v2.AppName) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.DescribeAppVictoria(ctx, stack, appName)
 		if err != nil {
-			return nil, "", &resource.UnexpectedStateError{LastError: err}
+			return nil, responseStatus(resp), &resource.UnexpectedStateError{LastError: err}
+		}
+		if err := validateResponse(resp); err != nil {
+			return nil, "", err
 		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
@@ -92,7 +114,10 @@ func AppStatusDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.UninstallAppVictoria(ctx, stack, appName, &params)
 		if err != nil {
-			return nil, "", &resource.UnexpectedStateError{LastError: err}
+			return nil, responseStatus(resp), &resource.UnexpectedStateError{LastError: err}
+		}
+		if err := validateResponse(resp); err != nil {
+			return nil, "", err
 		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
@@ -108,7 +133,10 @@ func AppStatusUpdate(ctx context.Context, acsClient v2.ClientInterface, stack v2
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.PatchAppVictoriaWithBody(ctx, stack, appName, &params, "application/x-www-form-urlencoded", body)
 		if err != nil {
-			return nil, "", &resource.UnexpectedStateError{LastError: err}
+			return nil, responseStatus(resp), &resource.UnexpectedStateError{LastError: err}
+		}
+		if err := validateResponse(resp); err != nil {
+			return nil, "", err
 		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
@@ -124,7 +152,10 @@ func AppStatusPoll(ctx context.Context, acsClient v2.ClientInterface, stack v2.S
 	return func() (interface{}, string, error) {
 		resp, err := acsClient.DescribeAppVictoria(ctx, stack, appName)
 		if err != nil {
-			return nil, "", &resource.UnexpectedStateError{LastError: err}
+			return nil, responseStatus(resp), &resource.UnexpectedStateError{LastError: err}
+		}
+		if err := validateResponse(resp); err != nil {
+			return nil, "", err
 		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()

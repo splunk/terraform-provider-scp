@@ -51,6 +51,29 @@ func TestHandlesConflictDuringAppCreationResponse(t *testing.T) {
 	assert.Nil(t, state)
 }
 
+func TestHandlesNilResponseDuringAppCreationResponse(t *testing.T) {
+	client := &mocks.ClientInterface{}
+	ctx := context.TODO()
+	stack := v2.Stack("mock-stack")
+	params := v2.InstallAppVictoriaParams{}
+	body := io.NopCloser(strings.NewReader("{}"))
+
+	client.On("InstallAppVictoriaWithBody", ctx, stack, &params, "application/x-www-form-urlencoded", body).Return(nil, errors.New("network error")).Once()
+
+	var (
+		state  interface{}
+		status string
+		err    error
+	)
+
+	assert.NotPanics(t, func() {
+		state, status, err = AppStatusCreate(ctx, client, stack, params, body)()
+	})
+	assert.Error(t, err)
+	assert.Empty(t, status)
+	assert.Nil(t, state)
+}
+
 func TestHandlesSuccessfulAppReadResponse(t *testing.T) {
 	client := &mocks.ClientInterface{}
 	ctx := context.TODO()
@@ -100,6 +123,28 @@ func TestHandlesFailedAppDeletionResponse(t *testing.T) {
 	state, status, err := AppStatusDelete(ctx, client, stack, appName, v2.UninstallAppVictoriaParams{})()
 	assert.Error(t, err)
 	assert.Equal(t, http.StatusText(http.StatusInternalServerError), status)
+	assert.Nil(t, state)
+}
+
+func TestHandlesNilResponseDuringAppDeletionResponse(t *testing.T) {
+	client := &mocks.ClientInterface{}
+	ctx := context.TODO()
+	stack := v2.Stack("mock-stack")
+	appName := v2.AppName("mock-app")
+
+	client.On("UninstallAppVictoria", ctx, stack, appName, &v2.UninstallAppVictoriaParams{}).Return(nil, errors.New("network error")).Once()
+
+	var (
+		state  interface{}
+		status string
+		err    error
+	)
+
+	assert.NotPanics(t, func() {
+		state, status, err = AppStatusDelete(ctx, client, stack, appName, v2.UninstallAppVictoriaParams{})()
+	})
+	assert.Error(t, err)
+	assert.Empty(t, status)
 	assert.Nil(t, state)
 }
 
