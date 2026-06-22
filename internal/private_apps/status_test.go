@@ -52,6 +52,29 @@ func TestHandlesConflictDuringAppCreation(t *testing.T) {
 	assert.Nil(t, state)
 }
 
+func TestHandlesNilResponseDuringAppCreation(t *testing.T) {
+	client := &mocks.ClientInterface{}
+	ctx := context.TODO()
+	stack := v2.Stack("mock-stack")
+	params := v2.InstallAppVictoriaParams{}
+	body := io.NopCloser(strings.NewReader("{}"))
+
+	client.On("InstallAppVictoriaWithBody", ctx, stack, &params, "application/x-www-form-urlencoded", body).Return(nil, errors.New("network error")).Once()
+
+	var (
+		state  interface{}
+		status string
+		err    error
+	)
+
+	assert.NotPanics(t, func() {
+		state, status, err = privateapps.AppStatusCreate(ctx, client, stack, params, body)()
+	})
+	assert.Error(t, err)
+	assert.Empty(t, status)
+	assert.Nil(t, state)
+}
+
 func TestHandlesErrorDuringAppRead(t *testing.T) {
 	client := &mocks.ClientInterface{}
 	ctx := context.TODO()
@@ -69,13 +92,37 @@ func TestHandlesSuccessfulAppDeletion(t *testing.T) {
 	ctx := context.TODO()
 	stack := v2.Stack("mock-stack")
 	appName := v2.AppName("mock-app")
+	params := v2.UninstallAppVictoriaParams{}
 
-	client.On("UninstallAppVictoria", ctx, stack, appName, &v2.UninstallAppVictoriaParams{}).Return(generateResponse(http.StatusNotFound), nil).Once()
+	client.On("UninstallAppVictoria", ctx, stack, appName, &params).Return(generateResponse(http.StatusNotFound), nil).Once()
 
-	state, status, err := privateapps.AppStatusDelete(ctx, client, stack, appName)()
+	state, status, err := privateapps.AppStatusDelete(ctx, client, stack, appName, params)()
 	assert.NoError(t, err)
 	assert.Equal(t, "Not Found", status)
 	assert.NotNil(t, state)
+}
+
+func TestHandlesNilResponseDuringAppDeletion(t *testing.T) {
+	client := &mocks.ClientInterface{}
+	ctx := context.TODO()
+	stack := v2.Stack("mock-stack")
+	appName := v2.AppName("mock-app")
+	params := v2.UninstallAppVictoriaParams{}
+
+	client.On("UninstallAppVictoria", ctx, stack, appName, &params).Return(nil, errors.New("network error")).Once()
+
+	var (
+		state  interface{}
+		status string
+		err    error
+	)
+
+	assert.NotPanics(t, func() {
+		state, status, err = privateapps.AppStatusDelete(ctx, client, stack, appName, params)()
+	})
+	assert.Error(t, err)
+	assert.Empty(t, status)
+	assert.Nil(t, state)
 }
 
 func TestHandlesErrorDuringAppUpdate(t *testing.T) {

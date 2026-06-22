@@ -172,7 +172,7 @@ func ResourceRole() *schema.Resource {
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -210,7 +210,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	tflog.Info(ctx, "resourceRoleRead invoked")
 	// use the meta value to retrieve your client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -289,7 +289,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -326,7 +326,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 

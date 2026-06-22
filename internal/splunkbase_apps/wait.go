@@ -44,8 +44,8 @@ func WaitAppRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Sta
 	return app, nil
 }
 
-func WaitAppDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, appName string) error {
-	waitAppDelete := wait.GenerateDeleteStateChangeConf(AppStatusDelete(ctx, acsClient, stack, v2.AppName(appName)))
+func WaitAppDelete(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, appName string, params v2.UninstallAppVictoriaParams) error {
+	waitAppDelete := wait.GenerateDeleteStateChangeConf(AppStatusDelete(ctx, acsClient, stack, v2.AppName(appName), params))
 	rawResp, err := waitAppDelete.WaitForStateContext(ctx)
 
 	if err != nil {

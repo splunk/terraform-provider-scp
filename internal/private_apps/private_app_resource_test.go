@@ -138,9 +138,9 @@ func testAccCheckAppDestroy(s *terraform.State) error {
 		return fmt.Errorf("%+v", diags)
 
 	}
-	acsProvider := providerNew.Meta().(client.ACSProvider).Client
+	acsProvider := providerNew.Meta().(*client.ACSProvider).Client
 	acsClient := *acsProvider
-	stack := providerNew.Meta().(client.ACSProvider).Stack
+	stack := providerNew.Meta().(*client.ACSProvider).Stack
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != privateapps.ResourceKey {

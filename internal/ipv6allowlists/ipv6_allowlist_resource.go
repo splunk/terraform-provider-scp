@@ -60,7 +60,7 @@ func ResourceIPv6Allowlist() *schema.Resource {
 
 func resourceIPv6AllowlistCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -87,7 +87,7 @@ func resourceIPv6AllowlistCreate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceIPv6AllowlistRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve your client from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -118,7 +118,7 @@ func resourceIPv6AllowlistRead(ctx context.Context, d *schema.ResourceData, m in
 
 func resourceIPv6AllowlistUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
@@ -156,7 +156,7 @@ func resourceIPv6AllowlistUpdate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceIPv6AllowlistDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	// use the meta value to retrieve client and stack from the provider configure method
-	acsProvider := m.(client.ACSProvider)
+	acsProvider := m.(*client.ACSProvider)
 	acsClient := *acsProvider.Client
 	stack := acsProvider.Stack
 
