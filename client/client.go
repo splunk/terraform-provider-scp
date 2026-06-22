@@ -10,10 +10,12 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/appinspect"
+	"github.com/splunk/terraform-provider-scp/internal/utils"
 )
 
 const TokenType = "ephemeral"
@@ -24,6 +26,16 @@ type ACSProvider struct {
 	Client           *v2.ClientInterface
 	Stack            v2.Stack
 	AppInspectClient *appinspect.ClientInterface
+	TargetClients    map[v2.Stack]v2.ClientInterface
+
+	mu                sync.RWMutex
+	server            string
+	version           string
+	username          string
+	password          string
+	authToken         string
+	splunkbaseSession string
+	splunkLoginToken  string
 }
 
 type LoginResult struct {
@@ -35,6 +47,11 @@ type LoginResult struct {
 	Status    string `json:"status"`
 	ExpiresOn string `json:"expiresOn"`
 	NotBefore string `json:"notBefore"`
+}
+
+type TargetFields struct {
+	Client v2.ClientInterface
+	Stack  v2.Stack
 }
 
 type errInvalidAuth struct {
@@ -53,6 +70,74 @@ func GetClient(server string, token string, version string, splunkbaseSession st
 	}
 	acsClient.RequestEditors = CommonRequestEditors(token, version, splunkbaseSession, splunkLoginToken)
 	return acsClient, nil
+}
+
+func (p *ACSProvider) Configure(server, version, username, password, authToken, splunkbaseSession, splunkLoginToken string) {
+	p.server = server
+	p.version = version
+	p.username = username
+	p.password = password
+	p.authToken = authToken
+	p.splunkbaseSession = splunkbaseSession
+	p.splunkLoginToken = splunkLoginToken
+	if p.TargetClients == nil {
+		p.TargetClients = map[v2.Stack]v2.ClientInterface{}
+	}
+}
+
+func (p *ACSProvider) ClientForTarget(ctx context.Context, stack v2.Stack) (v2.ClientInterface, error) {
+	p.mu.RLock()
+	value, ok := p.TargetClients[stack]
+	p.mu.RUnlock()
+
+	if ok {
+		return value, nil
+	}
+
+	if p.username == "" || p.password == "" {
+		return nil, fmt.Errorf("targeted app installs require provider username and password to generate per-instance tokens")
+	}
+
+	tmpClient, err := GetClientBasicAuth(p.server, p.username, p.password, p.version)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := GenerateToken(ctx, tmpClient, p.username, string(stack))
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := GetClient(p.server, token, p.version, p.splunkbaseSession, p.splunkLoginToken)
+	if err != nil {
+		return nil, err
+	}
+
+	p.mu.Lock()
+	if p.TargetClients == nil {
+		p.TargetClients = map[v2.Stack]v2.ClientInterface{}
+	}
+	p.TargetClients[stack] = client
+	p.mu.Unlock()
+
+	return client, err
+}
+
+func GetTargetInstall(ctx context.Context, target string, stack v2.Stack, acsProvider *ACSProvider) (TargetFields, error) {
+	targetStack, err := utils.TargetStackName(target, stack)
+	if err != nil {
+		return TargetFields{}, err
+	}
+
+	targetClient, err := acsProvider.ClientForTarget(ctx, targetStack)
+	if err != nil {
+		return TargetFields{}, err
+	}
+
+	return TargetFields{
+		Client: targetClient,
+		Stack:  targetStack,
+	}, nil
 }
 
 func CommonRequestEditors(token string, version string, splunkbaseSession string, splunkLoginToken string) []v2.RequestEditorFn {
@@ -246,6 +331,15 @@ func GetSplunkbaseSessionWithClient(ctx context.Context, username, password stri
 	if err != nil {
 		return "", fmt.Errorf("error reading response body: %w", err)
 	}
+	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusMultipleChoices {
+		if len(body) == 0 {
+			return "", fmt.Errorf("splunkbase login failed with status %d", res.StatusCode)
+		}
+		return "", fmt.Errorf("splunkbase login failed with status %d: %s", res.StatusCode, string(body))
+	}
+	if len(body) == 0 {
+		return "", fmt.Errorf("splunkbase login failed")
+	}
 	type LoginResponse struct {
 		ID string `xml:"id"`
 	}
@@ -254,6 +348,9 @@ func GetSplunkbaseSessionWithClient(ctx context.Context, username, password stri
 	err = xml.Unmarshal(body, &loginResponse)
 	if err != nil {
 		return "", fmt.Errorf("error unmarshalling XML: %w", err)
+	}
+	if loginResponse.ID == "" {
+		return "", fmt.Errorf("splunkbase login response did not include a session id")
 	}
 	return loginResponse.ID, nil
 }

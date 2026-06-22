@@ -416,10 +416,34 @@ func TestGetSplunkbaseSessionWithClient(t *testing.T) {
 		defer server.Close()
 
 		sessionID, err := client.GetSplunkbaseSessionWithClient(ctx, mockUsername, mockPassword, &http.Client{}, server.URL)
-		// Function doesn't check HTTP status, so it will try to parse the response
-		// and likely fail with XML parsing error or return empty session
 		assertion.NotNil(err)
 		assertion.Equal("", sessionID)
+		assertion.Contains(err.Error(), "splunkbase login failed with status 403")
+	})
+
+	t.Run("test with empty response body", func(_ *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		}))
+		defer server.Close()
+
+		sessionID, err := client.GetSplunkbaseSessionWithClient(ctx, mockUsername, mockPassword, &http.Client{}, server.URL)
+		assertion.Error(err)
+		assertion.Equal("", sessionID)
+		assertion.Contains(err.Error(), "splunkbase login failed")
+	})
+
+	t.Run("test with missing session id", func(_ *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(`<response></response>`))
+		}))
+		defer server.Close()
+
+		sessionID, err := client.GetSplunkbaseSessionWithClient(ctx, mockUsername, mockPassword, &http.Client{}, server.URL)
+		assertion.Error(err)
+		assertion.Equal("", sessionID)
+		assertion.Contains(err.Error(), "did not include a session id")
 	})
 
 	t.Run("test with invalid URL", func(_ *testing.T) {

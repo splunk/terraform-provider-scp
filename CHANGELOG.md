@@ -50,3 +50,6 @@
 
 ## Version v1.3.2
 * Restore: Index Creation bug fix for index creation timeouts
+
+## Version v1.3.3
+* Extend Splunkbase apps management to support Targeted app installation
