@@ -53,3 +53,6 @@
 
 ## Version v1.3.3
 * Extend Splunkbase apps management to support Targeted app installation
+
+## Version v1.3.4
+* Security update: upgrade Go client dependencies to remediate vulnerability findings for `google.golang.org/grpc`, `golang.org/x/net`, and `golang.org/x/crypto`
