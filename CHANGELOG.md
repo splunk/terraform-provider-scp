@@ -56,3 +56,6 @@
 
 ## Version v1.3.4
 * Security update: upgrade Go client dependencies to remediate vulnerability findings for `google.golang.org/grpc`, `golang.org/x/net`, and `golang.org/x/crypto`
+
+## Version v1.3.5
+* Security update: upgrade `golang.org/x/crypto` and `golang.org/x/net` to remediate vulnerability findings
