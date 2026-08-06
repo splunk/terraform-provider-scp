@@ -328,10 +328,11 @@ func parseUserRequest(d *schema.ResourceData) *UserInfo {
 		userInfo.Email = &parsedData
 	}
 
-	if forceChangePass, ok := d.GetOk(schemaKeyForceChangePass); ok {
-		parsedData := forceChangePass.(bool)
-		userInfo.ForceChangePass = &parsedData
-	}
+	// force_change_pass is Optional with a schema-level Default, so d.Get always returns a
+	// concrete value. GetOk cannot be used here since it treats an explicit "false" the same
+	// as "unset" for TypeBool fields, silently dropping the customer's intent to disable it.
+	forceChangePass := d.Get(schemaKeyForceChangePass).(bool)
+	userInfo.ForceChangePass = &forceChangePass
 
 	if fullName, ok := d.GetOk(schemaKeyFullName); ok {
 		parsedData := fullName.(string)

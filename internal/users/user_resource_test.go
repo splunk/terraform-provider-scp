@@ -85,6 +85,26 @@ func TestAcc_SplunkCloudUser_UpdateAttributes(t *testing.T) {
 	})
 }
 
+func TestAcc_SplunkCloudUser_ForceChangePassFalse(t *testing.T) {
+	// Regression test for ACS-146: force_change_pass = false must be honored on create,
+	// not silently dropped/defaulted to true.
+	userCreateResource := resource.UniqueId()
+
+	nameResourceTest := []resource.TestStep{
+		{
+			Config: testAccInstanceConfigForceChangePass(userCreateResource, false),
+			Check:  resource.TestCheckResourceAttr(resourcePrefix(userCreateResource), "force_change_pass", "false"),
+		},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ProviderFactories: acctest.ProviderFactories,
+		CheckDestroy:      testAccCheckUserDestroy,
+		Steps:             nameResourceTest,
+	})
+}
+
 func testAccInstanceConfigBasic(name string) string {
 	roleList, _ := json.Marshal(roles)
 	return fmt.Sprintf(`resource "scp_users" %[1]q {
@@ -96,6 +116,16 @@ func testAccInstanceConfigBasic(name string) string {
 		email = %[6]q
 		full_name = %[7]q
 	}`, name, password, defaultApp, string(roleList), federatedSearchManageAck, email, fullName)
+}
+
+func testAccInstanceConfigForceChangePass(name string, forceChangePass bool) string {
+	roleList, _ := json.Marshal(roles)
+	return fmt.Sprintf(`resource "scp_users" %[1]q {
+		name = %[1]q
+		password = %[2]q
+		roles = %[3]v
+		force_change_pass = %[4]t
+	}`, name, password, string(roleList), forceChangePass)
 }
 
 func testAccInstanceConfigBasicUpdateAttributes(name string) string {
