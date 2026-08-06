@@ -59,3 +59,6 @@
 
 ## Version v1.3.5
 * Security update: upgrade `golang.org/x/crypto` and `golang.org/x/net` to remediate vulnerability findings
+
+## Version v1.3.6
+* Fixes bug (ACS-146) where setting `force_change_pass = false` on the User resource was not working as intended, leaving the user forced to change their password on first login
