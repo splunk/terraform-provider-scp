@@ -245,6 +245,10 @@ func parseIndexRequest(d *schema.ResourceData) *v2.IndexInfo {
 	if maxDataSizeMB, ok := d.GetOk("max_data_size_mb"); ok {
 		parsedData := int64(maxDataSizeMB.(float64))
 		indexRequest.MaxDataSizeMB = &parsedData
+	} else if d.HasChange("max_data_size_mb") {
+		_, newVal := d.GetChange("max_data_size_mb")
+		parsedData := int64(newVal.(float64))
+		indexRequest.MaxDataSizeMB = &parsedData
 	}
 
 	if searchableDays, ok := d.GetOk("searchable_days"); ok {
