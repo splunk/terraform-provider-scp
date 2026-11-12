@@ -32,6 +32,10 @@ func UserStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v
 
 // UserStatusRead returns StateRefreshFunc that makes GET request, checks if request was successful, and returns user response
 func UserStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, userName string) resource.StateRefreshFunc {
+	return userStatusRead(ctx, acsClient, stack, userName, false)
+}
+
+func userStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, userName string, verifyCreated bool) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DescribeUser(ctx, stack, v2.UserName(userName))
 		if err != nil {
@@ -39,6 +43,10 @@ func UserStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.
 		}
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		if verifyCreated && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusFailedDependency) {
+			return &v2.UsersResponse{}, http.StatusText(resp.StatusCode), nil
+		}
 
 		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != http.StatusOK {
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{
