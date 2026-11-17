@@ -32,6 +32,10 @@ func RoleStatusCreate(ctx context.Context, acsClient v2.ClientInterface, stack v
 
 // RoleStatusRead returns StateRefreshFunc that makes GET request, checks if request was successful, and returns role response
 func RoleStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, roleName string) resource.StateRefreshFunc {
+	return roleStatusRead(ctx, acsClient, stack, roleName, false)
+}
+
+func roleStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, roleName string, verifyCreated bool) resource.StateRefreshFunc {
 	return func() (any, string, error) {
 		resp, err := acsClient.DescribeRole(ctx, stack, v2.RoleName(roleName))
 		if err != nil {
@@ -39,6 +43,10 @@ func RoleStatusRead(ctx context.Context, acsClient v2.ClientInterface, stack v2.
 		}
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		if verifyCreated && (resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusFailedDependency) {
+			return &v2.RolesResponse{}, http.StatusText(resp.StatusCode), nil
+		}
 
 		if _, ok := GeneralRetryableStatusCodes[resp.StatusCode]; !ok && resp.StatusCode != http.StatusOK {
 			return nil, http.StatusText(resp.StatusCode), &resource.UnexpectedStateError{

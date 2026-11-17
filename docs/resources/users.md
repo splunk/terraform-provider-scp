@@ -64,6 +64,10 @@ Defaults are currently set to:
 - `update` -  20m
 - `delete` -  20m
 
+After ACS accepts a create request, the provider waits up to five minutes for the new user to become readable, retrying HTTP 404, 424, and 429 responses.
+
+If this verification fails, the create operation returns an error. Check Terraform state before retrying. If the user exists on the stack but is missing from state, follow [Terraform Import](#terraform-import).
+
 ## Notes/Troubleshooting
 
 ### Terraform Import 

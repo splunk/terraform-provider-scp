@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	v2 "github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
@@ -36,6 +37,17 @@ func WaitUserCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.
 	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for user (%s): %s\n", createUserRequest.Name, resp.Header.Get("X-REQUEST-ID")))
 
 	return nil
+}
+
+// WaitUserCreated waits until a newly created user is readable and returns its state.
+func WaitUserCreated(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, userName string) (*v2.UsersResponse, error) {
+	output, err := wait.WaitForCreated(ctx, func(ctx context.Context) resource.StateRefreshFunc {
+		return userStatusRead(ctx, acsClient, stack, userName, true)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return output.(*v2.UsersResponse), nil
 }
 
 // WaitUserRead Handles retry logic for GET requests for the read lifecycle function

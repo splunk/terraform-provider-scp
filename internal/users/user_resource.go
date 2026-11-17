@@ -188,8 +188,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	tflog.Info(ctx, fmt.Sprintf("Created user resource: %s\n", createRequest.Name))
 
-	// Call readUser to set attributes of user
-	return resourceUserRead(ctx, d, m)
+	// Wait for the newly created user to become readable before populating state.
+	userResponse, err := WaitUserCreated(ctx, acsClient, stack, createRequest.Name)
+	if err != nil {
+		return diag.Errorf("User (%s) was created but could not be read: %s. It may need to be imported into Terraform state before retrying", createRequest.Name, err)
+	}
+	return setUserState(d, userResponse)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -213,6 +217,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.Errorf("%s", fmt.Sprintf("Error reading user (%s): %s", userName, err))
 	}
 
+	return setUserState(d, user)
+}
+
+func setUserState(d *schema.ResourceData, user *v2.UsersResponse) diag.Diagnostics {
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
 		return diag.FromErr(err)
 	}

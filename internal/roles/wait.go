@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/splunk/terraform-provider-scp/acs/v2"
 	"github.com/splunk/terraform-provider-scp/internal/status"
 	"github.com/splunk/terraform-provider-scp/internal/wait"
@@ -35,6 +36,17 @@ func WaitRoleCreate(ctx context.Context, acsClient v2.ClientInterface, stack v2.
 	tflog.Info(ctx, fmt.Sprintf("ACS Request ID for role (%s): %s\n", createRoleRequest.Name, resp.Header.Get("X-REQUEST-ID")))
 
 	return nil
+}
+
+// WaitRoleCreated waits until a newly created role is readable and returns its state.
+func WaitRoleCreated(ctx context.Context, acsClient v2.ClientInterface, stack v2.Stack, roleName string) (*v2.RolesResponse, error) {
+	output, err := wait.WaitForCreated(ctx, func(ctx context.Context) resource.StateRefreshFunc {
+		return roleStatusRead(ctx, acsClient, stack, roleName, true)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return output.(*v2.RolesResponse), nil
 }
 
 // WaitRoleRead Handles retry logic for GET requests for the read lifecycle function
