@@ -203,8 +203,12 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	tflog.Info(ctx, fmt.Sprintf("Created role resource: %s\n", createRequest.Name))
 
-	// Call readRole to set attributes of role
-	return resourceRoleRead(ctx, d, m)
+	// Wait for the newly created role to become readable before populating state.
+	roleResponse, err := WaitRoleCreated(ctx, acsClient, stack, createRequest.Name)
+	if err != nil {
+		return diag.Errorf("Role (%s) was created but could not be read: %s. It may need to be imported into Terraform state before retrying", createRequest.Name, err)
+	}
+	return setRoleState(d, roleResponse)
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -228,6 +232,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return diag.Errorf("Error reading role (%s): %s", roleName, err)
 	}
 
+	return setRoleState(d, roleResponse)
+}
+
+func setRoleState(d *schema.ResourceData, roleResponse *v2.RolesResponse) diag.Diagnostics {
 	if err := d.Set(schemaKeyName, d.Id()); err != nil {
 		return diag.FromErr(err)
 	}

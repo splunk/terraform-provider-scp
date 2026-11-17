@@ -61,4 +61,7 @@
 * Security update: upgrade `golang.org/x/crypto` and `golang.org/x/net` to remediate vulnerability findings
 
 ## Version v1.3.6
-* Fixes bug (ACS-146) where setting `force_change_pass = false` on the User resource was not working as intended, leaving the user forced to change their password on first login
+* Fixes bug where setting `force_change_pass = false` on the User resource was not working as intended, leaving the user forced to change their password on first login
+
+## Version v1.3.7
+* Fixes bug where a temporary 404 after creating `scp_roles` or `scp_users` could fail Terraform apply with "Root object was present, but now absent". The provider now waits up to five minutes for the resource to become readable before populating state.

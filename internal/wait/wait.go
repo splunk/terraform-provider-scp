@@ -1,6 +1,7 @@
 package wait
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -8,10 +9,11 @@ import (
 )
 
 const (
-	CrudDelayTime = 1 * time.Second
-	PollDelayTime = 2 * time.Second
-	Timeout       = 20 * time.Minute
-	MinTimeOut    = 3 * time.Second
+	CrudDelayTime           = 1 * time.Second
+	PollDelayTime           = 2 * time.Second
+	Timeout                 = 20 * time.Minute
+	CreateVisibilityTimeout = 5 * time.Minute
+	MinTimeOut              = 3 * time.Second
 )
 
 var (
@@ -48,6 +50,17 @@ func GenerateReadStateChangeConf(pending []string, target []string, fn resource.
 		MinTimeout: MinTimeOut,
 	}
 	return waitResourceRead
+}
+
+// WaitForCreated polls until a newly created resource is readable.
+// The refresh factory receives the visibility deadline so active requests are bounded too.
+func WaitForCreated(ctx context.Context, refresh func(context.Context) resource.StateRefreshFunc) (interface{}, error) {
+	ctx, cancel := context.WithTimeout(ctx, CreateVisibilityTimeout)
+	defer cancel()
+
+	conf := GenerateReadStateChangeConf(PendingStatusVerifyCreated, TargetStatusResourceExists, refresh(ctx))
+	conf.Timeout = CreateVisibilityTimeout
+	return conf.WaitForStateContext(ctx)
 }
 
 // GenerateDeleteStateChangeConf creates configuration struct for the WaitForStateContext on resources undergoing delete operation
